@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "440070942975",
+    "project_id": "riffrush-229d4",
+    "storage_bucket": "riffrush-229d4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:440070942975:android:330dd9d0fc846c3b175cca",
+        "android_client_info": {
+          "package_name": "com.example.riffrush"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAU4Pzmu0FEIC5Sxn2rb_c4cpu0FSpsHcs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
