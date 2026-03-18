@@ -1,18 +1,16 @@
 package com.example.riffrush
 
+// import com.example.riffrush.views.LoginScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.example.riffrush.ui.theme.RiffRushTheme
 import com.example.riffrush.viewmodel.SongViewModel
-import com.example.riffrush.views.LoginScreen
 import com.example.riffrush.views.SongPreviewScreen
-import org.koin.androidx.compose.koinViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
@@ -24,24 +22,24 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             RiffRushTheme {
-                var showLogin by remember { mutableStateOf(true) }
+                // Lógica de Login comentada para uso futuro, de momento iremos haciendo
+                // var showLogin by remember { mutableStateOf(true) }
 
                 Scaffold { innerPadding ->
-                    if (showLogin) {
-                        LoginScreen(
-                            onLoginSuccess = { showLogin = false }
-                        )
-                    } else {
+                    // if (showLogin) {
+                    //    LoginScreen(
+                    //        onLoginSuccess = { showLogin = false }
+                    //    )
+                    // } else {
                         SongPreviewScreen(
                             modifier = Modifier.padding(innerPadding),
                             onSearch = { songName ->
                                 songViewModel.searchAndPlay(songName)
                             }
                         )
-                    }
+                    // }
                 }
             }
         }
-
     }
 }
