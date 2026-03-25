@@ -16,7 +16,7 @@ class DeezerRepository(private val client: OkHttpClient) {
         try {
             val response = client.newCall(request).execute()
             val body = response.body?.string() ?: return@withContext null
-            
+
             val json = JSONObject(body)
             val data = json.getJSONArray("data")
 
