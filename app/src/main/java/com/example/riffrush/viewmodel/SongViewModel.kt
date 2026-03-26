@@ -13,9 +13,11 @@ class SongViewModel(
 
     fun searchAndPlay(songName: String) {
         viewModelScope.launch {
-            val song = repository.searchSong(songName)
-            song?.let {
-                musicPlayer.playPreview(it.previewUrl)
+            val songs = repository.searchSongs(songName)
+
+            if (songs.isNotEmpty()) {
+                val firstSong = songs[0]
+                musicPlayer.playPreview(firstSong.previewUrl)
             }
         }
     }

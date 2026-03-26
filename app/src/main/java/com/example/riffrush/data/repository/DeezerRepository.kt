@@ -9,27 +9,36 @@ import kotlinx.coroutines.withContext
 
 class DeezerRepository(private val client: OkHttpClient) {
 
-    suspend fun searchSong(query: String): Song? = withContext(Dispatchers.IO) {
+    suspend fun searchSongs(query: String): List<Song> = withContext(Dispatchers.IO) {
         val url = "https://api.deezer.com/search?q=$query"
         val request = Request.Builder().url(url).build()
 
+        val result = mutableListOf<Song>()
+
         try {
             val response = client.newCall(request).execute()
-            val body = response.body?.string() ?: return@withContext null
+            val body = response.body?.string() ?: return@withContext emptyList()
 
             val json = JSONObject(body)
             val data = json.getJSONArray("data")
 
-            if (data.length() > 0) {
-                val firstSong = data.getJSONObject(0)
-                return@withContext Song(
-                    title = firstSong.getString("title"),
-                    previewUrl = firstSong.getString("preview")
+            for (i in 0 until data.length()) {
+                val item = data.getJSONObject(i)
+
+                result.add(
+                    Song(
+                        title = item.getString("title"),
+                        artist = item.getJSONObject("artist").getString("name"),
+                        previewUrl = item.getString("preview"),
+                        coverUrl = item.getJSONObject("album").getString("cover")
+                    )
                 )
             }
+
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        null
+
+        result
     }
 }

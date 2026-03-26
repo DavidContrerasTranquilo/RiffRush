@@ -4,19 +4,48 @@ import com.example.riffrush.data.player.MusicPlayer
 import com.example.riffrush.data.repository.AuthRepository
 import com.example.riffrush.data.repository.DeezerRepository
 import com.example.riffrush.viewmodel.AuthViewModel
+import com.example.riffrush.viewmodel.MusicViewModel
 import com.example.riffrush.viewmodel.SongViewModel
 import com.google.firebase.auth.FirebaseAuth
 import okhttp3.OkHttpClient
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import com.google.firebase.firestore.FirebaseFirestore
+import com.example.riffrush.data.repository.FirebaseRepository
+import org.koin.android.ext.koin.androidContext
 
 val appModule = module {
-    single { FirebaseAuth.getInstance() }
+
+    // 🔐 Firebase
+    single { FirebaseFirestore.getInstance() }
+
+    singleOf(::FirebaseRepository)
+
+    // 🌐 HTTP
     singleOf(::OkHttpClient)
+
+    // 🎵 Retrofit (NUEVO)
+    single {
+        Retrofit.Builder()
+            .baseUrl("https://api.deezer.com/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(get())
+            .build()
+    }
+
+    // 📦 Repositorios
     singleOf(::DeezerRepository)
     singleOf(::AuthRepository)
+
+    // 🔊 Player
     singleOf(::MusicPlayer)
+    single { com.example.riffrush.data.local.GuestIdManager(androidContext()) }
+
+    // 🧠 ViewModels
     viewModelOf(::SongViewModel)
     viewModelOf(::AuthViewModel)
+    viewModelOf(::MusicViewModel)
 }
