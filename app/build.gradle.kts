@@ -60,6 +60,7 @@ dependencies {
 
     implementation(libs.okhttp)
     implementation(libs.firebase.firestore)
+    implementation(libs.androidx.ui.tooling.preview)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -77,4 +78,5 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("androidx.compose.material:material-icons-extended")
+    debugImplementation(libs.androidx.ui.tooling)
 }

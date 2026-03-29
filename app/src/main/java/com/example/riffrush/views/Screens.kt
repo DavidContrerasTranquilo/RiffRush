@@ -7,13 +7,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
-
-//Pestañas de prueba, solo musetran texto para comprobar que la navegacion funcione
 @Composable
 fun ProfileScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = "Perfil")
-    }
+    ProfileScreen()
 }
 
 @Composable
@@ -23,8 +19,8 @@ fun SocialScreen() {
     }
 }
 
-
 @Composable
 fun MyMusicScreen() {
     MusicScreen()
 }
+

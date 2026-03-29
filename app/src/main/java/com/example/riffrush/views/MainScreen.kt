@@ -20,9 +20,6 @@ fun MainScreen(
 ) {
     val navController = rememberNavController()
 
-    // Lógica de Login comentada para uso futuro (se puede mover aquí o envolver MainScreen)
-    // var showLogin by remember { mutableStateOf(true) }
-
     Scaffold(
         bottomBar = {
             NavigationBar {
@@ -67,7 +64,23 @@ fun MainScreen(
             }
             composable(Screen.Social.route) { SocialScreen() }
             composable(Screen.MyMusic.route) { MyMusicScreen() }
-            composable(Screen.Profile.route) { ProfileScreen() }
+            composable(Screen.Profile.route) {
+                ProfileScreen(
+                    onNavigateToSettings = { navController.navigate("settings") },
+                    onNavigateToMusic = {
+                        navController.navigate(Screen.MyMusic.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+            }
+            composable("settings") {
+                SettingsScreen(onBackClick = { navController.popBackStack() })
+            }
         }
     }
 }
