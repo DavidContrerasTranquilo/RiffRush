@@ -10,9 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,95 +26,108 @@ fun ProfileScreen(
     onNavigateToSettings: () -> Unit = {},
     onNavigateToMusic: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {},
+    onNavigateToEditProfile: () -> Unit = {}, // 1. Agregado el parámetro faltante
     authViewModel: AuthViewModel = koinViewModel()
 ) {
     val isLoggedIn by authViewModel.authState.collectAsState()
+    val uiMessage by authViewModel.uiMessage.collectAsState()
     val scrollState = rememberScrollState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(scrollState)
-            .padding(bottom = 24.dp)
-    ) {
-        ProfileHeader()
+    LaunchedEffect(uiMessage) {
+        uiMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            authViewModel.clearMessage()
+        }
+    }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        StatsSection()
-
-        Spacer(modifier = Modifier.height(20.dp))
-
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { padding ->
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .verticalScroll(scrollState)
+                .padding(padding)
+                .padding(bottom = 24.dp)
         ) {
-            Text(
-                text = "Cuenta",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-
-            ProfileMenuItem(
-                icon = Icons.Default.Person,
-                title = "Editar Perfil",
-                subtitle = "Nombre, bio y foto"
-            )
-
-            ProfileMenuItem(
-                icon = Icons.Default.Favorite,
-                title = "Mis Favoritos",
-                subtitle = "Tus canciones y artistas",
-                onClick = onNavigateToMusic
-            )
-
-            ProfileMenuItem(
-                icon = Icons.Default.Settings,
-                title = "Configuración",
-                subtitle = "Privacidad y ajustes de la app",
-                onClick = onNavigateToSettings
-            )
+            // 2. Pasamos el nombre real desde el AuthViewModel
+            ProfileHeader(username = authViewModel.currentUserName)
 
             Spacer(modifier = Modifier.height(16.dp))
+            StatsSection()
+            Spacer(modifier = Modifier.height(20.dp))
 
-            Text(
-                text = "Más",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-
-            ProfileMenuItem(
-                icon = Icons.Default.Info,
-                title = "Ayuda y Soporte"
-            )
-
-            if (isLoggedIn) {
-                ProfileMenuItem(
-                    icon = Icons.AutoMirrored.Filled.ExitToApp,
-                    title = "Cerrar Sesión",
-                    color = MaterialTheme.colorScheme.error,
-                    onClick = {
-                        authViewModel.signOut()
-                    }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text(
+                    text = "Cuenta",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 4.dp)
                 )
-            } else {
+
                 ProfileMenuItem(
-                    icon = Icons.Default.Login,
-                    title = "Iniciar Sesión",
-                    subtitle = "Accede a tu cuenta",
-                    onClick = onNavigateToLogin
+                    icon = Icons.Default.Person,
+                    title = "Editar Perfil",
+                    subtitle = "Nombre, bio y foto",
+                    onClick = onNavigateToEditProfile // 3. Ahora la referencia existe
                 )
+
+                ProfileMenuItem(
+                    icon = Icons.Default.Favorite,
+                    title = "Mis Favoritos",
+                    subtitle = "Tus canciones y artistas",
+                    onClick = onNavigateToMusic
+                )
+
+                ProfileMenuItem(
+                    icon = Icons.Default.Settings,
+                    title = "Configuración",
+                    subtitle = "Privacidad y ajustes de la app",
+                    onClick = onNavigateToSettings
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Más",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+
+                ProfileMenuItem(
+                    icon = Icons.Default.Info,
+                    title = "Ayuda y Soporte"
+                )
+
+                if (isLoggedIn) {
+                    ProfileMenuItem(
+                        icon = Icons.AutoMirrored.Filled.ExitToApp,
+                        title = "Cerrar Sesión",
+                        color = MaterialTheme.colorScheme.error,
+                        onClick = { authViewModel.signOut() }
+                    )
+                } else {
+                    ProfileMenuItem(
+                        icon = Icons.Default.Login,
+                        title = "Iniciar Sesión",
+                        subtitle = "Accede a tu cuenta",
+                        onClick = onNavigateToLogin
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun ProfileHeader() {
+fun ProfileHeader(username: String) { // Recibe el nombre como parámetro
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -142,7 +153,7 @@ fun ProfileHeader() {
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "John Joe",
+            text = username, // Se muestra el nombre real de Firebase
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )

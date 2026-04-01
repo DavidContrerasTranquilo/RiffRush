@@ -18,60 +18,34 @@ fun SignUpScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    val authState by authViewModel.authState.collectAsState()
+    var username by remember { mutableStateOf("") }
 
-    LaunchedEffect(authState) {
-        if (authState) {
-            onSignUpSuccess()
+    val uiMessage by authViewModel.uiMessage.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiMessage) {
+        uiMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            authViewModel.clearMessage()
+            if (it == "¡Cuenta creada con éxito!") onSignUpSuccess()
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "Crear Cuenta",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { padding ->
+        Column(modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp)) {
+            Text("Crear Cuenta", style = MaterialTheme.typography.headlineMedium)
 
-        Spacer(modifier = Modifier.height(32.dp))
+            OutlinedTextField(value = username, onValueChange = { username = it }, label = { Text("Nombre de usuario") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Contraseña") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
 
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Contraseña") },
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
-            onClick = { authViewModel.signUp(email, password) },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = email.isNotEmpty() && password.length >= 6
-        ) {
-            Text("Registrarse")
-        }
-
-        TextButton(onClick = onNavigateBack) {
-            Text("¿Ya tienes cuenta? Inicia sesión")
+            Button(
+                onClick = { authViewModel.signUp(email, password, username) },
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                enabled = username.isNotBlank() && email.isNotBlank() && password.length >= 6
+            ) { Text("Registrarse") }
         }
     }
 }
