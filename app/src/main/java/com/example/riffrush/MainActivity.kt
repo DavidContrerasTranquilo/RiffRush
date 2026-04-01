@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import com.example.riffrush.ui.theme.RiffRushTheme
 import com.example.riffrush.viewmodel.SongViewModel
 import com.example.riffrush.views.MainScreen
-import com.example.riffrush.views.SongPreviewScreen
+import com.example.riffrush.views.HomeScreen
 import org.koin.androidx.viewmodel.ext.android.viewModel
 /*
 class MainActivity : ComponentActivity() {

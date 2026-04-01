@@ -56,11 +56,7 @@ fun MainScreen(
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.Home.route) {
-                SongPreviewScreen(
-                    onSearch = { songName ->
-                        songViewModel.searchAndPlay(songName)
-                    }
-                )
+                HomeScreen()
             }
             composable(Screen.Social.route) { SocialScreen() }
             composable(Screen.MyMusic.route) { MyMusicScreen() }
