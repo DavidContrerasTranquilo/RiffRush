@@ -7,10 +7,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.riffrush.navigation.Screen
+import com.example.riffrush.navigation.items
 import com.example.riffrush.viewmodel.SongViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -30,7 +34,7 @@ fun MainScreen(
                     NavigationBarItem(
                         icon = {
                             Icon(
-                                painter = painterResource(id = screen.iconRes),
+                                imageVector = screen.icon,
                                 contentDescription = null
                             )
                         },
@@ -55,11 +59,11 @@ fun MainScreen(
             startDestination = Screen.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Home.route) {
-                HomeScreen()
-            }
+            // Pantallas Principales (Bottom Bar)
+            composable(Screen.Home.route) { HomeScreen() }
             composable(Screen.Social.route) { SocialScreen() }
             composable(Screen.MyMusic.route) { MyMusicScreen() }
+
             composable(Screen.Profile.route) {
                 ProfileScreen(
                     onNavigateToSettings = { navController.navigate("settings") },
@@ -72,21 +76,43 @@ fun MainScreen(
                             restoreState = true
                         }
                     },
-                    onNavigateToLogin = {
-                        navController.navigate("login")
-                    }
+                    onNavigateToLogin = { navController.navigate("login") },
+                    onNavigateToEditProfile = { navController.navigate("edit_profile") },
+                    onNavigateToSocialList = { type -> navController.navigate("social_list/$type") }
                 )
             }
+
+            // Pantallas Secundarias
             composable("settings") {
                 SettingsScreen(onBackClick = { navController.popBackStack() })
             }
+
+            composable("edit_profile") {
+                EditProfileScreen(onNavigateBack = { navController.popBackStack() })
+            }
+
+            composable(
+                "social_list/{type}",
+                arguments = listOf(navArgument("type") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val type = backStackEntry.arguments?.getString("type") ?: "Social"
+                SocialListScreen(
+                    type = type,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToSocial = {
+                        navController.navigate(Screen.Social.route) {
+                            popUpTo(navController.graph.findStartDestination().id)
+                        }
+                    }
+                )
+            }
+
+            // Autenticación
             composable("login") {
                 LoginScreen(
-                    onNavigateToSignUp = {
-                        navController.navigate("signup")
-                    },
+                    onNavigateToSignUp = { navController.navigate("signup") },
                     onLoginSuccess = {
-                        navController.navigate("profile") {
+                        navController.navigate(Screen.Profile.route) {
                             popUpTo("login") { inclusive = true }
                         }
                     }
@@ -95,25 +121,12 @@ fun MainScreen(
 
             composable("signup") {
                 SignUpScreen(
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    },
+                    onNavigateBack = { navController.popBackStack() },
                     onSignUpSuccess = {
-                        navController.navigate("profile") {
+                        navController.navigate(Screen.Profile.route) {
                             popUpTo("signup") { inclusive = true }
                         }
                     }
-                )
-            }
-            composable("edit_profile") {
-                EditProfileScreen(onNavigateBack = { navController.popBackStack() })
-            }
-            composable("profile") {
-                ProfileScreen(
-                    onNavigateToLogin = { navController.navigate("login") },
-                    onNavigateToMusic = { navController.navigate(Screen.MyMusic.route) },
-                    onNavigateToSettings = { navController.navigate("settings") },
-                    onNavigateToEditProfile = { navController.navigate("edit_profile") } // Conecta la nueva pantalla
                 )
             }
         }

@@ -62,4 +62,22 @@ class AuthRepository(
             "Explorando nuevos ritmos"
         }
     }
+
+    suspend fun getUserSongsCount(): Int {
+        val uid = firebaseAuth.currentUser?.uid ?: return 0
+        return try {
+            val snapshot = firestore.collection("users")
+                .document(uid)
+                .collection("songs")
+                .get()
+                .await()
+
+            val count = snapshot.size()
+            android.util.Log.d("RiffRush", "Canciones encontradas en subcolección: $count")
+            count
+        } catch (e: Exception) {
+            android.util.Log.e("RiffRush", "Error al contar subcolección songs: ${e.message}")
+            0
+        }
+    }
 }

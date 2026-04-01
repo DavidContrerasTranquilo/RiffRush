@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.riffrush.viewmodel.AuthViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -27,11 +28,17 @@ fun ProfileScreen(
     onNavigateToMusic: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {},
+    onNavigateToSocialList: (String) -> Unit = {},
     authViewModel: AuthViewModel = koinViewModel()
 ) {
     val isLoggedIn by authViewModel.authState.collectAsState()
     val uiMessage by authViewModel.uiMessage.collectAsState()
     val userBio by authViewModel.userBio.collectAsState()
+
+    val songsCount by authViewModel.songsCount.collectAsState()
+    val followers by authViewModel.followers.collectAsState()
+    val following by authViewModel.following.collectAsState()
+
     val scrollState = rememberScrollState()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -39,6 +46,13 @@ fun ProfileScreen(
         uiMessage?.let {
             snackbarHostState.showSnackbar(it)
             authViewModel.clearMessage()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (isLoggedIn) {
+            authViewModel.loadUserBio()
+            authViewModel.loadUserStats()
         }
     }
 
@@ -55,11 +69,20 @@ fun ProfileScreen(
         ) {
             ProfileHeader(
                 username = authViewModel.currentUserName,
-                bio = if (isLoggedIn) userBio else "Inicia sesión para ver tu bio"
+                bio = if (isLoggedIn && userBio.isNotBlank()) userBio else "Inicia sesión para ver tu bio"
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-            StatsSection()
+
+            StatsSection(
+                songsCount = songsCount.toString(),
+                followersCount = followers.size.toString(),
+                followingCount = following.size.toString(),
+                onStatClick = { title ->
+                    if (isLoggedIn) onNavigateToSocialList(title) else onNavigateToLogin()
+                }
+            )
+
             Spacer(modifier = Modifier.height(20.dp))
 
             Column(
@@ -141,26 +164,51 @@ fun ProfileHeader(username: String, bio: String) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Text(text = username, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text(text = bio, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+        Text(
+            text = username.ifBlank { "Invitado" },
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+
+        Text(
+            text = bio,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 32.dp)
+        )
     }
 }
 
 @Composable
-fun StatsSection() {
+fun StatsSection(
+    songsCount: String,
+    followersCount: String,
+    followingCount: String,
+    onStatClick: (String) -> Unit
+) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        StatItem(label = "Playlists", value = "12")
-        StatItem(label = "Seguidores", value = "156")
-        StatItem(label = "Siguiendo", value = "89")
+        StatItem(label = "Canciones", value = songsCount)
+
+        StatItem(label = "Seguidores", value = followersCount, onClick = { onStatClick("Seguidores") })
+        StatItem(label = "Siguiendo", value = followingCount, onClick = { onStatClick("Siguiendo") })
     }
 }
 
 @Composable
-fun StatItem(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+fun StatItem(label: String, value: String, onClick: () -> Unit = {}) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(MaterialTheme.shapes.small)
+            .clickable(enabled = label != "Canciones") { onClick() }
+            .padding(8.dp)
+    ) {
         Text(text = value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
     }
@@ -175,17 +223,25 @@ fun ProfileMenuItem(
     onClick: () -> Unit = {}
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 10.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.medium)
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp, horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(22.dp))
+        Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.bodyMedium, color = color)
+            Text(text = title, style = MaterialTheme.typography.bodyLarge, color = color)
             if (subtitle != null) {
                 Text(text = subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
             }
         }
-        Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
+        Icon(
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+        )
     }
 }

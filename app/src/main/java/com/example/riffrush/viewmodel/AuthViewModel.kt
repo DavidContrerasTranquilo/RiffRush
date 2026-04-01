@@ -20,19 +20,45 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
     private val _updateSuccess = MutableStateFlow(false)
     val updateSuccess: StateFlow<Boolean> = _updateSuccess
 
+    // --- NUEVOS ESTADOS PARA ESTADÍSTICAS ---
+    private val _songsCount = MutableStateFlow(0)
+    val songsCount: StateFlow<Int> = _songsCount
+
+    private val _followers = MutableStateFlow<List<String>>(emptyList())
+    val followers: StateFlow<List<String>> = _followers
+
+    private val _following = MutableStateFlow<List<String>>(emptyList())
+    val following: StateFlow<List<String>> = _following
+
     val currentUserName: String get() = repository.getCurrentUserName()
 
     init {
-        if (_authState.value) loadUserBio()
+        if (_authState.value) {
+            loadUserBio()
+            loadUserStats()
+        }
     }
 
     fun clearMessage() { _uiMessage.value = null }
-
     fun resetUpdateStatus() { _updateSuccess.value = false }
 
     fun loadUserBio() {
         viewModelScope.launch {
             _userBio.value = repository.getUserBio()
+        }
+    }
+
+    fun loadUserStats() {
+        viewModelScope.launch {
+            try {
+                // Suponiendo que en tu repositorio implementas estos métodos
+                _songsCount.value = repository.getUserSongsCount()
+                // De momento devolvemos listas vacías como pediste
+                _followers.value = emptyList()
+                _following.value = emptyList()
+            } catch (e: Exception) {
+                _songsCount.value = 0
+            }
         }
     }
 
@@ -43,6 +69,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 _uiMessage.value = "¡Cuenta creada correctamente!"
                 _authState.value = true
                 loadUserBio()
+                loadUserStats()
             } catch (e: Exception) {
                 _uiMessage.value = "Error en el registro"
             }
@@ -56,6 +83,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 _uiMessage.value = "Sesión iniciada correctamente"
                 _authState.value = true
                 loadUserBio()
+                loadUserStats()
             } catch (e: Exception) {
                 _uiMessage.value = "Email o contraseña incorrectos"
             }
@@ -66,9 +94,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         viewModelScope.launch {
             try {
                 repository.updateUsername(newName)
-
                 repository.updateBio(newBio)
-
                 if (!newPass.isNullOrBlank()) {
                     try {
                         repository.updatePassword(newPass)
@@ -77,22 +103,22 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                         return@launch
                     }
                 }
-
                 _uiMessage.value = "Perfil actualizado correctamente"
                 loadUserBio()
                 _updateSuccess.value = true
-
             } catch (e: Exception) {
                 _uiMessage.value = "Error al actualizar datos: ${e.message}"
             }
         }
     }
+
     fun signOut() {
         viewModelScope.launch {
             try {
-                repository.signOut() // Llama al método del repositorio
-                _authState.value = false // Actualiza el estado a "no autenticado"
-                _userBio.value = "" // Limpia los datos locales
+                repository.signOut()
+                _authState.value = false
+                _userBio.value = ""
+                _songsCount.value = 0
                 _uiMessage.value = "Sesión cerrada correctamente"
             } catch (e: Exception) {
                 _uiMessage.value = "Error al cerrar sesión"
