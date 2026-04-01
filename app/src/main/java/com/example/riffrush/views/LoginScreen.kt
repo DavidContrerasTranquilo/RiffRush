@@ -12,6 +12,7 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun LoginScreen(
+    onNavigateToSignUp: () -> Unit, // <--- Faltaba este parámetro
     onLoginSuccess: () -> Unit,
     authViewModel: AuthViewModel = koinViewModel()
 ) {
@@ -28,42 +29,51 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "RiffRush Login", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            text = "Bienvenido a RiffRush",
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+
         Spacer(modifier = Modifier.height(32.dp))
 
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
-        Spacer(modifier = Modifier.height(8.dp))
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password") },
+            label = { Text("Contraseña") },
+            modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
+            singleLine = true
         )
-        Spacer(modifier = Modifier.height(24.dp))
+
+        Spacer(modifier = Modifier.height(32.dp))
 
         Button(
             onClick = { authViewModel.signIn(email, password) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = email.isNotEmpty() && password.isNotEmpty()
         ) {
             Text("Iniciar Sesión")
         }
-        
-        TextButton(
-            onClick = { authViewModel.signUp(email, password) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("¿No tienes cuenta? Regístrate")
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TextButton(onClick = onNavigateToSignUp) {
+            Text("¿No tienes cuenta? Regístrate aquí")
         }
     }
 }

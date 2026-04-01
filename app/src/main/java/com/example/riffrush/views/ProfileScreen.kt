@@ -11,6 +11,8 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,12 +20,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.riffrush.viewmodel.AuthViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun ProfileScreen(
     onNavigateToSettings: () -> Unit = {},
-    onNavigateToMusic: () -> Unit = {}
+    onNavigateToMusic: () -> Unit = {},
+    onNavigateToLogin: () -> Unit = {},
+    authViewModel: AuthViewModel = koinViewModel()
 ) {
+    val isLoggedIn by authViewModel.authState.collectAsState()
     val scrollState = rememberScrollState()
 
     Column(
@@ -52,13 +59,13 @@ fun ProfileScreen(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
-            
+
             ProfileMenuItem(
                 icon = Icons.Default.Person,
                 title = "Editar Perfil",
                 subtitle = "Nombre, bio y foto"
             )
-            
+
             ProfileMenuItem(
                 icon = Icons.Default.Favorite,
                 title = "Mis Favoritos",
@@ -72,9 +79,9 @@ fun ProfileScreen(
                 subtitle = "Privacidad y ajustes de la app",
                 onClick = onNavigateToSettings
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Text(
                 text = "Más",
                 style = MaterialTheme.typography.titleMedium,
@@ -87,11 +94,23 @@ fun ProfileScreen(
                 title = "Ayuda y Soporte"
             )
 
-            ProfileMenuItem(
-                icon = Icons.AutoMirrored.Filled.ExitToApp,
-                title = "Cerrar Sesión",
-                color = MaterialTheme.colorScheme.error
-            )
+            if (isLoggedIn) {
+                ProfileMenuItem(
+                    icon = Icons.AutoMirrored.Filled.ExitToApp,
+                    title = "Cerrar Sesión",
+                    color = MaterialTheme.colorScheme.error,
+                    onClick = {
+                        authViewModel.signOut()
+                    }
+                )
+            } else {
+                ProfileMenuItem(
+                    icon = Icons.Default.Login,
+                    title = "Iniciar Sesión",
+                    subtitle = "Accede a tu cuenta",
+                    onClick = onNavigateToLogin
+                )
+            }
         }
     }
 }
@@ -101,7 +120,7 @@ fun ProfileHeader() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 20.dp), 
+            .padding(top = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
@@ -127,7 +146,7 @@ fun ProfileHeader() {
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
-        
+
         Text(
             text = "Explorando nuevos ritmos desde 2024",
             style = MaterialTheme.typography.bodySmall,
@@ -187,9 +206,9 @@ fun ProfileMenuItem(
             tint = color,
             modifier = Modifier.size(22.dp)
         )
-        
+
         Spacer(modifier = Modifier.width(16.dp))
-        
+
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -204,7 +223,7 @@ fun ProfileMenuItem(
                 )
             }
         }
-        
+
         Icon(
             imageVector = Icons.Default.ChevronRight,
             contentDescription = null,

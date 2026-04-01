@@ -71,11 +71,39 @@ fun MainScreen(
                             launchSingleTop = true
                             restoreState = true
                         }
+                    },
+                    onNavigateToLogin = {
+                        navController.navigate("login")
                     }
                 )
             }
             composable("settings") {
                 SettingsScreen(onBackClick = { navController.popBackStack() })
+            }
+            composable("login") {
+                LoginScreen(
+                    onNavigateToSignUp = {
+                        navController.navigate("signup")
+                    },
+                    onLoginSuccess = {
+                        navController.navigate("profile") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable("signup") {
+                SignUpScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onSignUpSuccess = {
+                        navController.navigate("profile") {
+                            popUpTo("signup") { inclusive = true }
+                        }
+                    }
+                )
             }
         }
     }

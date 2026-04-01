@@ -19,15 +19,12 @@ import org.koin.android.ext.koin.androidContext
 
 val appModule = module {
 
-    // 🔐 Firebase
     single { FirebaseFirestore.getInstance() }
+    single { FirebaseAuth.getInstance() }
 
     singleOf(::FirebaseRepository)
-
-    // 🌐 HTTP
     singleOf(::OkHttpClient)
 
-    // 🎵 Retrofit (NUEVO)
     single {
         Retrofit.Builder()
             .baseUrl("https://api.deezer.com/")
@@ -36,15 +33,12 @@ val appModule = module {
             .build()
     }
 
-    // 📦 Repositorios
     singleOf(::DeezerRepository)
     singleOf(::AuthRepository)
 
-    // 🔊 Player
     singleOf(::MusicPlayer)
     single { com.example.riffrush.data.local.GuestIdManager(androidContext()) }
 
-    // 🧠 ViewModels
     viewModelOf(::SongViewModel)
     viewModelOf(::AuthViewModel)
     viewModelOf(::MusicViewModel)
