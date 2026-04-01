@@ -49,7 +49,8 @@ class AuthRepository(
 
     suspend fun updateBio(newBio: String) {
         val uid = firebaseAuth.currentUser?.uid ?: return
-        firestore.collection("users").document(uid).update("bio", newBio).await()
+        firestore.collection("users").document(uid)
+            .update("bio", newBio).await()
     }
 
     suspend fun getUserBio(): String {
