@@ -3,59 +3,83 @@ package com.example.riffrush.views
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.riffrush.ui.components.SongItem
 import com.example.riffrush.viewmodel.MusicViewModel
 import org.koin.androidx.compose.koinViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicScreen(viewModel: MusicViewModel = koinViewModel()) {
 
     val songs by viewModel.songs.collectAsState()
     val favoriteSongs by viewModel.favoriteSongs.collectAsState()
-    var playingUrl by remember { mutableStateOf<String?>(null) }
-
     val isSearching by viewModel.isSearching.collectAsState()
+
+    var playingUrl by remember { mutableStateOf<String?>(null) }
     var query by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) { viewModel.loadMyMusic() }
+    LaunchedEffect(Unit) {
+        viewModel.loadMyMusic()
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Barra de búsqueda
-        Row(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             if (isSearching) {
-                Button(onClick = {
+                IconButton(onClick = {
                     query = ""
                     viewModel.loadMyMusic()
-                }) { Text("←") }
+                }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                }
             }
 
-            TextField(
+            OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("Buscar canciones...") }
+                placeholder = { Text("Buscar canciones...") },
+                singleLine = true,
+                shape = MaterialTheme.shapes.medium
             )
 
-            Button(onClick = { if (query.isNotEmpty()) viewModel.searchSongs(query) }) {
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Button(
+                onClick = { if (query.isNotBlank()) viewModel.searchSongs(query) },
+                contentPadding = PaddingValues(horizontal = 16.dp)
+            ) {
                 Text("Buscar")
             }
         }
 
-        LazyColumn {
-            items(songs) { song ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 16.dp)
+        ) {
+            items(songs, key = { it.id }) { song ->
                 SongItem(
                     song = song,
-                    isFavorite = favoriteSongs.contains(song.previewUrl),
-                    isPlaying = playingUrl == song.previewUrl,
+                    isFavorite = favoriteSongs.any { it.id == song.id },
+                    isPlaying = playingUrl == song.preview,
                     onPlayPause = {
                         viewModel.playPause(song)
-                        playingUrl = if (playingUrl == song.previewUrl) null else song.previewUrl
+                        playingUrl = if (playingUrl == song.preview) null else song.preview
                     },
-                    onFavoriteToggle = { viewModel.toggleFavorite(song) }
+                    onFavoriteToggle = {
+                        viewModel.toggleFavorite(song)
+                    }
                 )
             }
         }

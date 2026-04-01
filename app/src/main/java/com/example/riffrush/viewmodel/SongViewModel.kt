@@ -17,7 +17,7 @@ class SongViewModel(
 
             if (songs.isNotEmpty()) {
                 val firstSong = songs[0]
-                musicPlayer.playPreview(firstSong.previewUrl)
+                musicPlayer.playPreview(firstSong.preview)
             }
         }
     }

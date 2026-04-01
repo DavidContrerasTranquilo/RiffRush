@@ -16,6 +16,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import com.google.firebase.firestore.FirebaseFirestore
 import com.example.riffrush.data.repository.FirebaseRepository
 import org.koin.android.ext.koin.androidContext
+import com.example.riffrush.data.repository.DeezerApi
 
 val appModule = module {
 
@@ -31,6 +32,9 @@ val appModule = module {
             .addConverterFactory(GsonConverterFactory.create())
             .client(get())
             .build()
+    }
+    single<DeezerApi> {
+        get<Retrofit>().create(DeezerApi::class.java)
     }
 
     singleOf(::DeezerRepository)

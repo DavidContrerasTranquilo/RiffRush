@@ -1,44 +1,43 @@
 package com.example.riffrush.data.repository
 
+import com.example.riffrush.data.repository.DeezerApi
 import com.example.riffrush.data.model.Song
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import org.json.JSONObject
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
-class DeezerRepository(private val client: OkHttpClient) {
+class DeezerRepository(private val api: DeezerApi) {
 
-    suspend fun searchSongs(query: String): List<Song> = withContext(Dispatchers.IO) {
-        val url = "https://api.deezer.com/search?q=$query"
-        val request = Request.Builder().url(url).build()
-
-        val result = mutableListOf<Song>()
-
-        try {
-            val response = client.newCall(request).execute()
-            val body = response.body?.string() ?: return@withContext emptyList()
-
-            val json = JSONObject(body)
-            val data = json.getJSONArray("data")
-
-            for (i in 0 until data.length()) {
-                val item = data.getJSONObject(i)
-
-                result.add(
-                    Song(
-                        title = item.getString("title"),
-                        artist = item.getJSONObject("artist").getString("name"),
-                        previewUrl = item.getString("preview"),
-                        coverUrl = item.getJSONObject("album").getString("cover")
-                    )
+    suspend fun searchSongs(query: String): List<Song> {
+        return try {
+            val response = api.search(query)
+            response.data.map { item ->
+                Song(
+                    id = item.id.toInt(),
+                    title = item.title,
+                    artist = item.artist.name,
+                    album = item.album.title,
+                    preview = item.preview,
+                    cover = item.album.cover_medium
                 )
             }
-
         } catch (e: Exception) {
-            e.printStackTrace()
+            emptyList()
         }
+    }
 
-        result
+    suspend fun getChart(): List<Song> {
+        return try {
+            val response = api.getChart()
+            response.tracks.data.map { item ->
+                Song(
+                    id = item.id.toInt(),
+                    title = item.title,
+                    artist = item.artist.name,
+                    album = item.album.title,
+                    preview = item.preview,
+                    cover = item.album.cover_medium
+                )
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 }

@@ -22,7 +22,7 @@ fun SongItem(song: Song) {
     ) {
 
         AsyncImage(
-            model = song.coverUrl,
+            model = song.cover,
             contentDescription = null,
             modifier = Modifier.size(60.dp)
         )

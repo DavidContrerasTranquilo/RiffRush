@@ -2,66 +2,69 @@ package com.example.riffrush.data.repository
 
 import com.example.riffrush.data.model.Song
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
-class FirebaseRepository(
-    private val firestore: FirebaseFirestore
-) {
+class FirebaseRepository(private val firestore: FirebaseFirestore) {
 
-    suspend fun getUserSongs(userId: String): List<Song> {
-        val result = mutableListOf<Song>()
+    fun getFavorites(ownerId: String): Flow<List<Song>> = callbackFlow {
+        val subscription = firestore.collection("users")
+            .document(ownerId)
+            .collection("songs")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
 
-        try {
-            val snapshot = firestore
-                .collection("users")
-                .document(userId)
-                .collection("songs")
-                .get()
-                .await()
+                val songs = snapshot?.documents?.mapNotNull { doc ->
+                    Song(
+                        id = doc.getLong("id")?.toInt() ?: 0,
+                        title = doc.getString("title") ?: "",
+                        artist = doc.getString("artist") ?: "",
+                        album = doc.getString("album") ?: "",
+                        preview = doc.getString("preview") ?: "",
+                        cover = doc.getString("cover") ?: ""
+                    )
+                } ?: emptyList()
 
-            for (doc in snapshot.documents) {
-                val song = Song(
-                    title = doc.getString("title") ?: "",
-                    artist = doc.getString("artist") ?: "",
-                    previewUrl = doc.getString("previewUrl") ?: "",
-                    coverUrl = doc.getString("coverUrl") ?: ""
-                )
-                result.add(song)
+                trySend(songs)
             }
+        awaitClose { subscription.remove() }
+    }
 
+    suspend fun addFavorite(ownerId: String, song: Song) {
+        try {
+            val songData = hashMapOf(
+                "id" to song.id,
+                "title" to song.title,
+                "artist" to song.artist,
+                "album" to song.album,
+                "preview" to song.preview,
+                "cover" to song.cover
+            )
+
+            firestore.collection("users")
+                .document(ownerId)
+                .collection("songs")
+                .document(song.id.toString())
+                .set(songData)
+                .await()
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
-        return result
     }
 
-    suspend fun saveSong(userId: String, song: Song) {
+    suspend fun removeFavorite(ownerId: String, songId: String) {
         try {
-            firestore
-                .collection("users")
-                .document(userId)
+            firestore.collection("users")
+                .document(ownerId)
                 .collection("songs")
-                .add(song)
+                .document(songId)
+                .delete()
                 .await()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    suspend fun deleteSong(userId: String, previewUrl: String) {
-        try {
-            val snapshot = firestore
-                .collection("users")
-                .document(userId)
-                .collection("songs")
-                .whereEqualTo("previewUrl", previewUrl)
-                .get()
-                .await()
-
-            for (doc in snapshot.documents) {
-                doc.reference.delete()
-            }
         } catch (e: Exception) {
             e.printStackTrace()
         }

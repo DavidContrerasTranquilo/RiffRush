@@ -2,83 +2,82 @@ package com.example.riffrush.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.riffrush.data.local.GuestIdManager
 import com.example.riffrush.data.model.Song
-import com.example.riffrush.data.player.MusicPlayer
+import com.example.riffrush.data.repository.AuthRepository
 import com.example.riffrush.data.repository.DeezerRepository
 import com.example.riffrush.data.repository.FirebaseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.util.UUID
-import com.example.riffrush.data.local.GuestIdManager
 
 class MusicViewModel(
-    private val deezerRepository: DeezerRepository,
     private val firebaseRepository: FirebaseRepository,
-    private val musicPlayer: MusicPlayer,
-    guestIdManager: GuestIdManager
+    private val authRepository: AuthRepository,
+    private val deezerRepository: DeezerRepository,
+    private val guestIdManager: GuestIdManager
 ) : ViewModel() {
-    private val guestId = guestIdManager.getGuestId()
 
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
     val songs: StateFlow<List<Song>> = _songs
 
+    private val _favoriteSongs = MutableStateFlow<List<Song>>(emptyList())
+    val favoriteSongs: StateFlow<List<Song>> = _favoriteSongs
+
     private val _isSearching = MutableStateFlow(false)
     val isSearching: StateFlow<Boolean> = _isSearching
 
-    private val _favoriteSongs = MutableStateFlow<Set<String>>(emptySet())
-    val favoriteSongs: StateFlow<Set<String>> = _favoriteSongs
-
-    // Carga canciones de usuario/invitado
-    fun loadMyMusic(userId: String? = null) {
-        val id = userId ?: guestId
-        viewModelScope.launch {
-            _isSearching.value = false
-            // Traemos las canciones desde Firebase
-            val loaded = firebaseRepository.getUserSongs(id)
-            _songs.value = loaded
-            // Actualizamos favoritos según Firebase
-            _favoriteSongs.value = loaded.map { it.previewUrl }.toSet()
-        }
+    init {
+        loadMyMusic()
     }
 
-    // Buscar canciones en Deezer
-    fun searchSongs(query: String) {
-        viewModelScope.launch {
-            _isSearching.value = true
-            _songs.value = deezerRepository.searchSongs(query)
-        }
+    private fun getOwnerId(): String {
+        return authRepository.getCurrentUser()?.uid ?: guestIdManager.getGuestId()
     }
 
-    // Alterna favorito: guarda si no existe, elimina si ya está
-    fun toggleFavorite(song: Song, userId: String? = null) {
-        val id = userId ?: guestId
+    fun loadMyMusic() {
+        _isSearching.value = false
+        val ownerId = getOwnerId()
         viewModelScope.launch {
-            val currentFavorites = _favoriteSongs.value.toMutableSet()
-            if (currentFavorites.contains(song.previewUrl)) {
-                // eliminar de Firebase
-                firebaseRepository.deleteSong(id, song.previewUrl)
-                currentFavorites.remove(song.previewUrl)
-            } else {
-                // guardar en Firebase
-                firebaseRepository.saveSong(id, song)
-                currentFavorites.add(song.previewUrl)
+            firebaseRepository.getFavorites(ownerId).collect { favs ->
+                _favoriteSongs.value = favs
+                if (!_isSearching.value) {
+                    _songs.value = favs
+                }
             }
-            _favoriteSongs.value = currentFavorites
         }
     }
 
-    // Play o Pause del preview
+    fun searchSongs(query: String) {
+        if (query.isBlank()) return
+        _isSearching.value = true
+        viewModelScope.launch {
+            try {
+                val results = deezerRepository.searchSongs(query)
+                _songs.value = results
+            } catch (e: Exception) {
+                _songs.value = emptyList()
+            }
+        }
+    }
+
+    fun toggleFavorite(song: Song) {
+        val ownerId = getOwnerId()
+        viewModelScope.launch {
+            val isFavorite = _favoriteSongs.value.any { it.id == song.id }
+            if (isFavorite) {
+                firebaseRepository.removeFavorite(ownerId, song.id.toString())
+            } else {
+                firebaseRepository.addFavorite(ownerId, song)
+            }
+        }
+    }
+
     fun playPause(song: Song) {
-        if (musicPlayer.isPlaying(song.previewUrl)) {
-            musicPlayer.pause()
-        } else {
-            musicPlayer.playPreview(song.previewUrl)
-        }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        musicPlayer.release()
+    fun clearLocalData() {
+        _favoriteSongs.value = emptyList()
+        _songs.value = emptyList()
     }
 }

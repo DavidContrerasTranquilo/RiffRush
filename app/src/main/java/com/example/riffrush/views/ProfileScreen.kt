@@ -26,11 +26,12 @@ fun ProfileScreen(
     onNavigateToSettings: () -> Unit = {},
     onNavigateToMusic: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {},
-    onNavigateToEditProfile: () -> Unit = {}, // 1. Agregado el parámetro faltante
+    onNavigateToEditProfile: () -> Unit = {},
     authViewModel: AuthViewModel = koinViewModel()
 ) {
     val isLoggedIn by authViewModel.authState.collectAsState()
     val uiMessage by authViewModel.uiMessage.collectAsState()
+    val userBio by authViewModel.userBio.collectAsState()
     val scrollState = rememberScrollState()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -52,8 +53,10 @@ fun ProfileScreen(
                 .padding(padding)
                 .padding(bottom = 24.dp)
         ) {
-            // 2. Pasamos el nombre real desde el AuthViewModel
-            ProfileHeader(username = authViewModel.currentUserName)
+            ProfileHeader(
+                username = authViewModel.currentUserName,
+                bio = if (isLoggedIn) userBio else "Inicia sesión para ver tu bio"
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
             StatsSection()
@@ -75,7 +78,7 @@ fun ProfileScreen(
                     icon = Icons.Default.Person,
                     title = "Editar Perfil",
                     subtitle = "Nombre, bio y foto",
-                    onClick = onNavigateToEditProfile // 3. Ahora la referencia existe
+                    onClick = { if (isLoggedIn) onNavigateToEditProfile() else onNavigateToLogin() }
                 )
 
                 ProfileMenuItem(
@@ -93,18 +96,6 @@ fun ProfileScreen(
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "Más",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-
-                ProfileMenuItem(
-                    icon = Icons.Default.Info,
-                    title = "Ayuda y Soporte"
-                )
 
                 if (isLoggedIn) {
                     ProfileMenuItem(
@@ -127,7 +118,7 @@ fun ProfileScreen(
 }
 
 @Composable
-fun ProfileHeader(username: String) { // Recibe el nombre como parámetro
+fun ProfileHeader(username: String, bio: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -143,35 +134,22 @@ fun ProfileHeader(username: String) { // Recibe el nombre como parámetro
             Icon(
                 imageVector = Icons.Default.Person,
                 contentDescription = null,
-                modifier = Modifier
-                    .size(60.dp)
-                    .align(Alignment.Center),
+                modifier = Modifier.size(60.dp).align(Alignment.Center),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Text(
-            text = username, // Se muestra el nombre real de Firebase
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
-
-        Text(
-            text = "Explorando nuevos ritmos desde 2024",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-        )
+        Text(text = username, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(text = bio, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
     }
 }
 
 @Composable
 fun StatsSection() {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 32.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         StatItem(label = "Playlists", value = "12")
@@ -183,16 +161,8 @@ fun StatsSection() {
 @Composable
 fun StatItem(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        )
+        Text(text = value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
     }
 }
 
@@ -205,40 +175,17 @@ fun ProfileMenuItem(
     onClick: () -> Unit = {}
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 10.dp),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier.size(22.dp)
-        )
-
+        Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(22.dp))
         Spacer(modifier = Modifier.width(16.dp))
-
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium,
-                color = color
-            )
+            Text(text = title, style = MaterialTheme.typography.bodyMedium, color = color)
             if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
+                Text(text = subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
             }
         }
-
-        Icon(
-            imageVector = Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-        )
+        Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
     }
 }

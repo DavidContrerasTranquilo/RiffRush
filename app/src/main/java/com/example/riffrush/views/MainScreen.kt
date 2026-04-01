@@ -111,7 +111,7 @@ fun MainScreen(
             composable("profile") {
                 ProfileScreen(
                     onNavigateToLogin = { navController.navigate("login") },
-                    onNavigateToMusic = { navController.navigate("music") },
+                    onNavigateToMusic = { navController.navigate(Screen.MyMusic.route) },
                     onNavigateToSettings = { navController.navigate("settings") },
                     onNavigateToEditProfile = { navController.navigate("edit_profile") } // Conecta la nueva pantalla
                 )
