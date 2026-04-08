@@ -10,11 +10,11 @@ class DeezerRepository(private val api: DeezerApi) {
             response.data.map { item ->
                 Song(
                     id = item.id,
-                    title = item.title,
-                    artist = item.artist.name,
-                    album = item.album.title,
-                    preview = item.preview,
-                    cover = item.album.cover_medium
+                    title = item.title ?: "Unknown Title",
+                    artist = item.artist?.name ?: "Unknown Artist",
+                    album = item.album?.title ?: "Unknown Album",
+                    preview = item.preview ?: "",
+                    cover = item.album?.cover_medium ?: ""
                 )
             }
         } catch (e: Exception) {
@@ -28,11 +28,11 @@ class DeezerRepository(private val api: DeezerApi) {
             response.tracks.data.map { item ->
                 Song(
                     id = item.id,
-                    title = item.title,
-                    artist = item.artist.name,
-                    album = item.album.title,
-                    preview = item.preview,
-                    cover = item.album.cover_medium
+                    title = item.title ?: "Unknown Title",
+                    artist = item.artist?.name ?: "Unknown Artist",
+                    album = item.album?.title ?: "Unknown Album",
+                    preview = item.preview ?: "",
+                    cover = item.album?.cover_medium ?: ""
                 )
             }
         } catch (e: Exception) {

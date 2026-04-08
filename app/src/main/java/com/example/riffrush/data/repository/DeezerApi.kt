@@ -30,17 +30,17 @@ data class DeezerTrackData(
 
 data class DeezerTrack(
     val id: Long,
-    val title: String,
-    val preview: String,
-    val artist: DeezerArtist,
-    val album: DeezerAlbum
+    val title: String?,
+    val preview: String?,
+    val artist: DeezerArtist?,
+    val album: DeezerAlbum?
 )
 
 data class DeezerArtist(
-    val name: String
+    val name: String?
 )
 
 data class DeezerAlbum(
-    val title: String,
-    val cover_medium: String
+    val title: String?,
+    val cover_medium: String?
 )

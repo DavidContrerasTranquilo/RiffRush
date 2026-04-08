@@ -15,31 +15,11 @@ class MatchRepository(
 ) {
     private val matchesCollection = firestore.collection("matches")
 
-    suspend fun createMatch(opponentId: String): String {
-        val currentUserId = auth.currentUser?.uid ?: throw Exception("User not logged in")
-        
-        // Lista estática de IDs de canciones de Deezer (ejemplo)
-        val staticSongs = listOf(
-            1109731L,  // Daft Punk - One More Time
-            3135556L,  // Queen - Bohemian Rhapsody
-            1434890L,  // Michael Jackson - Billie Jean
-            653448L,   // Nirvana - Smells Like Teen Spirit
-            2107382L   // Gorillaz - Feel Good Inc.
-        )
-
-        val matchDoc = matchesCollection.document()
-        val match = MatchModel(
-            matchId = matchDoc.id,
-            player1Id = currentUserId,
-            player2Id = opponentId,
-            status = MatchStatus.WAITING,
-            staticSongList = staticSongs,
-            scoreP1 = 0,
-            scoreP2 = 0
-        )
-
-        matchDoc.set(match).await()
-        return matchDoc.id
+    suspend fun createMatch(match: MatchModel) {
+        firestore.collection("matches")
+            .document(match.matchId)
+            .set(match)
+            .await()
     }
 
     fun listenToMatch(matchId: String): Flow<MatchModel?> = callbackFlow {
@@ -55,12 +35,29 @@ class MatchRepository(
         awaitClose { registration.remove() }
     }
 
-    suspend fun updateScore(matchId: String, playerNumber: Int, newScore: Int) {
-        val field = if (playerNumber == 1) "scoreP1" else "scoreP2"
-        matchesCollection.document(matchId).update(field, newScore).await()
+    suspend fun updateScore(matchId: String, userId: String) {
+        val matchRef = firestore.collection("matches").document(matchId)
+
+        firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(matchRef)
+
+            // Comparamos el ID para saber a quién sumar el punto
+            val p1Id = snapshot.getString("player1Id") ?: ""
+
+            if (userId == p1Id) {
+                val currentScore = snapshot.getLong("scoreP1") ?: 0
+                transaction.update(matchRef, "scoreP1", currentScore + 1)
+            } else {
+                val currentScore = snapshot.getLong("scoreP2") ?: 0
+                transaction.update(matchRef, "scoreP2", currentScore + 1)
+            }
+        }.await()
     }
 
     suspend fun updateMatchStatus(matchId: String, status: MatchStatus) {
         matchesCollection.document(matchId).update("status", status).await()
+    }
+    fun getCurrentUserId(): String {
+        return com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: ""
     }
 }
