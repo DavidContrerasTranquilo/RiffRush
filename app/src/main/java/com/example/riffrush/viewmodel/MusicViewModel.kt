@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.riffrush.data.local.GuestIdManager
 import com.example.riffrush.data.model.Song
+import com.example.riffrush.data.player.MusicPlayer
 import com.example.riffrush.data.repository.AuthRepository
 import com.example.riffrush.data.repository.DeezerRepository
 import com.example.riffrush.data.repository.FirebaseRepository
@@ -15,7 +16,8 @@ class MusicViewModel(
     private val firebaseRepository: FirebaseRepository,
     private val authRepository: AuthRepository,
     private val deezerRepository: DeezerRepository,
-    private val guestIdManager: GuestIdManager
+    private val guestIdManager: GuestIdManager,
+    private val musicPlayer: MusicPlayer
 ) : ViewModel() {
 
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
@@ -74,6 +76,16 @@ class MusicViewModel(
     }
 
     fun playPause(song: Song) {
+        if (musicPlayer.isPlaying(song.preview)) {
+            musicPlayer.pause()
+        } else {
+            musicPlayer.playPreview(song.preview)
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        musicPlayer.release()
     }
 
     fun clearLocalData() {

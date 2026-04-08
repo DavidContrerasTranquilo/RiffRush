@@ -17,8 +17,8 @@ class MusicPlayer {
 
         mediaPlayer = MediaPlayer().apply {
             setDataSource(url)
-            prepare()
-            start()
+            setOnPreparedListener { start() }
+            prepareAsync()
         }
         currentUrl = url
     }
