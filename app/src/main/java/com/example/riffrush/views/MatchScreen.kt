@@ -60,7 +60,9 @@ fun MatchScreen(
 ) {
     val match by viewModel.currentMatch.collectAsState()
     val songs by viewModel.songs.collectAsState()
+    //David 08/04/26 Esto no va
     val currentRound by viewModel.currentRound.collectAsState()
+    //Fin
     val isLoading by viewModel.isLoading.collectAsState()
 
     LaunchedEffect(matchId) {
@@ -70,7 +72,7 @@ fun MatchScreen(
     DisposableEffect(Unit) {
         onDispose { musicPlayer.stop() }
     }
-
+a
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
