@@ -62,7 +62,15 @@ fun MainScreen(
         ) {
             // Pantallas Principales (Bottom Bar)
             composable(Screen.Home.route) { HomeScreen() }
-            composable(Screen.Social.route) { SocialScreen() }
+            
+            composable(Screen.Social.route) { 
+                SocialScreen(
+                    onNavigateToMatch = { matchId ->
+                        navController.navigate("match/$matchId")
+                    }
+                )
+            }
+            
             composable(Screen.MyMusic.route) { MusicScreen() }
 
             composable(Screen.Profile.route) {
@@ -105,6 +113,17 @@ fun MainScreen(
                             popUpTo(navController.graph.findStartDestination().id)
                         }
                     }
+                )
+            }
+
+            composable(
+                "match/{matchId}",
+                arguments = listOf(navArgument("matchId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val matchId = backStackEntry.arguments?.getString("matchId") ?: ""
+                MatchScreen(
+                    matchId = matchId,
+                    onExit = { navController.popBackStack() }
                 )
             }
 

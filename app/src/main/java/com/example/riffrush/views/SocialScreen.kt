@@ -1,15 +1,67 @@
 package com.example.riffrush.views
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.example.riffrush.ui.components.UserItem
+import com.example.riffrush.viewmodel.AuthViewModel
+import com.example.riffrush.viewmodel.MatchViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SocialScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = "Sección Social (Próximamente)")
+fun SocialScreen(
+    authViewModel: AuthViewModel = koinViewModel(),
+    matchViewModel: MatchViewModel = koinViewModel(),
+    onNavigateToMatch: (String) -> Unit
+) {
+    val users by authViewModel.allUsers.collectAsState()
+    val following by authViewModel.following.collectAsState()
+    val isLoggedIn by authViewModel.authState.collectAsState()
+    val currentMatch by matchViewModel.currentMatch.collectAsState()
+
+    // Si se crea una partida, navegamos a ella
+    currentMatch?.let {
+        onNavigateToMatch(it.matchId)
+    }
+
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Text(
+            text = "Comunidad RiffRush",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        if (!isLoggedIn) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Inicia sesión para ver a otros usuarios")
+            }
+        } else if (users.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Buscando melómanos...")
+            }
+        } else {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(users) { user ->
+                    UserItem(
+                        user = user,
+                        isFollowing = following.contains(user.uid),
+                        onFollowClick = { authViewModel.addFriend(user) },
+                        onMatchClick = { matchViewModel.startMatchmaking(user.uid) }
+                    )
+                }
+            }
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.example.riffrush.data.repository
 
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface DeezerApi {
@@ -9,6 +10,9 @@ interface DeezerApi {
 
     @GET("chart")
     suspend fun getChart(): DeezerChartResponse
+
+    @GET("track/{id}")
+    suspend fun getTrack(@Path("id") trackId: Long): DeezerTrack
 }
 
 // Clases de respuesta para el parseo de JSON

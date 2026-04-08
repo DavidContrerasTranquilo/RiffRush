@@ -12,7 +12,7 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun LoginScreen(
-    onNavigateToSignUp: () -> Unit, // <--- Faltaba este parámetro
+    onNavigateToSignUp: () -> Unit,
     onLoginSuccess: () -> Unit,
     authViewModel: AuthViewModel = koinViewModel()
 ) {
