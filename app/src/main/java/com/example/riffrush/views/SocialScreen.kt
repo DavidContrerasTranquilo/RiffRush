@@ -8,19 +8,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
 @Composable
-fun ProfileScreen() {
-    ProfileScreen()
-}
-
-@Composable
 fun SocialScreen() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = "Social1")
+        Text(text = "Sección Social (Próximamente)")
     }
 }
-
-@Composable
-fun MyMusicScreen() {
-    MusicScreen()
-}
-

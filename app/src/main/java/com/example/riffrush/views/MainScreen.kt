@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -16,6 +15,8 @@ import androidx.navigation.navArgument
 import com.example.riffrush.navigation.Screen
 import com.example.riffrush.navigation.items
 import com.example.riffrush.viewmodel.SongViewModel
+import com.example.riffrush.views.auth.LoginScreen
+import com.example.riffrush.views.auth.SignUpScreen
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -62,7 +63,7 @@ fun MainScreen(
             // Pantallas Principales (Bottom Bar)
             composable(Screen.Home.route) { HomeScreen() }
             composable(Screen.Social.route) { SocialScreen() }
-            composable(Screen.MyMusic.route) { MyMusicScreen() }
+            composable(Screen.MyMusic.route) { MusicScreen() }
 
             composable(Screen.Profile.route) {
                 ProfileScreen(

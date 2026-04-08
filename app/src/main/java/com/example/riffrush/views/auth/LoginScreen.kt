@@ -1,4 +1,4 @@
-package com.example.riffrush.views
+package com.example.riffrush.views.auth
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*

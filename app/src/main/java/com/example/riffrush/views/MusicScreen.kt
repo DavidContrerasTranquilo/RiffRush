@@ -2,7 +2,7 @@ package com.example.riffrush.views
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -68,7 +68,7 @@ fun MusicScreen(viewModel: MusicViewModel = koinViewModel()) {
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 16.dp)
         ) {
-            items(songs, key = { it.id }) { song ->
+            itemsIndexed(songs, key = { index, song -> "${song.id}_$index" }) { _, song ->
                 SongItem(
                     song = song,
                     isFavorite = favoriteSongs.any { it.id == song.id },

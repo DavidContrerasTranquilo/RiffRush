@@ -1,12 +1,12 @@
 package com.example.riffrush.data.model
 
 data class Song(
-    val id: Int = 0,
+    val id: Long = 0L,
     val title: String = "",
     val artist: String = "",
     val album: String = "",
     val preview: String = "",
     val cover: String = ""
 ) {
-    constructor() : this(0, "", "", "", "", "")
+    constructor() : this(0L, "", "", "", "", "")
 }

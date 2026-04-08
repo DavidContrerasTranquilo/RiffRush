@@ -1,6 +1,5 @@
 package com.example.riffrush.data.repository
 
-import com.example.riffrush.data.repository.DeezerApi
 import com.example.riffrush.data.model.Song
 
 class DeezerRepository(private val api: DeezerApi) {
@@ -10,7 +9,7 @@ class DeezerRepository(private val api: DeezerApi) {
             val response = api.search(query)
             response.data.map { item ->
                 Song(
-                    id = item.id.toInt(),
+                    id = item.id,
                     title = item.title,
                     artist = item.artist.name,
                     album = item.album.title,
@@ -28,7 +27,7 @@ class DeezerRepository(private val api: DeezerApi) {
             val response = api.getChart()
             response.tracks.data.map { item ->
                 Song(
-                    id = item.id.toInt(),
+                    id = item.id,
                     title = item.title,
                     artist = item.artist.name,
                     album = item.album.title,

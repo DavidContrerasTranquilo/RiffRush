@@ -21,7 +21,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
 
                 val songs = snapshot?.documents?.mapNotNull { doc ->
                     Song(
-                        id = doc.getLong("id")?.toInt() ?: 0,
+                        id = doc.getLong("id") ?: 0L,
                         title = doc.getString("title") ?: "",
                         artist = doc.getString("artist") ?: "",
                         album = doc.getString("album") ?: "",
