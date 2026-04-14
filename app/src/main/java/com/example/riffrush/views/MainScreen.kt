@@ -60,10 +60,15 @@ fun MainScreen(
             startDestination = Screen.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            // Pantallas Principales (Bottom Bar)
-            composable(Screen.Home.route) { HomeScreen() }
-            
-            composable(Screen.Social.route) { 
+            composable(Screen.Home.route) {
+                HomeScreen(
+                    onNavigateToMatch = { matchId ->
+                        navController.navigate("match/$matchId")
+                    }
+                )
+            }
+
+            composable(Screen.Social.route) {
                 SocialScreen(
                     onNavigateToMatch = { matchId ->
                         navController.navigate("match/$matchId")
@@ -91,7 +96,6 @@ fun MainScreen(
                 )
             }
 
-            // Pantallas Secundarias
             composable("settings") {
                 SettingsScreen(onBackClick = { navController.popBackStack() })
             }
@@ -127,7 +131,6 @@ fun MainScreen(
                 )
             }
 
-            // Autenticación
             composable("login") {
                 LoginScreen(
                     onNavigateToSignUp = { navController.navigate("signup") },

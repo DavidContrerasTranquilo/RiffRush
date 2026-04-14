@@ -17,7 +17,6 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicScreen(viewModel: MusicViewModel = koinViewModel()) {
-
     val songs by viewModel.songs.collectAsState()
     val favoriteSongs by viewModel.favoriteSongs.collectAsState()
     val isSearching by viewModel.isSearching.collectAsState()
@@ -31,9 +30,7 @@ fun MusicScreen(viewModel: MusicViewModel = koinViewModel()) {
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (isSearching) {
@@ -74,7 +71,7 @@ fun MusicScreen(viewModel: MusicViewModel = koinViewModel()) {
                     isFavorite = favoriteSongs.any { it.id == song.id },
                     isPlaying = playingUrl == song.preview,
                     onPlayPause = {
-                        viewModel.playPause(song)
+                        viewModel.playPause(song) // Ahora acepta el objeto Song
                         playingUrl = if (playingUrl == song.preview) null else song.preview
                     },
                     onFavoriteToggle = {

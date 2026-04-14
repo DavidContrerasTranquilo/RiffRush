@@ -16,6 +16,9 @@ class MatchRepository(
     private val matchesCollection = firestore.collection("matches")
 
     suspend fun createMatch(match: MatchModel) {
+        if (match.matchId == "offline_test_id") return
+        val userId = auth.currentUser?.uid ?: throw Exception("User not logged in")
+
         firestore.collection("matches")
             .document(match.matchId)
             .set(match)
@@ -35,29 +38,28 @@ class MatchRepository(
         awaitClose { registration.remove() }
     }
 
-    suspend fun updateScore(matchId: String, userId: String) {
-        val matchRef = firestore.collection("matches").document(matchId)
-
-        firestore.runTransaction { transaction ->
-            val snapshot = transaction.get(matchRef)
-
-            // Comparamos el ID para saber a quién sumar el punto
-            val p1Id = snapshot.getString("player1Id") ?: ""
-
-            if (userId == p1Id) {
-                val currentScore = snapshot.getLong("scoreP1") ?: 0
-                transaction.update(matchRef, "scoreP1", currentScore + 1)
-            } else {
-                val currentScore = snapshot.getLong("scoreP2") ?: 0
-                transaction.update(matchRef, "scoreP2", currentScore + 1)
-            }
-        }.await()
+    suspend fun updateScore(matchId: String, playerNumber: Int, newScore: Int) {
+        val field = if (playerNumber == 1) "scoreP1" else "scoreP2"
+        matchesCollection.document(matchId).update(field, newScore).await()
     }
 
     suspend fun updateMatchStatus(matchId: String, status: MatchStatus) {
         matchesCollection.document(matchId).update("status", status).await()
     }
+
+    fun getOfflineMatch(): MatchModel {
+        return MatchModel(
+            matchId = "offline_test_id",
+            player1Id = "me",
+            player2Id = "bot",
+            status = MatchStatus.PLAYING,
+            staticSongList = listOf(1109152L, 2109522L, 3109522L),
+            scoreP1 = 0,
+            scoreP2 = 0
+        )
+    }
+
     fun getCurrentUserId(): String {
-        return com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: ""
+        return auth.currentUser?.uid ?: "guest_user"
     }
 }

@@ -1,15 +1,39 @@
 package com.example.riffrush.views
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,7 +43,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.riffrush.data.model.MatchModel
 import com.example.riffrush.data.model.MatchStatus
 import com.example.riffrush.data.model.Song
 import com.example.riffrush.data.player.MusicPlayer
@@ -35,23 +58,21 @@ fun MatchScreen(
     viewModel: MatchViewModel = koinViewModel(),
     musicPlayer: MusicPlayer = koinInject()
 ) {
-    // RECOLECCIÓN DE ESTADOS CORREGIDA
-    // Importante: Asegúrate de que MatchViewModel tenga estos StateFlows expuestos
     val match by viewModel.currentMatch.collectAsState()
     val songs by viewModel.songs.collectAsState()
     val currentRound by viewModel.currentRound.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
-    // Sincronización inicial con Firebase
     LaunchedEffect(matchId) {
-        viewModel.listenToMatch(matchId)
+        if (matchId == "offline_test_id") {
+            viewModel.startOfflineMode()
+        } else {
+            viewModel.listenToMatch(matchId)
+        }
     }
 
-    // Limpieza de recursos al salir de la pantalla
     DisposableEffect(Unit) {
-        onDispose {
-            musicPlayer.stop()
-        }
+        onDispose { musicPlayer.stop() }
     }
 
     Scaffold(
@@ -63,43 +84,46 @@ fun MatchScreen(
                         Icon(Icons.Default.Close, contentDescription = "Salir")
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    scrolledContainerColor = Color.Unspecified,
+                    navigationIconContentColor = Color.Unspecified,
+                    titleContentColor = Color.Unspecified,
+                    actionIconContentColor = Color.Unspecified
                 )
             )
         }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            when {
-                isLoading -> LoadingView()
-
-                match?.status == MatchStatus.WAITING -> WaitingOpponentView()
-
-                match?.status == MatchStatus.PLAYING -> {
-                    val currentSong = songs.getOrNull(currentRound)
-                    if (currentSong != null) {
-                        GameView(
-                            song = currentSong,
-                            round = currentRound + 1,
-                            scoreP1 = match?.scoreP1 ?: 0,
-                            scoreP2 = match?.scoreP2 ?: 0,
-                            allSongs = songs,
-                            onAnswer = { isCorrect ->
-                                viewModel.onAnswerSelected(isCorrect)
-                            },
-                            musicPlayer = musicPlayer
+            if (isLoading || songs.isEmpty()) {
+                LoadingView()
+            } else {
+                match?.let { currentMatch ->
+                    when (currentMatch.status) {
+                        MatchStatus.WAITING -> WaitingOpponentView()
+                        MatchStatus.PLAYING -> {
+                            val currentSong = songs.getOrNull(currentRound)
+                            if (currentSong != null) {
+                                GameView(
+                                    song = currentSong,
+                                    round = currentRound + 1,
+                                    scoreP1 = currentMatch.scoreP1,
+                                    scoreP2 = currentMatch.scoreP2,
+                                    allSongs = songs,
+                                    onAnswer = { isCorrect -> 
+                                        viewModel.onAnswerSelected(isCorrect)
+                                    },
+                                    musicPlayer = musicPlayer
+                                )
+                            }
+                        }
+                        MatchStatus.FINISHED -> ResultView(
+                            scoreP1 = currentMatch.scoreP1,
+                            scoreP2 = currentMatch.scoreP2,
+                            onExit = onExit
                         )
-                    } else if (songs.isNotEmpty()) {
-                        // Caso de seguridad por si el índice de ronda falla
-                        LoadingView()
                     }
                 }
-
-                match?.status == MatchStatus.FINISHED -> ResultView(
-                    scoreP1 = match?.scoreP1 ?: 0,
-                    scoreP2 = match?.scoreP2 ?: 0,
-                    onExit = onExit
-                )
             }
         }
     }
@@ -125,12 +149,7 @@ fun WaitingOpponentView() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            imageVector = Icons.Default.MusicNote,
-            contentDescription = null,
-            modifier = Modifier.size(100.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
+        Icon(Icons.Default.MusicNote, contentDescription = null, modifier = Modifier.size(100.dp), tint = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.height(24.dp))
         Text("Esperando al oponente...", style = MaterialTheme.typography.headlineSmall)
         Text("La música empezará pronto", color = Color.Gray)
@@ -147,13 +166,11 @@ fun GameView(
     onAnswer: (Boolean) -> Unit,
     musicPlayer: MusicPlayer
 ) {
-    // Lógica de opciones (Correcta + 3 Aleatorias)
     val options = remember(song) {
         val wrongOptions = allSongs.filter { it.id != song.id }.shuffled().take(3)
         (wrongOptions + song).shuffled()
     }
 
-    // Reproducción automática de la preview al cambiar de canción
     LaunchedEffect(song) {
         musicPlayer.playPreview(song.preview)
     }
@@ -163,16 +180,11 @@ fun GameView(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         ScoreBoard(scoreP1, scoreP2)
-
+        
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text(
-            text = "RONDA $round / 5",
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.titleMedium
-        )
-
+        Text("RONDA $round / 5", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        
         Spacer(modifier = Modifier.height(32.dp))
 
         MusicWaves()
@@ -182,22 +194,14 @@ fun GameView(
         options.forEach { option ->
             Button(
                 onClick = { onAnswer(option.id == song.id) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(68.dp)
-                    .padding(vertical = 6.dp),
-                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().height(60.dp).padding(vertical = 4.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             ) {
-                Text(
-                    text = option.title,
-                    fontSize = 16.sp,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 18.sp
-                )
+                Text(option.title, fontSize = 16.sp, textAlign = TextAlign.Center)
             }
         }
     }
@@ -239,12 +243,7 @@ fun MusicWaves() {
             ),
         contentAlignment = Alignment.Center
     ) {
-        Icon(
-            imageVector = Icons.Default.Timer,
-            contentDescription = null,
-            modifier = Modifier.size(60.dp),
-            tint = Color.White
-        )
+        Icon(Icons.Default.Timer, contentDescription = null, modifier = Modifier.size(60.dp), tint = Color.White)
     }
 }
 
@@ -264,7 +263,7 @@ fun ResultView(scoreP1: Int, scoreP2: Int, onExit: () -> Unit) {
                 draw -> "¡EMPATE!"
                 else -> "DERROTA..."
             },
-            fontSize = 44.sp,
+            fontSize = 48.sp,
             fontWeight = FontWeight.Black,
             color = if (win) Color(0xFF4CAF50) else if (draw) Color.Gray else Color.Red
         )
@@ -275,12 +274,8 @@ fun ResultView(scoreP1: Int, scoreP2: Int, onExit: () -> Unit) {
 
         Spacer(modifier = Modifier.height(48.dp))
 
-        Button(
-            onClick = onExit,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text("VOLVER AL INICIO", fontWeight = FontWeight.Bold)
+        Button(onClick = onExit, modifier = Modifier.fillMaxWidth().height(56.dp)) {
+            Text("VOLVER AL INICIO")
         }
     }
 }

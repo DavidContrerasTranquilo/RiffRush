@@ -1,56 +1,65 @@
 package com.example.riffrush.data.player
 
 import android.media.MediaPlayer
+import android.util.Log
 
 class MusicPlayer {
 
-    private var mediaPlayer: MediaPlayer? = null
+    private var mediaPlayer: MediaPlayer? = MediaPlayer().apply {
+        setOnPreparedListener { mp ->
+            Log.d("MusicPlayer", "Audio listo, empezando reproducción")
+            mp.start()
+        }
+        setOnErrorListener { _, what, extra ->
+            Log.e("MusicPlayer", "Error de MediaPlayer: what=$what, extra=$extra")
+            true
+        }
+    }
+
     private var currentUrl: String? = null
 
     /**
-     * Reproduce el preview. Si ya se está reproduciendo la misma canción, no reinicia.
-     */
-    fun playPreview(url: String) {
-        if (currentUrl == url && mediaPlayer?.isPlaying == true) return
-
-        stop() // para cualquier canción anterior
-
-        mediaPlayer = MediaPlayer().apply {
-            setDataSource(url)
-            setOnPreparedListener { start() }
-            prepareAsync()
-        }
-        currentUrl = url
-    }
-
-    /**
-     * Pausa la canción actual
-     */
-    fun pause() {
-        mediaPlayer?.pause()
-    }
-
-    /**
-     * Comprueba si la canción dada se está reproduciendo actualmente
+     * Comprueba si la canción con esta URL está sonando actualmente.
      */
     fun isPlaying(url: String): Boolean {
         return mediaPlayer?.isPlaying == true && currentUrl == url
     }
 
     /**
-     * Detiene y libera recursos
+     * Reproduce el audio desde una URL de Deezer.
      */
+    fun playPreview(url: String) {
+        if (url.isBlank()) {
+            Log.e("MusicPlayer", "URL vacía")
+            return
+        }
+        if (isPlaying(url)) return
+
+        try {
+            currentUrl = url
+            mediaPlayer?.apply {
+                if (isPlaying) stop()
+                reset()
+                setDataSource(url)
+                prepareAsync()
+            }
+        } catch (e: Exception) {
+            Log.e("MusicPlayer", "Error al preparar el audio: ${e.message}")
+        }
+    }
+
+    fun pause() {
+        mediaPlayer?.pause()
+    }
+
     fun stop() {
         mediaPlayer?.stop()
-        mediaPlayer?.release()
-        mediaPlayer = null
         currentUrl = null
     }
 
-    /**
-     * Llamar cuando el ViewModel se destruye
-     */
     fun release() {
-        stop()
+        mediaPlayer?.release()
+        mediaPlayer = null
+        currentUrl = null
     }
 }
