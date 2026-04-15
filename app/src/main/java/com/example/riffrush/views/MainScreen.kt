@@ -64,6 +64,9 @@ fun MainScreen(
                 HomeScreen(
                     onNavigateToMatch = { matchId ->
                         navController.navigate("match/$matchId")
+                    },
+                    onNavigateToFavorites = {
+                        navController.navigate("favorites_game")
                     }
                 )
             }
@@ -128,6 +131,12 @@ fun MainScreen(
                 MatchScreen(
                     matchId = matchId,
                     onExit = { navController.popBackStack() }
+                )
+            }
+
+            composable("favorites_game") {
+                FavoritesGameScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
 

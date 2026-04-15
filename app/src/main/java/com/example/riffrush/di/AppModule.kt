@@ -19,6 +19,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.example.riffrush.data.repository.FirebaseRepository
 import org.koin.android.ext.koin.androidContext
 import com.example.riffrush.data.repository.DeezerApi
+import com.example.riffrush.viewmodel.FavoritesGameViewModel
 
 val appModule = module {
 
@@ -50,4 +51,5 @@ val appModule = module {
     viewModelOf(::AuthViewModel)
     viewModelOf(::MusicViewModel)
     viewModelOf(::MatchViewModel)
+    viewModelOf(::FavoritesGameViewModel)
 }

@@ -20,7 +20,8 @@ import androidx.compose.ui.text.style.TextAlign
 @Composable
 fun HomeScreen(
     matchViewModel: MatchViewModel = koinViewModel(),
-    onNavigateToMatch: (String) -> Unit
+    onNavigateToMatch: (String) -> Unit,
+    onNavigateToFavorites: () -> Unit
 ) {
     val currentMatch by matchViewModel.currentMatch.collectAsState()
 
@@ -69,13 +70,13 @@ fun HomeScreen(
                         Text("PLAYLIST DEL DÍA", style = MaterialTheme.typography.labelLarge, color = Color(0xFF7B1FA2))
                         Spacer(modifier = Modifier.height(8.dp))
                         Text("Trivia del Retro", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                        Text("Pon a prueba tus oídos con hits clásicos de los 80 y 90.")
+                        Text("Pon a prueba tus oídos con tus canciones preferidas.")
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
-                            onClick = { /* Lógica normal */ },
+                            onClick = { onNavigateToFavorites() },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7B1FA2))
                         ) {
-                            Text("Jugar ahora")
+                            Text("Jugar con favoritos")
                         }
                     }
                 }
