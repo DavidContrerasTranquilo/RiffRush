@@ -1,5 +1,6 @@
 package com.example.riffrush.viewmodels
 
+import com.example.riffrush.data.player.MusicPlayer
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,7 +19,8 @@ import kotlinx.coroutines.launch
 class MatchViewModel(
     private val repository: MatchRepository,
     private val deezerApi: DeezerApi,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val musicPlayer: MusicPlayer
 ) : ViewModel() {
 
     private val _currentMatch = MutableStateFlow<MatchModel?>(null)
@@ -92,7 +94,7 @@ class MatchViewModel(
                     Song(
                         id = track.id,
                         title = track.title ?: "Sin título",
-                        artist = track.artist?.name ?: "Artista desconocido", // Aquí fallaba [cite: 488]
+                        artist = track.artist?.name ?: "Artista desconocido",
                         album = track.album?.title ?: "Álbum desconocido",
                         preview = track.preview ?: "",
                         cover = track.album?.cover_medium ?: ""
@@ -108,6 +110,7 @@ class MatchViewModel(
     }
 
     fun onAnswerSelected(isCorrect: Boolean) {
+        musicPlayer.stop()
         val match = _currentMatch.value ?: return
         val round = _currentRound.value
         val isOffline = match.matchId == "offline_test_id"
@@ -115,7 +118,6 @@ class MatchViewModel(
         viewModelScope.launch {
             if (isCorrect) {
                 if (isOffline) {
-                    // Actualización local para pruebas
                     _currentMatch.value = _currentMatch.value?.copy(
                         scoreP1 = match.scoreP1 + 1
                     )
@@ -131,7 +133,8 @@ class MatchViewModel(
                 }
             }
 
-            if (round < 4) {
+            val totalSongs = _songs.value.size
+            if (round < totalSongs - 1) {
                 _currentRound.value = round + 1
             } else {
                 if (isOffline) {

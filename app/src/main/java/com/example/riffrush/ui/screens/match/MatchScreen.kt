@@ -11,11 +11,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -110,7 +114,7 @@ fun MatchScreen(
                                     scoreP1 = currentMatch.scoreP1,
                                     scoreP2 = currentMatch.scoreP2,
                                     allSongs = songs,
-                                    onAnswer = { isCorrect -> 
+                                    onAnswer = { isCorrect ->
                                         viewModel.onAnswerSelected(isCorrect)
                                     },
                                     musicPlayer = musicPlayer
@@ -171,25 +175,35 @@ fun GameView(
         (wrongOptions + song).shuffled()
     }
 
-    LaunchedEffect(song) {
+    LaunchedEffect(song.id) {
         musicPlayer.playPreview(song.preview)
     }
 
+    // AÑADIR SCROLL STATE
+    val scrollState = rememberScrollState()
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(scrollState), // HABILITAR SCROLL
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         ScoreBoard(scoreP1, scoreP2)
-        
+
         Spacer(modifier = Modifier.height(24.dp))
 
         Text("RONDA $round / 5", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        
-        Spacer(modifier = Modifier.height(32.dp))
 
-        MusicWaves()
+        Spacer(modifier = Modifier.height(24.dp)) // ANTES 32.dp
 
-        Spacer(modifier = Modifier.height(48.dp))
+        IconButton(
+            onClick = { musicPlayer.playPreview(song.preview) }, // ESTO FUERZA EL AUDIO
+            modifier = Modifier.size(120.dp)
+        ) {
+            PlayMusicIndicator()
+        }
+
+        Spacer(modifier = Modifier.height(32.dp)) // ANTES 48.dp
 
         options.forEach { option ->
             Button(
@@ -231,7 +245,7 @@ fun ScoreBoard(s1: Int, s2: Int) {
 }
 
 @Composable
-fun MusicWaves() {
+fun PlayMusicIndicator() {
     Box(
         modifier = Modifier
             .size(120.dp)
@@ -243,7 +257,12 @@ fun MusicWaves() {
             ),
         contentAlignment = Alignment.Center
     ) {
-        Icon(Icons.Default.Timer, contentDescription = null, modifier = Modifier.size(60.dp), tint = Color.White)
+        Icon(
+            Icons.Default.PlayArrow,
+            contentDescription = "Reproducir audio",
+            modifier = Modifier.size(60.dp),
+            tint = Color.White
+        )
     }
 }
 

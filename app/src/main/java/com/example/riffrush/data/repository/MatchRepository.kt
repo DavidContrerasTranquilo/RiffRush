@@ -53,8 +53,7 @@ class MatchRepository(
             player1Id = "me",
             player2Id = "bot",
             status = MatchStatus.PLAYING,
-            staticSongList = listOf(1109152L, 2109522L, 3109522L),
-            scoreP1 = 0,
+            staticSongList = listOf(2336600585L, 1718098247L, 2565307142L, 1704442327L, 2308217445L),            scoreP1 = 0,
             scoreP2 = 0
         )
     }

@@ -121,8 +121,7 @@ class MusicViewModel(
     fun playPause(song: Song) {
         viewModelScope.launch {
             var url = song.preview
-            
-            // Si la canción no tiene preview por lo que sea
+
             if (url.isBlank()) {
                 try {
                     val fSong = deezerRepository.getSong(song.id)
@@ -151,7 +150,7 @@ class MusicViewModel(
 
             if (url.isNotBlank()) {
                 if (musicPlayer.isPlaying(url)) {
-                    musicPlayer.pause()
+                    musicPlayer.stop()
                     _playingSongId.value = null
                 } else {
                     musicPlayer.playPreview(url)

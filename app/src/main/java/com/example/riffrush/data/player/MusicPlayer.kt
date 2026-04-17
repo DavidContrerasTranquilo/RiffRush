@@ -5,55 +5,54 @@ import android.util.Log
 
 class MusicPlayer {
 
-    private var mediaPlayer: MediaPlayer? = MediaPlayer().apply {
-        setOnPreparedListener { mp ->
-            Log.d("MusicPlayer", "Audio listo, empezando reproducción")
-            mp.start()
-        }
-        setOnErrorListener { _, what, extra ->
-            Log.e("MusicPlayer", "Error de MediaPlayer: what=$what, extra=$extra")
-            true
-        }
-    }
-
+    private var mediaPlayer: MediaPlayer? = null
     private var currentUrl: String? = null
 
-    /**
-     * Comprueba si la canción con esta URL está sonando actualmente.
-     */
+    private fun getPlayer(): MediaPlayer {
+        if (mediaPlayer == null) {
+            mediaPlayer = MediaPlayer().apply {
+                setOnPreparedListener { mp ->
+                    Log.d("MusicPlayer", "Audio listo, iniciando...")
+                    mp.start()
+                }
+                setOnErrorListener { mp, what, extra ->
+                    Log.e("MusicPlayer", "Error: $what, $extra")
+                    mp.reset()
+                    false
+                }
+            }
+        }
+        return mediaPlayer!!
+    }
+
     fun isPlaying(url: String): Boolean {
         return mediaPlayer?.isPlaying == true && currentUrl == url
     }
 
-    /**
-     * Reproduce el audio desde una URL de Deezer.
-     */
     fun playPreview(url: String) {
-        if (url.isBlank()) {
-            Log.e("MusicPlayer", "URL vacía")
-            return
-        }
+        if (url.isBlank()) return
         if (isPlaying(url)) return
 
         try {
+            val player = getPlayer()
+            player.stop()
+            player.reset()
+
             currentUrl = url
-            mediaPlayer?.apply {
-                if (isPlaying) stop()
-                reset()
-                setDataSource(url)
-                prepareAsync()
-            }
+            player.setDataSource(url)
+            player.prepareAsync()
+
         } catch (e: Exception) {
-            Log.e("MusicPlayer", "Error al preparar el audio: ${e.message}")
+            Log.e("MusicPlayer", "Error al cambiar de canción: ${e.message}")
+            currentUrl = null
         }
     }
 
-    fun pause() {
-        mediaPlayer?.pause()
-    }
-
     fun stop() {
-        mediaPlayer?.stop()
+        try {
+            mediaPlayer?.stop()
+            mediaPlayer?.reset()
+        } catch (e: Exception) { }
         currentUrl = null
     }
 
