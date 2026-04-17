@@ -39,4 +39,20 @@ class DeezerRepository(private val api: DeezerApi) {
             emptyList()
         }
     }
+//He modificado esto para que me devuelva la cancion con su preview!!
+    suspend fun getSong(trackId: Long): Song? {
+        return try {
+            val item = api.getTrack(trackId)
+            Song(
+                id = item.id,
+                title = item.title ?: "Unknown Title",
+                artist = item.artist?.name ?: "Unknown Artist",
+                album = item.album?.title ?: "Unknown Album",
+                preview = item.preview ?: "",
+                cover = item.album?.cover_medium ?: ""
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
 }

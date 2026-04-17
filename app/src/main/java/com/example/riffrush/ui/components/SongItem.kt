@@ -17,6 +17,7 @@ fun SongItem(
     song: Song,
     isFavorite: Boolean,
     isPlaying: Boolean,
+    showFavoriteIcon: Boolean = true,
     onPlayPause: () -> Unit,
     onFavoriteToggle: () -> Unit
 ) {
@@ -38,11 +39,14 @@ fun SongItem(
                     contentDescription = "Play/Pause"
                 )
             }
-            IconButton(onClick = onFavoriteToggle) {
-                Icon(
-                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = "Favorite"
-                )
+            //Añado que si ya es favorito no mostremos el icono, si no que se hara swipe para borrarlo
+            if (showFavoriteIcon) {
+                IconButton(onClick = onFavoriteToggle) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Favorite"
+                    )
+                }
             }
         }
     }

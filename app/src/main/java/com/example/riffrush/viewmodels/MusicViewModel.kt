@@ -31,6 +31,10 @@ class MusicViewModel(
     private val _isSearching = MutableStateFlow(false)
     val isSearching: StateFlow<Boolean> = _isSearching
 
+    // Estado para la canción que se está reproduciendo
+    private val _playingSongId = MutableStateFlow<Long?>(null)
+    val playingSongId: StateFlow<Long?> = _playingSongId
+
     init {
         loadMyMusic()
     }
@@ -87,16 +91,39 @@ class MusicViewModel(
      * Lógica de reproducción
      */
     fun playPause(song: Song) {
-        if (musicPlayer.isPlaying(song.preview)) {
-            musicPlayer.pause()
-        } else {
-            musicPlayer.playPreview(song.preview)
+        viewModelScope.launch {
+            var url = song.preview
+            
+            // Si la canción no tiene preview por lo que sea
+            if (url.isBlank()) {
+                try {
+                    val fSong = deezerRepository.getSong(song.id)
+                    if (fSong != null && fSong.preview.isNotBlank()) {
+                        url = fSong.preview
+                        // Actualizar en Firebase para no tener que buscar de nuevo
+                        firebaseRepository.addFavorite(getOwnerId(), fSong)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            if (url.isNotBlank()) {
+                if (musicPlayer.isPlaying(url)) {
+                    musicPlayer.pause()
+                    _playingSongId.value = null
+                } else {
+                    musicPlayer.playPreview(url)
+                    _playingSongId.value = song.id
+                }
+            }
         }
     }
 
     override fun onCleared() {
         super.onCleared()
         musicPlayer.release()
+        _playingSongId.value = null
     }
 
     fun clearLocalData() {
