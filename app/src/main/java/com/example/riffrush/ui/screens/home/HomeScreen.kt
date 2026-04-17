@@ -37,20 +37,19 @@ fun HomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(140.dp)
                 .background(
                     Brush.verticalGradient(
                         listOf(Color(0xFF6A00F4), Color(0xFF9C27B0))
                     )
-                ),
-            contentAlignment = Alignment.BottomStart
+                )
+                .padding(horizontal = 16.dp, vertical = 24.dp),
+            contentAlignment = Alignment.CenterStart
         ) {
             Text(
                 text = "RiffRush",
                 color = Color.White,
                 fontSize = 32.sp,
-                fontWeight = FontWeight.Black,
-                modifier = Modifier.padding(16.dp)
+                fontWeight = FontWeight.Bold
             )
         }
 

@@ -51,6 +51,8 @@ fun MainScreen(
                         },
                         label = { Text(screen.title) },
                         selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                      //Añado para saber en que pestaña estamos, ya que funciona un poco raro
+                        alwaysShowLabel = false,
                         onClick = {
                             navController.navigate(screen.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {
