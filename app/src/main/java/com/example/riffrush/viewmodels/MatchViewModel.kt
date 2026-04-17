@@ -113,7 +113,7 @@ class MatchViewModel(
         musicPlayer.stop()
         val match = _currentMatch.value ?: return
         val round = _currentRound.value
-        val isOffline = match.matchId == "offline_test_id"
+        val isOffline = match.matchId.startsWith("offline")
 
         viewModelScope.launch {
             if (isCorrect) {
@@ -127,8 +127,9 @@ class MatchViewModel(
             if (isOffline) {
                 val botHits = (0..1).random() == 1
                 if (botHits) {
+                    val currentScoreP2 = _currentMatch.value?.scoreP2 ?: 0
                     _currentMatch.value = _currentMatch.value?.copy(
-                        scoreP2 = (_currentMatch.value?.scoreP2 ?: 0) + 1
+                        scoreP2 = currentScoreP2 + 1
                     )
                 }
             }
@@ -181,10 +182,11 @@ class MatchViewModel(
         matchJob?.cancel()
     }
 
-    fun startOfflineMode() {
+    fun startOfflineMode(category: String) {
         _isLoading.value = true
         viewModelScope.launch {
-            val offlineMatch = repository.getOfflineMatch()
+            val offlineMatch = repository.getOfflineMatch(category)
+
             _currentMatch.value = offlineMatch
             loadSongs(offlineMatch.staticSongList)
             _currentRound.value = 0

@@ -77,6 +77,7 @@ fun MainScreen(
         ) {
             composable(Screen.Home.route) {
                 HomeScreen(
+                    navController = navController,
                     onNavigateToMatch = { matchId ->
                         navController.navigate("match/$matchId")
                     },

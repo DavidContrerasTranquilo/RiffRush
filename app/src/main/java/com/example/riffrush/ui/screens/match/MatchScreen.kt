@@ -68,8 +68,16 @@ fun MatchScreen(
     val isLoading by viewModel.isLoading.collectAsState()
 
     LaunchedEffect(matchId) {
-        if (matchId == "offline_test_id") {
-            viewModel.startOfflineMode()
+        if (matchId.startsWith("offline_")) {
+            val rawCategory = matchId.substringAfter("offline_")
+            val category = when(rawCategory) {
+                "reggaeton" -> "REGGAETON"
+                "rap_frances" -> "RAP FRANCÉS"
+                "rock_espanol" -> "ROCK ESPAÑOL"
+                "top_50_espana" -> "TOP 50 ESPAÑA"
+                else -> "REGGAETON"
+            }
+            viewModel.startOfflineMode(category)
         } else {
             viewModel.listenToMatch(matchId)
         }

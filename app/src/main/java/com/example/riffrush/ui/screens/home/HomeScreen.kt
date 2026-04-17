@@ -16,9 +16,12 @@ import androidx.compose.ui.unit.sp
 import com.example.riffrush.viewmodels.MatchViewModel
 import org.koin.androidx.compose.koinViewModel
 import androidx.compose.ui.text.style.TextAlign
+import androidx.navigation.NavHostController
+
 
 @Composable
 fun HomeScreen(
+    navController: NavHostController,
     matchViewModel: MatchViewModel = koinViewModel(),
     onNavigateToMatch: (String) -> Unit,
     onNavigateToFavorites: () -> Unit
@@ -92,16 +95,28 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    QuickButton("Rock 90s", Color(0xFFF8BBD0))
-                    QuickButton("Pop Actual", Color(0xFFBBDEFB))
+                    // Categoría: REGGAETON
+                    QuickButton("Reggaetón", Color(0xFFF8BBD0)) {
+                        navController.navigate("match/offline_reggaeton")
+                    }
+                    // Categoría: RAP FRANCÉS
+                    QuickButton("Rap Français", Color(0xFFBBDEFB)) {
+                        navController.navigate("match/offline_rap_frances")
+                    }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    QuickButton("Indie España", Color(0xFFFFE0B2))
-                    QuickButton("Aleatorio", Color(0xFFC8E6C9))
+                    // Categoría: ROCK ESPAÑOL
+                    QuickButton("Rock Español", Color(0xFFFFE0B2)) {
+                        navController.navigate("match/offline_rock_espanol")
+                    }
+                    // Categoría: TOP 50 ESPAÑA
+                    QuickButton("Top 50 España", Color(0xFFC8E6C9)) {
+                        navController.navigate("match/offline_top_50_espana")
+                    }
                 }
             }
 
@@ -143,14 +158,14 @@ fun HomeScreen(
 }
 
 @Composable
-fun RowScope.QuickButton(text: String, color: Color) {
+fun RowScope.QuickButton(text: String, color: Color, onClick: () -> Unit) {
     Surface(
         modifier = Modifier
             .weight(1f)
             .height(90.dp),
         color = color,
         shape = RoundedCornerShape(16.dp),
-        onClick = { /* Acción rápida */ }
+        onClick = onClick
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(text, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
