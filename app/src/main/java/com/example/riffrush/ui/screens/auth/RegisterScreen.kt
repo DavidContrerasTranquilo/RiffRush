@@ -64,7 +64,7 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.height(10.dp))
             
             Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                painter = painterResource(id = R.drawable.logo_riffrush),
                 contentDescription = "RiffRush Logo",
                 modifier = Modifier.size(80.dp)
             )

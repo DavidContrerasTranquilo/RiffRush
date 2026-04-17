@@ -72,7 +72,7 @@ fun LoginScreen(
             // Logo
             //Ahora mismo no funciona, creo que hay que añadirlo modo png
             Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                painter = painterResource(id = R.drawable.logo_riffrush),
                 contentDescription = "RiffRush Logo",
                 modifier = Modifier.size(100.dp)
             )
