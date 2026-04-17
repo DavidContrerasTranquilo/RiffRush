@@ -36,6 +36,10 @@ class AuthRepository(
 
     suspend fun signIn(email: String, pass: String) =
         firebaseAuth.signInWithEmailAndPassword(email, pass).await()
+//Funcion para mandar el mail de reseteo de contraseña, firebase se encarga!
+    suspend fun sendPasswordResetEmail(email: String) {
+        firebaseAuth.sendPasswordResetEmail(email).await()
+    }
 
     fun signOut() = firebaseAuth.signOut()
 

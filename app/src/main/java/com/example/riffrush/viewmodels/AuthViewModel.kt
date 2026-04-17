@@ -94,7 +94,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 loadUserStats()
                 loadAllUsers()
             } catch (e: Exception) {
-                _uiMessage.value = "Error en el registro"
+                _uiMessage.value = "Error en el registro: ${e.localizedMessage}"
             }
         }
     }
@@ -109,7 +109,22 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 loadUserStats()
                 loadAllUsers()
             } catch (e: Exception) {
-                _uiMessage.value = "Email o contraseña incorrectos"
+                _uiMessage.value = "Error: ${e.localizedMessage}"
+            }
+        }
+    }
+    //Añado funcion para recuperar la contraseña, firestore lo hace el solo
+    fun resetPassword(email: String) {
+        if (email.isBlank()) {
+            _uiMessage.value = "Por favor, introduce tu email primero."
+            return
+        }
+        viewModelScope.launch {
+            try {
+                repository.sendPasswordResetEmail(email)
+                _uiMessage.value = "Se ha enviado un correo de recuperación a $email"
+            } catch (e: Exception) {
+                _uiMessage.value = "Error: ${e.localizedMessage}"
             }
         }
     }

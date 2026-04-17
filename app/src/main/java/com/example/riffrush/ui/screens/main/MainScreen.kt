@@ -37,32 +37,35 @@ fun MainScreen(
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
-
-                items.forEach { screen ->
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                painter = painterResource(id = screen.icon),
-                                contentDescription = null
-                            )
-                        },
-                        label = { Text(screen.title) },
-                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                      //Añado para saber en que pestaña estamos, ya que funciona un poco raro
-                        alwaysShowLabel = false,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentDestination = navBackStackEntry?.destination
+            val currentRoute = currentDestination?.route
+            //Cuando estamos no estamos en la pestaña d elogin la mostramos
+            //Lo dejo asi porque no tenia sentido que pudieses ver la parte de abajo de la barra cuando estas inciado sesion
+            if (currentRoute != "login" && currentRoute != "signup") {
+                NavigationBar {
+                    items.forEach { screen ->
+                        NavigationBarItem(
+                            icon = {
+                                Icon(
+                                    painter = painterResource(id = screen.icon),
+                                    contentDescription = null
+                                )
+                            },
+                            label = { Text(screen.title) },
+                            selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                            alwaysShowLabel = false,
+                            onClick = {
+                                navController.navigate(screen.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
@@ -154,6 +157,7 @@ fun MainScreen(
 
             composable("login") {
                 LoginScreen(
+                    onNavigateBack = { navController.popBackStack() },
                     onNavigateToSignUp = { navController.navigate("signup") },
                     onLoginSuccess = {
                         navController.navigate(Screen.Profile.route) {
