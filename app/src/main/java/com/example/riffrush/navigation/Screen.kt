@@ -1,17 +1,12 @@
 package com.example.riffrush.navigation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LibraryMusic
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.riffrush.R
 
-sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
-    object Home : Screen("home", "Inicio", Icons.Default.Home)
-    object Social : Screen("social", "Social", Icons.Default.People)
-    object MyMusic : Screen("mymusic", "Mi Música", Icons.Default.LibraryMusic)
-    object Profile : Screen("profile", "Perfil", Icons.Default.Person)
+sealed class Screen(val route: String, val title: String, val icon: Int) {
+    object Home : Screen("home", "Inicio", R.drawable.home_24px)
+    object Social : Screen("social", "Social", R.drawable.group_24px)
+    object MyMusic : Screen("mymusic", "Mi Música", R.drawable.music_note_24px)
+    object Profile : Screen("profile", "Perfil", R.drawable.person_24px)
 }
 
 val items = listOf(
