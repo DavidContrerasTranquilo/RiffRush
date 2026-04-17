@@ -26,6 +26,7 @@ fun SocialListScreen(
 ) {
     val list by authViewModel.socialList.collectAsState()
     val following by authViewModel.following.collectAsState()
+    val isLoggedIn by authViewModel.authState.collectAsState()
 
     LaunchedEffect(type) {
         authViewModel.loadSocialList(type)
@@ -43,7 +44,32 @@ fun SocialListScreen(
             )
         }
     ) { padding ->
-        if (list.isEmpty()) {
+    //Añado que si no esta logueado no mostremos nada!
+        if (!isLoggedIn) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.People,
+                        contentDescription = null,
+                        modifier = Modifier.size(80.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Inicia sesión para ver tu lista social",
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                }
+            }
+        } else if (list.isEmpty()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()

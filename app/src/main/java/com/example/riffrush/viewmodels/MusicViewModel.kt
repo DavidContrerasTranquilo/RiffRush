@@ -42,16 +42,27 @@ class MusicViewModel(
     private fun getOwnerId(): String {
         return authRepository.getCurrentUser()?.uid ?: guestIdManager.getGuestId()
     }
-
+    //David, Añado para ver si esta logueado
+    fun isLoggedIn(): Boolean {
+        return authRepository.getCurrentUser() != null
+    }
+    //Si no esta logueado no cargamos la musica
     fun loadMyMusic() {
         _isSearching.value = false
-        val ownerId = getOwnerId()
-        viewModelScope.launch {
-            firebaseRepository.getFavorites(ownerId).collect { favs ->
-                _favoriteSongs.value = favs
-                if (!_isSearching.value) {
-                    _songs.value = favs
+        if (isLoggedIn()) {
+            val ownerId = getOwnerId()
+            viewModelScope.launch {
+                firebaseRepository.getFavorites(ownerId).collect { favs ->
+                    _favoriteSongs.value = favs
+                    if (!_isSearching.value) {
+                        _songs.value = favs
+                    }
                 }
+            }
+        } else {
+            // RAM only mode
+            if (!_isSearching.value) {
+                _songs.value = _favoriteSongs.value
             }
         }
     }
@@ -75,14 +86,31 @@ class MusicViewModel(
     /**
      * Agrega o quita de favoritos
      */
+     //Tambien añado aqui que si no esta logueado la musica se guarde en ram
+     //Se podria hacer en Room!
     fun toggleFavorite(song: Song) {
-        val ownerId = getOwnerId()
-        viewModelScope.launch {
-            val isFavorite = _favoriteSongs.value.any { it.id == song.id }
+        val isFavorite = _favoriteSongs.value.any { it.id == song.id }
+
+        if (isLoggedIn()) {
+            val ownerId = getOwnerId()
+            viewModelScope.launch {
+                if (isFavorite) {
+                    firebaseRepository.removeFavorite(ownerId, song.id.toString())
+                } else {
+                    firebaseRepository.addFavorite(ownerId, song)
+                }
+            }
+        } else {
+            
+            val currentFavs = _favoriteSongs.value.toMutableList()
             if (isFavorite) {
-                firebaseRepository.removeFavorite(ownerId, song.id.toString())
+                currentFavs.removeAll { it.id == song.id }
             } else {
-                firebaseRepository.addFavorite(ownerId, song)
+                currentFavs.add(song)
+            }
+            _favoriteSongs.value = currentFavs
+            if (!_isSearching.value) {
+                _songs.value = currentFavs
             }
         }
     }
@@ -100,8 +128,21 @@ class MusicViewModel(
                     val fSong = deezerRepository.getSong(song.id)
                     if (fSong != null && fSong.preview.isNotBlank()) {
                         url = fSong.preview
-                        // Actualizar en Firebase para no tener que buscar de nuevo
-                        firebaseRepository.addFavorite(getOwnerId(), fSong)
+                        if (isLoggedIn()) {
+                            // Actualizar en Firebase para no tener que buscar de nuevo
+                            firebaseRepository.addFavorite(getOwnerId(), fSong)
+                        } else {
+                            
+                            val currentFavs = _favoriteSongs.value.toMutableList()
+                            val index = currentFavs.indexOfFirst { it.id == fSong.id }
+                            if (index != -1) {
+                                currentFavs[index] = fSong
+                                _favoriteSongs.value = currentFavs
+                                if (!_isSearching.value) {
+                                    _songs.value = currentFavs
+                                }
+                            }
+                        }
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
