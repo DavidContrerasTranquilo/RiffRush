@@ -1,4 +1,4 @@
-package com.example.riffrush.views
+package com.example.riffrush.ui.screens.main
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
@@ -14,9 +14,18 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.riffrush.navigation.Screen
 import com.example.riffrush.navigation.items
-import com.example.riffrush.viewmodel.SongViewModel
-import com.example.riffrush.views.auth.LoginScreen
-import com.example.riffrush.views.auth.SignUpScreen
+import com.example.riffrush.viewmodels.SongViewModel
+import com.example.riffrush.ui.screens.auth.LoginScreen
+import com.example.riffrush.ui.screens.auth.SignUpScreen
+import com.example.riffrush.ui.screens.home.HomeScreen
+import com.example.riffrush.ui.screens.match.FavoritesGameScreen
+import com.example.riffrush.ui.screens.match.MatchScreen
+import com.example.riffrush.ui.screens.music.MusicScreen
+import com.example.riffrush.ui.screens.profile.EditProfileScreen
+import com.example.riffrush.ui.screens.profile.ProfileScreen
+import com.example.riffrush.ui.screens.settings.SettingsScreen
+import com.example.riffrush.ui.screens.social.SocialListScreen
+import com.example.riffrush.ui.screens.social.SocialScreen
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

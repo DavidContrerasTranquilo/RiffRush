@@ -4,10 +4,10 @@ import com.example.riffrush.data.player.MusicPlayer
 import com.example.riffrush.data.repository.AuthRepository
 import com.example.riffrush.data.repository.DeezerRepository
 import com.example.riffrush.data.repository.MatchRepository
-import com.example.riffrush.viewmodel.AuthViewModel
-import com.example.riffrush.viewmodel.MusicViewModel
-import com.example.riffrush.viewmodel.SongViewModel
-import com.example.riffrush.viewmodel.MatchViewModel
+import com.example.riffrush.viewmodels.AuthViewModel
+import com.example.riffrush.viewmodels.MusicViewModel
+import com.example.riffrush.viewmodels.SongViewModel
+import com.example.riffrush.viewmodels.MatchViewModel
 import com.google.firebase.auth.FirebaseAuth
 import okhttp3.OkHttpClient
 import org.koin.core.module.dsl.singleOf
@@ -19,7 +19,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.example.riffrush.data.repository.FirebaseRepository
 import org.koin.android.ext.koin.androidContext
 import com.example.riffrush.data.repository.DeezerApi
-import com.example.riffrush.viewmodel.FavoritesGameViewModel
+import com.example.riffrush.viewmodels.FavoritesGameViewModel
 
 val appModule = module {
 

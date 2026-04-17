@@ -1,4 +1,4 @@
-package com.example.riffrush.views
+package com.example.riffrush.ui.screens.match
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -46,7 +46,7 @@ import androidx.compose.ui.unit.sp
 import com.example.riffrush.data.model.MatchStatus
 import com.example.riffrush.data.model.Song
 import com.example.riffrush.data.player.MusicPlayer
-import com.example.riffrush.viewmodel.MatchViewModel
+import com.example.riffrush.viewmodels.MatchViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 

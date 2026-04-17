@@ -1,4 +1,4 @@
-package com.example.riffrush.views
+package com.example.riffrush.ui.screens.social
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,8 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.riffrush.ui.components.UserItem
-import com.example.riffrush.viewmodel.AuthViewModel
-import com.example.riffrush.viewmodel.MatchViewModel
+import com.example.riffrush.viewmodels.AuthViewModel
+import com.example.riffrush.viewmodels.MatchViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

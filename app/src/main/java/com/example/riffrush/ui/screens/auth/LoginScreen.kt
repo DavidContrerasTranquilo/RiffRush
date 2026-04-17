@@ -1,4 +1,4 @@
-package com.example.riffrush.views.auth
+package com.example.riffrush.ui.screens.auth
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -7,7 +7,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.riffrush.viewmodel.AuthViewModel
+import com.example.riffrush.viewmodels.AuthViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

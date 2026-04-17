@@ -1,4 +1,4 @@
-package com.example.riffrush.views
+package com.example.riffrush.ui.screens.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState

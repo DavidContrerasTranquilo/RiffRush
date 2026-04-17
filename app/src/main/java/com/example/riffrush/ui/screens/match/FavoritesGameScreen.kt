@@ -1,4 +1,4 @@
-package com.example.riffrush.views
+package com.example.riffrush.ui.screens.match
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -10,8 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.riffrush.data.player.MusicPlayer
-import com.example.riffrush.viewmodel.MusicViewModel
-import com.example.riffrush.viewmodel.FavoritesGameViewModel
+import com.example.riffrush.viewmodels.MusicViewModel
+import com.example.riffrush.viewmodels.FavoritesGameViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 

@@ -1,4 +1,4 @@
-package com.example.riffrush.viewmodel
+package com.example.riffrush.viewmodels
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
