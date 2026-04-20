@@ -289,4 +289,8 @@ class MatchViewModel(
             _matchmakingState.value = MatchmakingUiState.Idle
         }
     }
+
+    fun getCurrentPlayerId(): String {
+        return repository.getCurrentUserId()
+    }
 }

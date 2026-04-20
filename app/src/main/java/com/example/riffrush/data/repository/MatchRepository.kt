@@ -75,11 +75,15 @@ class MatchRepository(
             matchId = "offline_${category.lowercase()}",
             player1Id = "me",
             player2Id = "bot",
+            player1Name = "Tú",
+            player2Name = "Bot",
             status = MatchStatus.PLAYING,
             staticSongList = randomSelection,
             currentRound = 0,
             scoreP1 = 0,
-            scoreP2 = 0
+            scoreP2 = 0,
+            answeredP1 = false,
+            answeredP2 = false
         )
     }
 
@@ -103,8 +107,8 @@ class MatchRepository(
             matchId = matchId,
             player1Id = player1Id,
             player2Id = player2Id,
-            player1Name = player1Name,
-            player2Name = player2Name,
+            player1Name = player1Name.ifBlank { "Invitado" },
+            player2Name = player2Name.ifBlank { "Invitado" },
             playlist = playlist,
             status = MatchStatus.PLAYING,
             staticSongList = songIds,
@@ -191,18 +195,19 @@ class MatchRepository(
     }
 
     suspend fun submitAnswer(matchId: String, isCorrect: Boolean) {
-        val playerId = playerIdentityManager.getPlayerId()
+        val playerId = getCurrentUserId()
         val matchRef = matchesCollection.document(matchId)
 
         firestore.runTransaction { transaction ->
             val snapshot = transaction.get(matchRef)
             val match = snapshot.toObject(MatchModel::class.java) ?: return@runTransaction
 
+            if (match.status != MatchStatus.PLAYING) return@runTransaction
+
             val isPlayer1 = match.player1Id == playerId
             val isPlayer2 = match.player2Id == playerId
 
             if (!isPlayer1 && !isPlayer2) return@runTransaction
-            if (match.status != MatchStatus.PLAYING) return@runTransaction
 
             var scoreP1 = match.scoreP1
             var scoreP2 = match.scoreP2
@@ -211,22 +216,28 @@ class MatchRepository(
             var currentRound = match.currentRound
             var status = match.status
 
-            if (isPlayer1 && !answeredP1) {
+            // Si ya había respondido, no hacer nada
+            if (isPlayer1 && answeredP1) return@runTransaction
+            if (isPlayer2 && answeredP2) return@runTransaction
+
+            // Registrar respuesta
+            if (isPlayer1) {
                 answeredP1 = true
-                if (isCorrect) scoreP1++
+                if (isCorrect) scoreP1 += 1
             }
 
-            if (isPlayer2 && !answeredP2) {
+            if (isPlayer2) {
                 answeredP2 = true
-                if (isCorrect) scoreP2++
+                if (isCorrect) scoreP2 += 1
             }
 
+            // Solo avanzar si ambos respondieron
             if (answeredP1 && answeredP2) {
                 val isLastRound = currentRound >= match.staticSongList.size - 1
                 if (isLastRound) {
                     status = MatchStatus.FINISHED
                 } else {
-                    currentRound++
+                    currentRound += 1
                     answeredP1 = false
                     answeredP2 = false
                 }

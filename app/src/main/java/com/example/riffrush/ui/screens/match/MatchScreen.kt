@@ -116,13 +116,28 @@ fun MatchScreen(
                         MatchStatus.PLAYING -> {
                             val roundIndex = currentMatch.currentRound
                             val currentSong = songs.getOrNull(roundIndex)
+
                             if (currentSong != null) {
+                                val currentPlayerId = viewModel.getCurrentPlayerId()
+                                val amIPlayer1 = currentPlayerId == currentMatch.player1Id
+
+                                val rawPlayer1Name = currentMatch.player1Name.ifBlank { "Invitado" }
+                                val rawPlayer2Name = currentMatch.player2Name.ifBlank { "Invitado" }
+
+                                val player1DisplayName = if (amIPlayer1) "$rawPlayer1Name (Tú)" else rawPlayer1Name
+                                val player2DisplayName = if (!amIPlayer1) "$rawPlayer2Name (Tú)" else rawPlayer2Name
+
+                                val hasAnswered = if (amIPlayer1) currentMatch.answeredP1 else currentMatch.answeredP2
+
                                 GameView(
                                     song = currentSong,
                                     round = roundIndex + 1,
+                                    player1Name = player1DisplayName,
+                                    player2Name = player2DisplayName,
                                     scoreP1 = currentMatch.scoreP1,
                                     scoreP2 = currentMatch.scoreP2,
                                     allSongs = songs,
+                                    hasAnswered = hasAnswered,
                                     onAnswer = { isCorrect ->
                                         viewModel.onAnswerSelected(isCorrect)
                                     },
@@ -130,11 +145,24 @@ fun MatchScreen(
                                 )
                             }
                         }
-                        MatchStatus.FINISHED -> ResultView(
-                            scoreP1 = currentMatch.scoreP1,
-                            scoreP2 = currentMatch.scoreP2,
-                            onExit = onExit
-                        )
+                        MatchStatus.FINISHED -> {
+                            val currentPlayerId = viewModel.getCurrentPlayerId()
+                            val amIPlayer1 = currentPlayerId == currentMatch.player1Id
+
+                            val rawPlayer1Name = currentMatch.player1Name.ifBlank { "Invitado" }
+                            val rawPlayer2Name = currentMatch.player2Name.ifBlank { "Invitado" }
+
+                            val player1DisplayName = if (amIPlayer1) "$rawPlayer1Name (Tú)" else rawPlayer1Name
+                            val player2DisplayName = if (!amIPlayer1) "$rawPlayer2Name (Tú)" else rawPlayer2Name
+
+                            ResultView(
+                                player1Name = player1DisplayName,
+                                player2Name = player2DisplayName,
+                                scoreP1 = currentMatch.scoreP1,
+                                scoreP2 = currentMatch.scoreP2,
+                                onExit = onExit
+                            )
+                        }
                     }
                 }
             }
@@ -173,9 +201,12 @@ fun WaitingOpponentView() {
 fun GameView(
     song: Song,
     round: Int,
+    player1Name: String,
+    player2Name: String,
     scoreP1: Int,
     scoreP2: Int,
     allSongs: List<Song>,
+    hasAnswered: Boolean = false,
     onAnswer: (Boolean) -> Unit,
     musicPlayer: MusicPlayer
 ) {
@@ -197,7 +228,12 @@ fun GameView(
             .verticalScroll(scrollState), // HABILITAR SCROLL
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        ScoreBoard(scoreP1, scoreP2)
+        ScoreBoard(
+            player1Name = player1Name,
+            player2Name = player2Name,
+            scoreP1 = scoreP1,
+            scoreP2 = scoreP2
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -217,7 +253,11 @@ fun GameView(
         options.forEach { option ->
             Button(
                 onClick = { onAnswer(option.id == song.id) },
-                modifier = Modifier.fillMaxWidth().height(60.dp).padding(vertical = 4.dp),
+                enabled = !hasAnswered,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+                    .padding(vertical = 4.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -226,12 +266,25 @@ fun GameView(
             ) {
                 Text(option.title, fontSize = 16.sp, textAlign = TextAlign.Center)
             }
+            if (hasAnswered) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Esperando la respuesta del rival...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }
 
 @Composable
-fun ScoreBoard(s1: Int, s2: Int) {
+fun ScoreBoard(
+    player1Name: String,
+    player2Name: String,
+    scoreP1: Int,
+    scoreP2: Int
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -242,13 +295,15 @@ fun ScoreBoard(s1: Int, s2: Int) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("TÚ", style = MaterialTheme.typography.labelSmall)
-            Text("$s1", fontSize = 32.sp, fontWeight = FontWeight.Black)
+            Text(player1Name, style = MaterialTheme.typography.labelSmall)
+            Text("$scoreP1", fontSize = 32.sp, fontWeight = FontWeight.Black)
         }
+
         Text("VS", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("RIVAL", style = MaterialTheme.typography.labelSmall)
-            Text("$s2", fontSize = 32.sp, fontWeight = FontWeight.Black)
+            Text(player2Name, style = MaterialTheme.typography.labelSmall)
+            Text("$scoreP2", fontSize = 32.sp, fontWeight = FontWeight.Black)
         }
     }
 }
@@ -276,7 +331,13 @@ fun PlayMusicIndicator() {
 }
 
 @Composable
-fun ResultView(scoreP1: Int, scoreP2: Int, onExit: () -> Unit) {
+fun ResultView(
+    player1Name: String,
+    player2Name: String,
+    scoreP1: Int,
+    scoreP2: Int,
+    onExit: () -> Unit
+) {
     val win = scoreP1 > scoreP2
     val draw = scoreP1 == scoreP2
 
@@ -298,7 +359,12 @@ fun ResultView(scoreP1: Int, scoreP2: Int, onExit: () -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        ScoreBoard(scoreP1, scoreP2)
+        ScoreBoard(
+            player1Name = player1Name,
+            player2Name = player2Name,
+            scoreP1 = scoreP1,
+            scoreP2 = scoreP2
+        )
 
         Spacer(modifier = Modifier.height(48.dp))
 

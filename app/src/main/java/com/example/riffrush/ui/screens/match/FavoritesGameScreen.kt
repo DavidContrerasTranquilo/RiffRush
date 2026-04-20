@@ -73,8 +73,10 @@ fun FavoritesGameScreen(
 
                 gameState == FavoritesGameViewModel.FavoritesState.FINISHED -> {
                     ResultView(
+                        player1Name = "Tú",
+                        player2Name = "Bot",
                         scoreP1 = score,
-                        scoreP2 = 0, // En solo no hay rival
+                        scoreP2 = 0,
                         onExit = onBack
                     )
                 }
@@ -85,17 +87,20 @@ fun FavoritesGameScreen(
                         GameView(
                             song = currentSong,
                             round = currentIndex + 1,
+                            player1Name = "Tú",
+                            player2Name = "Bot",
                             scoreP1 = score,
                             scoreP2 = 0,
                             allSongs = favorites,
+                            hasAnswered = false,
                             onAnswer = { isCorrect ->
                                 favoritesViewModel.submitAnswer(isCorrect)
                             },
                             musicPlayer = musicPlayer
                         )
-                    }
                 }
             }
         }
     }
+}
 }
