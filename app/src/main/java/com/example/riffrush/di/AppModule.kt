@@ -20,6 +20,7 @@ import com.example.riffrush.data.repository.FirebaseRepository
 import org.koin.android.ext.koin.androidContext
 import com.example.riffrush.data.repository.DeezerApi
 import com.example.riffrush.viewmodels.FavoritesGameViewModel
+import com.example.riffrush.data.local.PlayerIdentityManager
 
 val appModule = module {
 
@@ -43,7 +44,7 @@ val appModule = module {
     singleOf(::DeezerRepository)
     singleOf(::AuthRepository)
     singleOf(::MatchRepository)
-
+    singleOf(::PlayerIdentityManager)
     singleOf(::MusicPlayer)
     single { com.example.riffrush.data.local.GuestIdManager(androidContext()) }
 

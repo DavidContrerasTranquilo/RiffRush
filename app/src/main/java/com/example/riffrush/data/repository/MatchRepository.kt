@@ -8,12 +8,17 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import com.example.riffrush.data.local.PlayerIdentityManager
+import com.example.riffrush.data.model.MatchmakingResult
+import com.example.riffrush.data.model.MatchmakingQueueEntry
 
 class MatchRepository(
     private val firestore: FirebaseFirestore,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val playerIdentityManager: PlayerIdentityManager
 ) {
     private val matchesCollection = firestore.collection("matches")
+    private val queueCollection = firestore.collection("matchmaking_queue")
 
     private val playlists = mapOf(
         "REGGAETON" to listOf(
@@ -72,6 +77,7 @@ class MatchRepository(
             player2Id = "bot",
             status = MatchStatus.PLAYING,
             staticSongList = randomSelection,
+            currentRound = 0,
             scoreP1 = 0,
             scoreP2 = 0
         )
@@ -79,5 +85,161 @@ class MatchRepository(
 
     fun getCurrentUserId(): String {
         return auth.currentUser?.uid ?: "guest_user"
+    }
+
+    private fun buildMatch(
+        matchId: String,
+        player1Id: String,
+        player1Name: String,
+        player2Id: String,
+        player2Name: String,
+        playlist: String
+    ): MatchModel {
+        val songIds = (playlists[playlist] ?: playlists["REGGAETON"].orEmpty())
+            .shuffled()
+            .take(5)
+
+        return MatchModel(
+            matchId = matchId,
+            player1Id = player1Id,
+            player2Id = player2Id,
+            player1Name = player1Name,
+            player2Name = player2Name,
+            playlist = playlist,
+            status = MatchStatus.PLAYING,
+            staticSongList = songIds,
+            currentRound = 0,
+            scoreP1 = 0,
+            scoreP2 = 0,
+            answeredP1 = false,
+            answeredP2 = false
+        )
+    }
+
+    suspend fun joinMatchmaking(playlist: String): MatchmakingResult {
+        val playerId = playerIdentityManager.getPlayerId()
+        val playerName = playerIdentityManager.getPlayerName()
+        val isGuest = playerIdentityManager.isGuest()
+
+        val waitingSnapshot = queueCollection
+            .whereEqualTo("playlist", playlist)
+            .whereEqualTo("status", "WAITING")
+            .get()
+            .await()
+
+        val rivalDoc = waitingSnapshot.documents.firstOrNull {
+            it.getString("playerId") != playerId
+        }
+
+        return if (rivalDoc != null) {
+            val rivalPlayerId = rivalDoc.getString("playerId") ?: ""
+            val rivalPlayerName = rivalDoc.getString("playerName") ?: "Invitado"
+            val matchId = queueCollection.document().id
+
+            val match = buildMatch(
+                matchId = matchId,
+                player1Id = rivalPlayerId,
+                player1Name = rivalPlayerName,
+                player2Id = playerId,
+                player2Name = playerName,
+                playlist = playlist
+            )
+
+            firestore.runBatch { batch ->
+                batch.set(matchesCollection.document(matchId), match)
+                batch.update(queueCollection.document(rivalDoc.id), mapOf(
+                    "status" to "MATCHED",
+                    "matchId" to matchId
+                ))
+            }.await()
+
+            MatchmakingResult.Matched(matchId)
+        } else {
+            val queueId = queueCollection.document().id
+            val entry = MatchmakingQueueEntry(
+                queueId = queueId,
+                playerId = playerId,
+                playerName = playerName,
+                playlist = playlist,
+                status = "WAITING",
+                matchId = null,
+                isGuest = isGuest
+            )
+
+            queueCollection.document(queueId).set(entry).await()
+            MatchmakingResult.Waiting(queueId)
+        }
+    }
+
+    fun listenToQueueEntry(queueId: String): Flow<MatchmakingQueueEntry?> = callbackFlow {
+        val registration = queueCollection.document(queueId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val entry = snapshot?.toObject(MatchmakingQueueEntry::class.java)
+                trySend(entry)
+            }
+
+        awaitClose { registration.remove() }
+    }
+
+    suspend fun cancelMatchmaking(queueId: String) {
+        queueCollection.document(queueId).delete().await()
+    }
+
+    suspend fun submitAnswer(matchId: String, isCorrect: Boolean) {
+        val playerId = playerIdentityManager.getPlayerId()
+        val matchRef = matchesCollection.document(matchId)
+
+        firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(matchRef)
+            val match = snapshot.toObject(MatchModel::class.java) ?: return@runTransaction
+
+            val isPlayer1 = match.player1Id == playerId
+            val isPlayer2 = match.player2Id == playerId
+
+            if (!isPlayer1 && !isPlayer2) return@runTransaction
+            if (match.status != MatchStatus.PLAYING) return@runTransaction
+
+            var scoreP1 = match.scoreP1
+            var scoreP2 = match.scoreP2
+            var answeredP1 = match.answeredP1
+            var answeredP2 = match.answeredP2
+            var currentRound = match.currentRound
+            var status = match.status
+
+            if (isPlayer1 && !answeredP1) {
+                answeredP1 = true
+                if (isCorrect) scoreP1++
+            }
+
+            if (isPlayer2 && !answeredP2) {
+                answeredP2 = true
+                if (isCorrect) scoreP2++
+            }
+
+            if (answeredP1 && answeredP2) {
+                val isLastRound = currentRound >= match.staticSongList.size - 1
+                if (isLastRound) {
+                    status = MatchStatus.FINISHED
+                } else {
+                    currentRound++
+                    answeredP1 = false
+                    answeredP2 = false
+                }
+            }
+
+            transaction.update(matchRef, mapOf(
+                "scoreP1" to scoreP1,
+                "scoreP2" to scoreP2,
+                "answeredP1" to answeredP1,
+                "answeredP2" to answeredP2,
+                "currentRound" to currentRound,
+                "status" to status
+            ))
+        }.await()
     }
 }

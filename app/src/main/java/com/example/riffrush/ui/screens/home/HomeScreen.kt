@@ -11,13 +11,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.riffrush.viewmodels.MatchViewModel
 import org.koin.androidx.compose.koinViewModel
-import androidx.compose.ui.text.style.TextAlign
-import androidx.navigation.NavHostController
 
+data class PlaylistOption(
+    val displayName: String,
+    val onlineValue: String,
+    val offlineRouteSuffix: String
+)
 
 @Composable
 fun HomeScreen(
@@ -28,12 +33,55 @@ fun HomeScreen(
 ) {
     val currentMatch by matchViewModel.currentMatch.collectAsState()
 
+    var selectedPlaylist by remember { mutableStateOf<PlaylistOption?>(null) }
+
+    val reggaeton = PlaylistOption(
+        displayName = "Reggaetón",
+        onlineValue = "REGGAETON",
+        offlineRouteSuffix = "reggaeton"
+    )
+
+    val rapFrances = PlaylistOption(
+        displayName = "Rap Français",
+        onlineValue = "RAP FRANCÉS",
+        offlineRouteSuffix = "rap_frances"
+    )
+
+    val rockEspanol = PlaylistOption(
+        displayName = "Rock Español",
+        onlineValue = "ROCK ESPAÑOL",
+        offlineRouteSuffix = "rock_espanol"
+    )
+
+    val top50Espana = PlaylistOption(
+        displayName = "Top 50 España",
+        onlineValue = "TOP 50 ESPAÑA",
+        offlineRouteSuffix = "top_50_espana"
+    )
+
     LaunchedEffect(currentMatch) {
         currentMatch?.let {
             if (it.matchId == "offline_test_id") {
                 onNavigateToMatch(it.matchId)
             }
         }
+    }
+
+    if (selectedPlaylist != null) {
+        PlaylistModeDialog(
+            playlistName = selectedPlaylist!!.displayName,
+            onOnlineClick = {
+                navController.navigate("matchmaking/${selectedPlaylist!!.onlineValue}")
+                selectedPlaylist = null
+            },
+            onOfflineClick = {
+                navController.navigate("match/offline_${selectedPlaylist!!.offlineRouteSuffix}")
+                selectedPlaylist = null
+            },
+            onDismiss = {
+                selectedPlaylist = null
+            }
+        )
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -69,9 +117,17 @@ fun HomeScreen(
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFF3E5F5))
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
-                        Text("PLAYLIST DEL DÍA", style = MaterialTheme.typography.labelLarge, color = Color(0xFF7B1FA2))
+                        Text(
+                            "PLAYLIST DEL DÍA",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Color(0xFF7B1FA2)
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Trivia del Retro", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            "Trivia del Retro",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                         Text("Pon a prueba tus oídos con tus canciones preferidas.")
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
@@ -86,7 +142,11 @@ fun HomeScreen(
 
             item {
                 Spacer(modifier = Modifier.height(24.dp))
-                Text("Partida Rápida", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(
+                    "Partida por Playlist",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
@@ -95,43 +155,51 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Categoría: REGGAETON
                     QuickButton("Reggaetón", Color(0xFFF8BBD0)) {
-                        navController.navigate("match/offline_reggaeton")
+                        selectedPlaylist = reggaeton
                     }
-                    // Categoría: RAP FRANCÉS
                     QuickButton("Rap Français", Color(0xFFBBDEFB)) {
-                        navController.navigate("match/offline_rap_frances")
+                        selectedPlaylist = rapFrances
                     }
                 }
+
                 Spacer(modifier = Modifier.height(12.dp))
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Categoría: ROCK ESPAÑOL
                     QuickButton("Rock Español", Color(0xFFFFE0B2)) {
-                        navController.navigate("match/offline_rock_espanol")
+                        selectedPlaylist = rockEspanol
                     }
-                    // Categoría: TOP 50 ESPAÑA
                     QuickButton("Top 50 España", Color(0xFFC8E6C9)) {
-                        navController.navigate("match/offline_top_50_espana")
+                        selectedPlaylist = top50Espana
                     }
                 }
             }
 
             item {
                 Spacer(modifier = Modifier.height(32.dp))
-                Text("NOVEDADES", style = MaterialTheme.typography.labelLarge, color = Color.Gray)
+                Text(
+                    "NOVEDADES",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.Gray
+                )
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Card(
                     shape = RoundedCornerShape(20.dp),
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
-                        Text("¡NUEVO!", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        Text(
+                            "¡NUEVO!",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
                         Text(
                             text = "Modo de Juego Offline",
                             fontSize = 20.sp,
@@ -152,9 +220,44 @@ fun HomeScreen(
                 }
             }
 
-            item { Spacer(modifier = Modifier.height(80.dp)) } // Espacio para la BottomBar
+            item {
+                Spacer(modifier = Modifier.height(80.dp))
+            }
         }
     }
+}
+
+@Composable
+fun PlaylistModeDialog(
+    playlistName: String,
+    onOnlineClick: () -> Unit,
+    onOfflineClick: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text("Elegir modo de juego")
+        },
+        text = {
+            Text("Has seleccionado \"$playlistName\". ¿Quieres jugar online o offline?")
+        },
+        confirmButton = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = onOnlineClick) {
+                    Text("Online")
+                }
+                Button(onClick = onOfflineClick) {
+                    Text("Offline")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }
 
 @Composable
@@ -168,7 +271,11 @@ fun RowScope.QuickButton(text: String, color: Color, onClick: () -> Unit) {
         onClick = onClick
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Text(text, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Text(
+                text = text,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }

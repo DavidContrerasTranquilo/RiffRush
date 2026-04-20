@@ -114,11 +114,12 @@ fun MatchScreen(
                     when (currentMatch.status) {
                         MatchStatus.WAITING -> WaitingOpponentView()
                         MatchStatus.PLAYING -> {
-                            val currentSong = songs.getOrNull(currentRound)
+                            val roundIndex = currentMatch.currentRound
+                            val currentSong = songs.getOrNull(roundIndex)
                             if (currentSong != null) {
                                 GameView(
                                     song = currentSong,
-                                    round = currentRound + 1,
+                                    round = roundIndex + 1,
                                     scoreP1 = currentMatch.scoreP1,
                                     scoreP2 = currentMatch.scoreP2,
                                     allSongs = songs,

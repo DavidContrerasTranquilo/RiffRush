@@ -15,6 +15,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import com.example.riffrush.data.model.MatchmakingUiState
+import com.example.riffrush.data.model.MatchmakingResult
 
 class MatchViewModel(
     private val repository: MatchRepository,
@@ -39,6 +41,11 @@ class MatchViewModel(
     val error: StateFlow<String?> = _error
 
     private var matchJob: Job? = null
+    private val _matchmakingState = MutableStateFlow<MatchmakingUiState>(MatchmakingUiState.Idle)
+    val matchmakingState: StateFlow<MatchmakingUiState> = _matchmakingState
+
+    private var queueJob: Job? = null
+    private var currentQueueId: String? = null
 
     fun startMatchmaking(opponentId: String) {
         _isLoading.value = true
@@ -68,15 +75,36 @@ class MatchViewModel(
 
     fun listenToMatch(matchId: String) {
         matchJob?.cancel()
+        _currentMatch.value = null
+        _songs.value = emptyList()
+        _currentRound.value = 0
+        _isLoading.value = true
         matchJob = viewModelScope.launch {
             try {
                 repository.listenToMatch(matchId).collect { match ->
                     _currentMatch.value = match
-                    if (match != null && _songs.value.isEmpty()) {
-                        loadSongs(match.staticSongList)
-                    }
-                    if (match?.status == MatchStatus.WAITING && match.player1Id.isNotEmpty() && match.player2Id.isNotEmpty()) {
-                        repository.updateMatchStatus(matchId, MatchStatus.PLAYING)
+
+                    match?.let { currentMatch ->
+                        val isOffline = currentMatch.matchId.startsWith("offline")
+
+                        // Cargar canciones solo una vez por partida
+                        if (_songs.value.isEmpty() && currentMatch.staticSongList.isNotEmpty()) {
+                            loadSongs(currentMatch.staticSongList)
+                        }
+
+                        // En online, la ronda real viene del documento compartido
+                        if (!isOffline) {
+                            _currentRound.value = currentMatch.currentRound
+                        }
+
+                        // Si por alguna razón la partida online sigue en WAITING y ya tiene dos jugadores, arrancarla
+                        if (!isOffline &&
+                            currentMatch.status == MatchStatus.WAITING &&
+                            currentMatch.player1Id.isNotEmpty() &&
+                            currentMatch.player2Id.isNotEmpty()
+                        ) {
+                            repository.updateMatchStatus(matchId, MatchStatus.PLAYING)
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -85,7 +113,6 @@ class MatchViewModel(
             }
         }
     }
-
     private fun loadSongs(ids: List<Long>) {
         viewModelScope.launch {
             try {
@@ -112,41 +139,53 @@ class MatchViewModel(
     fun onAnswerSelected(isCorrect: Boolean) {
         musicPlayer.stop()
         val match = _currentMatch.value ?: return
-        val round = _currentRound.value
         val isOffline = match.matchId.startsWith("offline")
 
         viewModelScope.launch {
-            if (isCorrect) {
+            try {
                 if (isOffline) {
-                    _currentMatch.value = _currentMatch.value?.copy(
-                        scoreP1 = match.scoreP1 + 1
-                    )
-                }
-            }
-
-            if (isOffline) {
-                val botHits = (0..1).random() == 1
-                if (botHits) {
-                    val currentScoreP2 = _currentMatch.value?.scoreP2 ?: 0
-                    _currentMatch.value = _currentMatch.value?.copy(
-                        scoreP2 = currentScoreP2 + 1
-                    )
-                }
-            }
-
-            val totalSongs = _songs.value.size
-            if (round < totalSongs - 1) {
-                _currentRound.value = round + 1
-            } else {
-                if (isOffline) {
-                    _currentMatch.value = _currentMatch.value?.copy(
-                        status = MatchStatus.FINISHED
-                    )
+                    handleOfflineAnswer(match, isCorrect)
                 } else {
-                    repository.updateMatchStatus(match.matchId, MatchStatus.FINISHED)
+                    repository.submitAnswer(match.matchId, isCorrect)
                 }
+            } catch (e: Exception) {
+                Log.e("MatchViewModel", "Error submitting answer", e)
+                _error.value = "Error al enviar la respuesta: ${e.message}"
             }
         }
+    }
+
+    private fun handleOfflineAnswer(match: MatchModel, isCorrect: Boolean) {
+        var updatedMatch = match
+
+        if (isCorrect) {
+            updatedMatch = updatedMatch.copy(
+                scoreP1 = updatedMatch.scoreP1 + 1
+            )
+        }
+
+        val botHits = (0..1).random() == 1
+        if (botHits) {
+            updatedMatch = updatedMatch.copy(
+                scoreP2 = updatedMatch.scoreP2 + 1
+            )
+        }
+
+        val totalSongs = _songs.value.size
+        val currentRoundValue = _currentRound.value
+
+        if (currentRoundValue < totalSongs - 1) {
+            _currentRound.value = currentRoundValue + 1
+            updatedMatch = updatedMatch.copy(
+                currentRound = currentRoundValue + 1
+            )
+        } else {
+            updatedMatch = updatedMatch.copy(
+                status = MatchStatus.FINISHED
+            )
+        }
+
+        _currentMatch.value = updatedMatch
     }
 
     private fun incrementScore() {
@@ -180,16 +219,74 @@ class MatchViewModel(
     override fun onCleared() {
         super.onCleared()
         matchJob?.cancel()
+        queueJob?.cancel()
     }
 
     fun startOfflineMode(category: String) {
         _isLoading.value = true
-        viewModelScope.launch {
-            val offlineMatch = repository.getOfflineMatch(category)
+        _error.value = null
+        _songs.value = emptyList()
+        _currentRound.value = 0
+        _currentMatch.value = null
 
-            _currentMatch.value = offlineMatch
-            loadSongs(offlineMatch.staticSongList)
-            _currentRound.value = 0
+        viewModelScope.launch {
+            try {
+                val offlineMatch = repository.getOfflineMatch(category).copy(
+                    currentRound = 0
+                )
+
+                _currentMatch.value = offlineMatch
+                loadSongs(offlineMatch.staticSongList)
+
+            } catch (e: Exception) {
+                Log.e("MatchViewModel", "Error starting offline mode", e)
+                _error.value = "Error al iniciar la partida offline: ${e.message}"
+                _isLoading.value = false
+            }
+        }
+    }
+
+    private fun listenToQueue(queueId: String) {
+        queueJob?.cancel()
+        queueJob = viewModelScope.launch {
+            repository.listenToQueueEntry(queueId).collect { entry ->
+                val matchId = entry?.matchId
+                if (entry?.status == "MATCHED" && !matchId.isNullOrBlank()) {
+                    _matchmakingState.value = MatchmakingUiState.Matched(matchId)
+                    listenToMatch(matchId)
+                }
+            }
+        }
+    }
+
+    fun joinPlaylistMatchmaking(playlist: String) {
+        _matchmakingState.value = MatchmakingUiState.Searching
+
+        viewModelScope.launch {
+            try {
+                when (val result = repository.joinMatchmaking(playlist)) {
+                    is MatchmakingResult.Matched -> {
+                        _matchmakingState.value = MatchmakingUiState.Matched(result.matchId)
+                        listenToMatch(result.matchId)
+                    }
+                    is MatchmakingResult.Waiting -> {
+                        currentQueueId = result.queueId
+                        _matchmakingState.value = MatchmakingUiState.Waiting(playlist)
+                        listenToQueue(result.queueId)
+                    }
+                }
+            } catch (e: Exception) {
+                _matchmakingState.value = MatchmakingUiState.Error("Error en matchmaking: ${e.message}")
+            }
+        }
+    }
+
+    fun cancelMatchmaking() {
+        val queueId = currentQueueId ?: return
+        viewModelScope.launch {
+            repository.cancelMatchmaking(queueId)
+            currentQueueId = null
+            _matchmakingState.value = MatchmakingUiState.Idle
         }
     }
 }

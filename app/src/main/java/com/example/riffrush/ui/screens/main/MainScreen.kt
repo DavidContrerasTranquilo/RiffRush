@@ -28,6 +28,7 @@ import com.example.riffrush.ui.screens.settings.SettingsScreen
 import com.example.riffrush.ui.screens.social.SocialListScreen
 import com.example.riffrush.ui.screens.social.SocialScreen
 import org.koin.androidx.compose.koinViewModel
+import com.example.riffrush.ui.screens.match.MatchmakingScreen
 
 @Composable
 fun MainScreen(
@@ -176,6 +177,23 @@ fun MainScreen(
                             popUpTo("signup") { inclusive = true }
                         }
                     }
+                )
+            }
+
+            composable(
+                "matchmaking/{playlist}",
+                arguments = listOf(navArgument("playlist") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val playlist = backStackEntry.arguments?.getString("playlist") ?: "REGGAETON"
+
+                MatchmakingScreen(
+                    playlist = playlist,
+                    onMatched = { matchId ->
+                        navController.navigate("match/$matchId") {
+                            popUpTo("matchmaking/$playlist") { inclusive = true }
+                        }
+                    },
+                    onBack = { navController.popBackStack() }
                 )
             }
         }
