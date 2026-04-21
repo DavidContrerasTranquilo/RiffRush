@@ -37,6 +37,9 @@ class MatchViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    private val _timeLeft = MutableStateFlow(1f)
+    val timeLeft: StateFlow<Float> = _timeLeft
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
@@ -82,6 +85,8 @@ class MatchViewModel(
         matchJob = viewModelScope.launch {
             try {
                 repository.listenToMatch(matchId).collect { match ->
+                    val previousMatch = _currentMatch.value
+                    val previousRound = previousMatch?.currentRound ?: -1
                     _currentMatch.value = match
 
                     match?.let { currentMatch ->
@@ -89,12 +94,32 @@ class MatchViewModel(
 
                         // Cargar canciones solo una vez por partida
                         if (_songs.value.isEmpty() && currentMatch.staticSongList.isNotEmpty()) {
-                            loadSongs(currentMatch.staticSongList)
+                            loadSongs(currentMatch.staticSongList) {
+                                // Al terminar de cargar por primera vez, si ya estamos jugando, arrancar timer
+                                if (currentMatch.status == MatchStatus.PLAYING && !isOffline) {
+                                    val amIPlayer1 = getCurrentPlayerId() == currentMatch.player1Id
+                                    val hasAnswered = if (amIPlayer1) currentMatch.answeredP1 else currentMatch.answeredP2
+                                    if (!hasAnswered) startTimer()
+                                }
+                            }
                         }
 
                         // En online, la ronda real viene del documento compartido
                         if (!isOffline) {
                             _currentRound.value = currentMatch.currentRound
+                            
+                            // Lógica de timer para Online
+                            if (currentMatch.status == MatchStatus.PLAYING && _songs.value.isNotEmpty()) {
+                                val amIPlayer1 = getCurrentPlayerId() == currentMatch.player1Id
+                                val hasAnswered = if (amIPlayer1) currentMatch.answeredP1 else currentMatch.answeredP2
+                                
+                                val roundChanged = currentMatch.currentRound != previousRound
+                                val justStarted = previousMatch?.status == MatchStatus.WAITING
+                                
+                                if ((roundChanged || justStarted) && !hasAnswered) {
+                                    startTimer()
+                                }
+                            }
                         }
 
                         // Si por alguna razón la partida online sigue en WAITING y ya tiene dos jugadores, arrancarla
@@ -113,7 +138,7 @@ class MatchViewModel(
             }
         }
     }
-    private fun loadSongs(ids: List<Long>) {
+    private fun loadSongs(ids: List<Long>, onComplete: () -> Unit = {}) {
         viewModelScope.launch {
             try {
                 val loadedSongs = ids.map { id ->
@@ -129,6 +154,7 @@ class MatchViewModel(
                 }
                 _songs.value = loadedSongs
                 _isLoading.value = false
+                onComplete()
             } catch (e: Exception) {
                 Log.e("MatchViewModel", "Error loading songs", e)
                 _isLoading.value = false
@@ -136,7 +162,30 @@ class MatchViewModel(
         }
     }
 
+    private var timerJob: Job? = null
+
+    private fun startTimer() {
+        timerJob?.cancel()
+        _timeLeft.value = 1f
+        timerJob = viewModelScope.launch {
+            val totalTime = 15000L // 15 segundos
+            val interval = 100L
+            var elapsed = 0L
+            
+            while (elapsed < totalTime) {
+                delay(interval)
+                elapsed += interval
+                _timeLeft.value = 1f - (elapsed.toFloat() / totalTime)
+                
+                // Si el usuario responde mientras el timer corre, el job se cancelará en onAnswerSelected
+            }
+            // Si llega aquí, el tiempo se agotó
+            onAnswerSelected(false)
+        }
+    }
+
     fun onAnswerSelected(isCorrect: Boolean) {
+        timerJob?.cancel() // Detener el timer
         musicPlayer.stop()
         val match = _currentMatch.value ?: return
         val isOffline = match.matchId.startsWith("offline")
@@ -156,36 +205,43 @@ class MatchViewModel(
     }
 
     private fun handleOfflineAnswer(match: MatchModel, isCorrect: Boolean) {
-        var updatedMatch = match
+        // En offline, usamos el MatchModel para llevar el estado, 
+        // pero necesitamos simular un poco de espera para que no sea instantáneo
+        viewModelScope.launch {
+            // Marcamos que hemos respondido localmente en el modelo para que la UI se bloquee
+            val matchWithAnswer = match.copy(answeredP1 = true)
+            _currentMatch.value = matchWithAnswer
+            
+            delay(1500) // Pausa para ver el resultado de la ronda
 
-        if (isCorrect) {
-            updatedMatch = updatedMatch.copy(
-                scoreP1 = updatedMatch.scoreP1 + 1
-            )
+            var updatedMatch = matchWithAnswer
+            if (isCorrect) {
+                updatedMatch = updatedMatch.copy(scoreP1 = updatedMatch.scoreP1 + 1)
+            }
+
+            val botHits = (0..2).random() > 0 // El bot es decente
+            if (botHits) {
+                updatedMatch = updatedMatch.copy(scoreP2 = updatedMatch.scoreP2 + 1)
+            }
+
+            val totalSongs = _songs.value.size
+            val currentRoundValue = updatedMatch.currentRound
+
+            if (currentRoundValue < totalSongs - 1) {
+                val nextRound = currentRoundValue + 1
+                _currentRound.value = nextRound
+                _currentMatch.value = updatedMatch.copy(
+                    currentRound = nextRound,
+                    answeredP1 = false,
+                    answeredP2 = false
+                )
+                startTimer() // Reiniciamos el timer para la nueva ronda
+            } else {
+                _currentMatch.value = updatedMatch.copy(
+                    status = MatchStatus.FINISHED
+                )
+            }
         }
-
-        val botHits = (0..1).random() == 1
-        if (botHits) {
-            updatedMatch = updatedMatch.copy(
-                scoreP2 = updatedMatch.scoreP2 + 1
-            )
-        }
-
-        val totalSongs = _songs.value.size
-        val currentRoundValue = _currentRound.value
-
-        if (currentRoundValue < totalSongs - 1) {
-            _currentRound.value = currentRoundValue + 1
-            updatedMatch = updatedMatch.copy(
-                currentRound = currentRoundValue + 1
-            )
-        } else {
-            updatedMatch = updatedMatch.copy(
-                status = MatchStatus.FINISHED
-            )
-        }
-
-        _currentMatch.value = updatedMatch
     }
 
     private fun incrementScore() {
@@ -228,6 +284,7 @@ class MatchViewModel(
         _songs.value = emptyList()
         _currentRound.value = 0
         _currentMatch.value = null
+        timerJob?.cancel()
 
         viewModelScope.launch {
             try {
@@ -236,7 +293,9 @@ class MatchViewModel(
                 )
 
                 _currentMatch.value = offlineMatch
-                loadSongs(offlineMatch.staticSongList)
+                loadSongs(offlineMatch.staticSongList) {
+                    startTimer() // Iniciar el timer SOLO cuando las canciones estén listas
+                }
 
             } catch (e: Exception) {
                 Log.e("MatchViewModel", "Error starting offline mode", e)
