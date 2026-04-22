@@ -224,8 +224,13 @@ fun DailyChallengeGameView(
                 )
             }
         }
-
+        //Cuando se contesta a una cancion, pasa a la siguiente
         if (hasAnswered) {
+            LaunchedEffect(hasAnswered) {
+                kotlinx.coroutines.delay(1500)
+                onNextRound()
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = if (answerCorrect == true) "¡Correcto!" else "¡Incorrecto!",
