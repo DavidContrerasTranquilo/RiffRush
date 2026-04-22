@@ -69,4 +69,23 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
             e.printStackTrace()
         }
     }
+
+    suspend fun saveDailyChallengeResult(ownerId: String, isWin: Boolean) {
+        try {
+            val statsRef = firestore.collection("users")
+                .document(ownerId)
+                .collection("stats")
+                .document("daily_challenge")
+
+            val incrementField = if (isWin) "wins" else "losses"
+            val updates = hashMapOf<String, Any>(
+                incrementField to com.google.firebase.firestore.FieldValue.increment(1)
+            )
+
+            // Usamos set con merge por si el documento no existe
+            statsRef.set(updates, com.google.firebase.firestore.SetOptions.merge()).await()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }

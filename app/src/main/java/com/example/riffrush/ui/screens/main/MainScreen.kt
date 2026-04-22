@@ -156,6 +156,12 @@ fun MainScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
+        //El reto diario !
+            composable("daily_challenge") {
+                com.example.riffrush.ui.screens.challenge.DailyChallengeScreen(
+                    onExit = { navController.popBackStack() }
+                )
+            }
 
             composable("login") {
                 LoginScreen(

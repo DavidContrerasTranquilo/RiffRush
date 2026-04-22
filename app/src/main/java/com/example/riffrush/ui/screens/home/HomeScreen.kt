@@ -16,8 +16,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.riffrush.viewmodels.MatchViewModel
+import com.example.riffrush.viewmodels.DailyChallengeViewModel
 import org.koin.androidx.compose.koinViewModel
-
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import com.google.firebase.auth.FirebaseAuth
 data class PlaylistOption(
     val displayName: String,
     val onlineValue: String,
@@ -28,10 +31,15 @@ data class PlaylistOption(
 fun HomeScreen(
     navController: NavHostController,
     matchViewModel: MatchViewModel = koinViewModel(),
+    //Añado el reto diario
+    dailyChallengeViewModel: DailyChallengeViewModel = koinViewModel(),
     onNavigateToMatch: (String) -> Unit,
     onNavigateToFavorites: () -> Unit
 ) {
     val currentMatch by matchViewModel.currentMatch.collectAsState()
+    //Consigo el estado del reto diario
+    val dailyChallengeState by dailyChallengeViewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     var selectedPlaylist by remember { mutableStateOf<PlaylistOption?>(null) }
 
@@ -181,7 +189,7 @@ fun HomeScreen(
             item {
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
-                    "NOVEDADES",
+                    "RETO DIARIO",
                     style = MaterialTheme.typography.labelLarge,
                     color = Color.Gray
                 )
@@ -194,27 +202,56 @@ fun HomeScreen(
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
                 ) {
+                    //Aqui construyo la pestaña, podria sacarse a otro compsable quiza?
                     Column(modifier = Modifier.padding(20.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "¡GANA LA RACHA!",
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "Racha: ${dailyChallengeState.streak} 🔥",
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFF9800)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "¡NUEVO!",
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Modo de Juego Offline",
+                            text = "Adivina 6 canciones",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("¿Sin conexión? No hay problema. Entrena tus habilidades contra nuestra IA en el modo de prueba local.")
+                        //Si esta completado pues eso
+                        Text(
+                            if (dailyChallengeState.isCompletedToday) 
+                                "Ya has completado el reto de hoy. ¡Vuelve mañana para continuar tu racha!"
+                            else 
+                                "6 canciones, 1 intento por canción. ¿Podrás adivinarlas todas y mantener tu racha?"
+                        )
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Button(
-                            onClick = { onNavigateToMatch("offline_test_id") },
+                            onClick = { 
+                                val currentUser = FirebaseAuth.getInstance().currentUser
+                                if (currentUser == null || currentUser.uid.startsWith("guest")) {
+                                    Toast.makeText(context, "Debes iniciar sesión para jugar al Reto Diario", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    if (!dailyChallengeState.isCompletedToday) {
+                                        navController.navigate("daily_challenge")
+                                    }
+                                }
+                            },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            enabled = !dailyChallengeState.isCompletedToday
                         ) {
-                            Text("PROBAR AHORA")
+                            Text(if (dailyChallengeState.isCompletedToday) "COMPLETADO" else "JUGAR AHORA")
                         }
                     }
                 }

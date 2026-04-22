@@ -21,6 +21,7 @@ import org.koin.android.ext.koin.androidContext
 import com.example.riffrush.data.repository.DeezerApi
 import com.example.riffrush.viewmodels.FavoritesGameViewModel
 import com.example.riffrush.data.local.PlayerIdentityManager
+import com.example.riffrush.viewmodels.DailyChallengeViewModel
 
 val appModule = module {
     single { FirebaseAuth.getInstance() }
@@ -61,4 +62,6 @@ val appModule = module {
     viewModelOf(::MusicViewModel)
     viewModelOf(::MatchViewModel)
     viewModelOf(::FavoritesGameViewModel)
+    
+    viewModelOf(::DailyChallengeViewModel)
 }
