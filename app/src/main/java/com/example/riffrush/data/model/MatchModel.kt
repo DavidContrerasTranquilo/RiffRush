@@ -13,7 +13,9 @@ data class MatchModel(
     val scoreP1: Int = 0,
     val scoreP2: Int = 0,
     val answeredP1: Boolean = false,
-    val answeredP2: Boolean = false
+    val answeredP2: Boolean = false,
+    val player1PfpUrl: String = "",
+    val player2PfpUrl: String = "",
 )
 
 enum class MatchStatus {

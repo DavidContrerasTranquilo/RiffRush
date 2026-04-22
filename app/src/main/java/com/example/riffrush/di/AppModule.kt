@@ -23,9 +23,9 @@ import com.example.riffrush.viewmodels.FavoritesGameViewModel
 import com.example.riffrush.data.local.PlayerIdentityManager
 
 val appModule = module {
-
-    single { FirebaseFirestore.getInstance() }
     single { FirebaseAuth.getInstance() }
+    single { FirebaseFirestore.getInstance() }
+
 
     singleOf(::FirebaseRepository)
     singleOf(::OkHttpClient)
@@ -39,6 +39,14 @@ val appModule = module {
     }
     single<DeezerApi> {
         get<Retrofit>().create(DeezerApi::class.java)
+    }
+    single {
+        AuthRepository(
+            firebaseAuth = get(),
+            firestore = get(),
+            context = androidContext(),
+            okHttpClient = get()
+        )
     }
 
     singleOf(::DeezerRepository)

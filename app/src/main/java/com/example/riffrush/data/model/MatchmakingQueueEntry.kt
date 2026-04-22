@@ -7,5 +7,6 @@ data class MatchmakingQueueEntry(
     val playlist: String = "",
     val status: String = "WAITING",
     val matchId: String? = null,
-    val isGuest: Boolean = true
+    val isGuest: Boolean = true,
+    val playerPfpUrl: String = ""
 )

@@ -16,9 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.riffrush.viewmodels.AuthViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -34,6 +36,7 @@ fun ProfileScreen(
     val isLoggedIn by authViewModel.authState.collectAsState()
     val uiMessage by authViewModel.uiMessage.collectAsState()
     val userBio by authViewModel.userBio.collectAsState()
+    val profileImageUrl by authViewModel.profileImageUrl.collectAsState()
 
     val songsCount by authViewModel.songsCount.collectAsState()
     val followers by authViewModel.followers.collectAsState()
@@ -49,10 +52,11 @@ fun ProfileScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(isLoggedIn) {
         if (isLoggedIn) {
             authViewModel.loadUserBio()
             authViewModel.loadUserStats()
+            authViewModel.loadUserProfileImage()
         }
     }
 
@@ -69,7 +73,12 @@ fun ProfileScreen(
         ) {
             ProfileHeader(
                 username = authViewModel.currentUserName,
-                bio = if (isLoggedIn && userBio.isNotBlank()) userBio else "Inicia sesión para ver tu bio"
+                bio = if (isLoggedIn && userBio.isNotBlank()) {
+                    userBio
+                } else {
+                    "Inicia sesión para ver tu bio"
+                },
+                profileImageUrl = profileImageUrl
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -101,7 +110,9 @@ fun ProfileScreen(
                     icon = Icons.Default.Person,
                     title = "Editar Perfil",
                     subtitle = "Nombre, bio y foto",
-                    onClick = { if (isLoggedIn) onNavigateToEditProfile() else onNavigateToLogin() }
+                    onClick = {
+                        if (isLoggedIn) onNavigateToEditProfile() else onNavigateToLogin()
+                    }
                 )
 
                 ProfileMenuItem(
@@ -141,25 +152,42 @@ fun ProfileScreen(
 }
 
 @Composable
-fun ProfileHeader(username: String, bio: String) {
+fun ProfileHeader(
+    username: String,
+    bio: String,
+    profileImageUrl: String
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            modifier = Modifier
-                .size(100.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                modifier = Modifier.size(60.dp).align(Alignment.Center),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+        if (profileImageUrl.isNotBlank()) {
+            AsyncImage(
+                model = profileImageUrl,
+                contentDescription = "Foto de perfil",
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
             )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(60.dp)
+                        .align(Alignment.Center),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -195,8 +223,17 @@ fun StatsSection(
     ) {
         StatItem(label = "Canciones", value = songsCount)
 
-        StatItem(label = "Seguidores", value = followersCount, onClick = { onStatClick("Seguidores") })
-        StatItem(label = "Siguiendo", value = followingCount, onClick = { onStatClick("Siguiendo") })
+        StatItem(
+            label = "Seguidores",
+            value = followersCount,
+            onClick = { onStatClick("Seguidores") }
+        )
+
+        StatItem(
+            label = "Siguiendo",
+            value = followingCount,
+            onClick = { onStatClick("Siguiendo") }
+        )
     }
 }
 
@@ -209,8 +246,16 @@ fun StatItem(label: String, value: String, onClick: () -> Unit = {}) {
             .clickable(enabled = label != "Canciones") { onClick() }
             .padding(8.dp)
     ) {
-        Text(text = value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
     }
 }
 
@@ -230,14 +275,30 @@ fun ProfileMenuItem(
             .padding(vertical = 12.dp, horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(24.dp)
+        )
+
         Spacer(modifier = Modifier.width(16.dp))
+
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.bodyLarge, color = color)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = color
+            )
             if (subtitle != null) {
-                Text(text = subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
             }
         }
+
         Icon(
             imageVector = Icons.Default.ChevronRight,
             contentDescription = null,

@@ -37,12 +37,14 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
     val socialList: StateFlow<List<FriendModel>> = _socialList
 
     val currentUserName: String get() = repository.getCurrentUserName()
-
+    private val _profileImageUrl = MutableStateFlow("")
+    val profileImageUrl: StateFlow<String> = _profileImageUrl
     init {
         if (_authState.value) {
             loadUserBio()
             loadUserStats()
             loadAllUsers()
+            loadUserProfileImage()
         }
     }
 
@@ -93,6 +95,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 loadUserBio()
                 loadUserStats()
                 loadAllUsers()
+                loadUserProfileImage()
             } catch (e: Exception) {
                 _uiMessage.value = "Error en el registro: ${e.localizedMessage}"
             }
@@ -108,6 +111,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 loadUserBio()
                 loadUserStats()
                 loadAllUsers()
+                loadUserProfileImage()
             } catch (e: Exception) {
                 _uiMessage.value = "Error: ${e.localizedMessage}"
             }
@@ -160,6 +164,9 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 _songsCount.value = 0
                 _allUsers.value = emptyList()
                 _socialList.value = emptyList()
+                _followers.value = emptyList()
+                _following.value = emptyList()
+                _profileImageUrl.value = ""
                 _uiMessage.value = "Sesión cerrada correctamente"
             } catch (e: Exception) {
                 _uiMessage.value = "Error al cerrar sesión"
@@ -175,6 +182,27 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 loadUserStats()
             } catch (e: Exception) {
                 _uiMessage.value = "Error al seguir al usuario"
+            }
+        }
+    }
+
+    fun loadUserProfileImage() {
+        viewModelScope.launch {
+            _profileImageUrl.value = repository.getUserProfileImageUrl()
+        }
+    }
+
+    fun updateProfilePicture(imageUri: android.net.Uri) {
+        viewModelScope.launch {
+            try {
+                val newUrl = repository.updateProfilePicture(imageUri)
+                _profileImageUrl.value = newUrl
+                _uiMessage.value = "Foto de perfil actualizada"
+                loadAllUsers()
+                loadUserStats()
+            } catch (e: Exception) {
+                android.util.Log.e("PFP_DEBUG", "Error al subir imagen", e)
+                _uiMessage.value = "Error al subir la imagen: ${e.message ?: "sin detalles"}"
             }
         }
     }

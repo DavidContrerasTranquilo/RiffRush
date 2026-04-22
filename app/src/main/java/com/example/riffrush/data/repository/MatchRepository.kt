@@ -253,4 +253,17 @@ class MatchRepository(
             ))
         }.await()
     }
+    private suspend fun getCurrentPlayerProfileData(): Triple<String, String, String> {
+        val playerId = getCurrentUserId()
+        val userDoc = firestore.collection("users").document(playerId).get().await()
+
+        val name = userDoc.getString("name")
+            ?: userDoc.getString("username")
+            ?: userDoc.getString("displayName")
+            ?: "Invitado"
+
+        val pfpUrl = userDoc.getString("pfpUrl") ?: ""
+
+        return Triple(playerId, name, pfpUrl)
+    }
 }
