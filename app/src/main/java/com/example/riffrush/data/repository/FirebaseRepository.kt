@@ -6,7 +6,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-
+import com.example.riffrush.data.model.DailyChallengeConfig
 class FirebaseRepository(private val firestore: FirebaseFirestore) {
 
     fun getFavorites(ownerId: String): Flow<List<Song>> = callbackFlow {
@@ -84,6 +84,46 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
 
             // Usamos set con merge por si el documento no existe
             statsRef.set(updates, com.google.firebase.firestore.SetOptions.merge()).await()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun getDailyChallengeConfig(date: String): DailyChallengeConfig? {
+        return try {
+            val doc = firestore.collection("daily_challenges")
+                .document(date)
+                .get()
+                .await()
+
+            if (doc.exists()) {
+                doc.toObject(DailyChallengeConfig::class.java)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    suspend fun saveDailyChallengeConfig(config: DailyChallengeConfig) {
+        try {
+            firestore.collection("daily_challenges")
+                .document(config.date)
+                .set(config)
+                .await()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun deleteDailyChallengeConfig(date: String) {
+        try {
+            firestore.collection("daily_challenges")
+                .document(date)
+                .delete()
+                .await()
         } catch (e: Exception) {
             e.printStackTrace()
         }

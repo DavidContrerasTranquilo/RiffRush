@@ -2,14 +2,17 @@ package com.example.riffrush.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.riffrush.data.model.DailyChallengeConfig
 import com.example.riffrush.data.model.FriendModel
 import com.example.riffrush.data.repository.AuthRepository
+import com.example.riffrush.data.repository.FirebaseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class AdminViewModel(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val firebaseRepository: FirebaseRepository
 ) : ViewModel() {
 
     private val _users = MutableStateFlow<List<FriendModel>>(emptyList())
@@ -62,5 +65,55 @@ class AdminViewModel(
                 _uiMessage.value = "Error al eliminar foto"
             }
         }
+    }
+
+    fun saveDailyChallenge(
+        date: String,
+        songIds: List<String>,
+        isActive: Boolean = true
+    ) {
+        viewModelScope.launch {
+            try {
+                if (date.isBlank()) {
+                    _uiMessage.value = "La fecha no puede estar vacía"
+                    return@launch
+                }
+
+                if (songIds.size != 6) {
+                    _uiMessage.value = "Debes indicar exactamente 6 canciones"
+                    return@launch
+                }
+
+                val config = DailyChallengeConfig(
+                    date = date,
+                    songIds = songIds,
+                    isActive = isActive
+                )
+
+                firebaseRepository.saveDailyChallengeConfig(config)
+                _uiMessage.value = "Reto diario guardado correctamente"
+            } catch (e: Exception) {
+                _uiMessage.value = "Error al guardar el reto diario"
+            }
+        }
+    }
+
+    fun deleteDailyChallenge(date: String) {
+        viewModelScope.launch {
+            try {
+                if (date.isBlank()) {
+                    _uiMessage.value = "La fecha no puede estar vacía"
+                    return@launch
+                }
+
+                firebaseRepository.deleteDailyChallengeConfig(date)
+                _uiMessage.value = "Reto diario eliminado"
+            } catch (e: Exception) {
+                _uiMessage.value = "Error al eliminar el reto diario"
+            }
+        }
+    }
+    fun showMessage(message: String) {
+        _uiMessage.value = message
     }
 }

@@ -49,13 +49,17 @@ class DailyChallengeViewModel(
             val lastPlayedDate = prefs.getString("last_played_date", "")
             val currentStreak = prefs.getInt("current_streak", 0)
 
+            android.util.Log.d("DAILY_DEBUG", "todayStr=$todayStr lastPlayedDate=$lastPlayedDate")
+
             if (todayStr == lastPlayedDate) {
+                android.util.Log.d("DAILY_DEBUG", "Reto ya completado hoy, no se vuelve a cargar")
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     isCompletedToday = true,
                     streak = currentStreak
                 )
             } else {
+                android.util.Log.d("DAILY_DEBUG", "Cargando reto diario...")
                 _uiState.value = _uiState.value.copy(
                     isLoading = true,
                     isCompletedToday = false,
@@ -67,22 +71,53 @@ class DailyChallengeViewModel(
     }
 
     private suspend fun loadDailySongs() {
+        val todayStr = getCurrentDateString()
+        android.util.Log.d("DAILY_DEBUG", "Fecha de hoy: $todayStr")
+
+        val configuredChallenge = firebaseRepository.getDailyChallengeConfig(todayStr)
+        android.util.Log.d("DAILY_DEBUG", "Config encontrada: $configuredChallenge")
+
+        if (configuredChallenge != null &&
+            configuredChallenge.isActive &&
+            configuredChallenge.songIds.size >= 6
+        ) {
+            android.util.Log.d("DAILY_DEBUG", "Song IDs configuradas: ${configuredChallenge.songIds}")
+
+            val loadedSongs = configuredChallenge.songIds.mapNotNull { id ->
+                val parsed = id.toLongOrNull()
+                android.util.Log.d("DAILY_DEBUG", "ID original=$id parsed=$parsed")
+
+                parsed?.let { deezerRepository.getSong(it) }
+            }
+
+            android.util.Log.d("DAILY_DEBUG", "Canciones cargadas desde config: ${loadedSongs.size}")
+
+            if (loadedSongs.size >= 6) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    songs = loadedSongs.take(6)
+                )
+                android.util.Log.d("DAILY_DEBUG", "Usando reto configurado por admin")
+                return
+            }
+        }
+
+        android.util.Log.d("DAILY_DEBUG", "Entrando en fallback automático")
         val allSongs = deezerRepository.getChart()
-        //Añado 6 canciones, porque si
+
         if (allSongs.size >= 6) {
             val seed = getDailySeed()
-            val random = Random(seed)
+            val random = kotlin.random.Random(seed)
             val selectedSongs = allSongs.shuffled(random).take(6)
-            
+
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
                 songs = selectedSongs
             )
         } else {
-            // Manejar error de red o falta de canciones (fallback)
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                songs = emptyList() // El UI deberia mostrar error
+                songs = emptyList()
             )
         }
     }
