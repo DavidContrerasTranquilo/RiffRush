@@ -39,12 +39,18 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
     val currentUserName: String get() = repository.getCurrentUserName()
     private val _profileImageUrl = MutableStateFlow("")
     val profileImageUrl: StateFlow<String> = _profileImageUrl
+    private val _userRole = MutableStateFlow("user")
+    val userRole: StateFlow<String> = _userRole
+
+    private val _isBlocked = MutableStateFlow(false)
+    val isBlocked: StateFlow<Boolean> = _isBlocked
     init {
         if (_authState.value) {
             loadUserBio()
             loadUserStats()
             loadAllUsers()
             loadUserProfileImage()
+            loadModerationState()
         }
     }
 
@@ -96,6 +102,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 loadUserStats()
                 loadAllUsers()
                 loadUserProfileImage()
+                loadModerationState()
             } catch (e: Exception) {
                 _uiMessage.value = "Error en el registro: ${e.localizedMessage}"
             }
@@ -112,6 +119,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 loadUserStats()
                 loadAllUsers()
                 loadUserProfileImage()
+                loadModerationState()
             } catch (e: Exception) {
                 _uiMessage.value = "Error: ${e.localizedMessage}"
             }
@@ -168,6 +176,8 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 _following.value = emptyList()
                 _profileImageUrl.value = ""
                 _uiMessage.value = "Sesión cerrada correctamente"
+                _userRole.value = "user"
+                _isBlocked.value = false
             } catch (e: Exception) {
                 _uiMessage.value = "Error al cerrar sesión"
             }
@@ -204,6 +214,14 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 android.util.Log.e("PFP_DEBUG", "Error al subir imagen", e)
                 _uiMessage.value = "Error al subir la imagen: ${e.message ?: "sin detalles"}"
             }
+        }
+    }
+
+    fun loadModerationState() {
+        viewModelScope.launch {
+            val (role, blocked) = repository.getCurrentUserModerationData()
+            _userRole.value = role
+            _isBlocked.value = blocked
         }
     }
 }

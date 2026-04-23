@@ -31,6 +31,7 @@ fun ProfileScreen(
     onNavigateToLogin: () -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {},
     onNavigateToSocialList: (String) -> Unit = {},
+    onNavigateToAdminPanel: () -> Unit = {},
     authViewModel: AuthViewModel = koinViewModel()
 ) {
     val isLoggedIn by authViewModel.authState.collectAsState()
@@ -44,7 +45,7 @@ fun ProfileScreen(
 
     val scrollState = rememberScrollState()
     val snackbarHostState = remember { SnackbarHostState() }
-
+    val userRole by authViewModel.userRole.collectAsState()
     LaunchedEffect(uiMessage) {
         uiMessage?.let {
             snackbarHostState.showSnackbar(it)
@@ -57,6 +58,7 @@ fun ProfileScreen(
             authViewModel.loadUserBio()
             authViewModel.loadUserStats()
             authViewModel.loadUserProfileImage()
+            authViewModel.loadModerationState()
         }
     }
 
@@ -121,6 +123,15 @@ fun ProfileScreen(
                     subtitle = "Tus canciones y artistas",
                     onClick = onNavigateToMusic
                 )
+
+                if (userRole == "admin") {
+                    ProfileMenuItem(
+                        icon = Icons.Default.AdminPanelSettings,
+                        title = "Panel de Administración",
+                        subtitle = "Moderación de usuarios",
+                        onClick = onNavigateToAdminPanel
+                    )
+                }
 
                 ProfileMenuItem(
                     icon = Icons.Default.Settings,

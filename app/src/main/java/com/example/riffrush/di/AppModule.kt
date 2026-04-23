@@ -22,6 +22,7 @@ import com.example.riffrush.data.repository.DeezerApi
 import com.example.riffrush.viewmodels.FavoritesGameViewModel
 import com.example.riffrush.data.local.PlayerIdentityManager
 import com.example.riffrush.viewmodels.DailyChallengeViewModel
+import com.example.riffrush.viewmodels.AdminViewModel
 
 val appModule = module {
     single { FirebaseAuth.getInstance() }
@@ -64,4 +65,5 @@ val appModule = module {
     viewModelOf(::FavoritesGameViewModel)
     
     viewModelOf(::DailyChallengeViewModel)
+    viewModelOf(::AdminViewModel)
 }

@@ -110,9 +110,11 @@ fun MainScreen(
                             restoreState = true
                         }
                     },
+                    onNavigateToAdminPanel = { navController.navigate("admin_panel") },
                     onNavigateToLogin = { navController.navigate("login") },
                     onNavigateToEditProfile = { navController.navigate("edit_profile") },
                     onNavigateToSocialList = { type -> navController.navigate("social_list/$type") }
+
                 )
             }
 
@@ -199,6 +201,12 @@ fun MainScreen(
                             popUpTo("matchmaking/$playlist") { inclusive = true }
                         }
                     },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable("admin_panel") {
+                com.example.riffrush.ui.screens.admin.AdminPanelScreen(
                     onBack = { navController.popBackStack() }
                 )
             }

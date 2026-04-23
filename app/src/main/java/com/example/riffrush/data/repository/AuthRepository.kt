@@ -38,10 +38,13 @@ class AuthRepository(
             firestore.collection("users").document(uid).set(
                 mapOf(
                     "uid" to uid,
+                    "email" to email,
                     "name" to username,
                     "bio" to defaultBio,
                     "pfpUrl" to "",
-                    "status" to "¡Hola! Estoy usando RiffRush"
+                    "status" to "¡Hola! Estoy usando RiffRush",
+                    "role" to "user",
+                    "isBlocked" to false
                 )
             ).await()
         }
@@ -115,6 +118,10 @@ class AuthRepository(
             val snapshot = firestore.collection("users").get().await()
             snapshot.documents.mapNotNull { doc ->
                 val uid = doc.id
+                val isBlocked = doc.getBoolean("isBlocked") ?: false
+                if (uid.startsWith("guest") || uid == currentUid || isBlocked) {
+                    null
+                } else {
                 if (uid.startsWith("guest") || uid == currentUid) {
                     null
                 } else {
@@ -127,9 +134,12 @@ class AuthRepository(
                         uid = uid,
                         name = nameFromFirestore,
                         pfpUrl = doc.getString("pfpUrl") ?: "",
-                        status = doc.getString("status") ?: "¡Hola! Estoy usando RiffRush"
+                        status = doc.getString("status") ?: "¡Hola! Estoy usando RiffRush",
+                        email = doc.getString("email") ?: "",
+                        role = doc.getString("role") ?: "user",
+                        isBlocked = isBlocked
                     )
-                }
+                }}
             }
         } catch (e: Exception) {
             emptyList()
@@ -169,13 +179,20 @@ class AuthRepository(
             val snapshot = firestore.collection("users").document(uid)
                 .collection(collectionName).get().await()
             snapshot.documents.mapNotNull { doc ->
-                FriendModel(
-                    uid = doc.getString("uid") ?: doc.id,
-                    name = doc.getString("name") ?: "Usuario",
-                    pfpUrl = doc.getString("pfpUrl") ?: "",
-                    status = doc.getString("status") ?: ""
-                )
-            }
+                val blocked = doc.getBoolean("isBlocked") ?: false
+                if (blocked) {
+                    null
+                } else {
+                    FriendModel(
+                        uid = doc.getString("uid") ?: doc.id,
+                        name = doc.getString("name") ?: "Usuario",
+                        pfpUrl = doc.getString("pfpUrl") ?: "",
+                        status = doc.getString("status") ?: "",
+                        email = doc.getString("email") ?: "",
+                        role = doc.getString("role") ?: "user",
+                        isBlocked = false
+                    )
+                }}
         } catch (e: Exception) {
             emptyList()
         }
@@ -260,5 +277,57 @@ class AuthRepository(
         } catch (e: Exception) {
             ""
         }
+    }
+
+    suspend fun getCurrentUserModerationData(): Pair<String, Boolean> {
+        val uid = firebaseAuth.currentUser?.uid ?: return "user" to false
+        return try {
+            val doc = firestore.collection("users").document(uid).get().await()
+            val role = doc.getString("role") ?: "user"
+            val isBlocked = doc.getBoolean("isBlocked") ?: false
+            role to isBlocked
+        } catch (e: Exception) {
+            "user" to false
+        }
+    }
+
+    suspend fun getAllUsersForAdmin(): List<FriendModel> {
+        return try {
+            val snapshot = firestore.collection("users").get().await()
+            snapshot.documents.map { doc ->
+                FriendModel(
+                    uid = doc.getString("uid") ?: doc.id,
+                    name = doc.getString("name") ?: "Usuario",
+                    pfpUrl = doc.getString("pfpUrl") ?: "",
+                    status = doc.getString("status") ?: "",
+                    email = doc.getString("email") ?: "",
+                    role = doc.getString("role") ?: "user",
+                    isBlocked = doc.getBoolean("isBlocked") ?: false
+                )
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    suspend fun setUserBlocked(targetUid: String, blocked: Boolean) {
+        firestore.collection("users")
+            .document(targetUid)
+            .update("isBlocked", blocked)
+            .await()
+    }
+
+    suspend fun clearUserProfilePicture(targetUid: String) {
+        firestore.collection("users")
+            .document(targetUid)
+            .update("pfpUrl", "")
+            .await()
+    }
+
+    suspend fun setUserProfilePictureUrl(targetUid: String, newUrl: String) {
+        firestore.collection("users")
+            .document(targetUid)
+            .update("pfpUrl", newUrl)
+            .await()
     }
 }

@@ -1,5 +1,6 @@
 package com.example.riffrush.ui.screens.home
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,17 +11,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.riffrush.viewmodels.MatchViewModel
+import com.example.riffrush.viewmodels.AuthViewModel
 import com.example.riffrush.viewmodels.DailyChallengeViewModel
-import org.koin.androidx.compose.koinViewModel
-import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
+import com.example.riffrush.viewmodels.MatchViewModel
 import com.google.firebase.auth.FirebaseAuth
+import org.koin.androidx.compose.koinViewModel
+
 data class PlaylistOption(
     val displayName: String,
     val onlineValue: String,
@@ -31,14 +33,15 @@ data class PlaylistOption(
 fun HomeScreen(
     navController: NavHostController,
     matchViewModel: MatchViewModel = koinViewModel(),
-    //Añado el reto diario
     dailyChallengeViewModel: DailyChallengeViewModel = koinViewModel(),
+    authViewModel: AuthViewModel = koinViewModel(),
     onNavigateToMatch: (String) -> Unit,
     onNavigateToFavorites: () -> Unit
 ) {
     val currentMatch by matchViewModel.currentMatch.collectAsState()
-    //Consigo el estado del reto diario
     val dailyChallengeState by dailyChallengeViewModel.uiState.collectAsState()
+    val isBlocked by authViewModel.isBlocked.collectAsState()
+
     val context = LocalContext.current
 
     var selectedPlaylist by remember { mutableStateOf<PlaylistOption?>(null) }
@@ -67,6 +70,10 @@ fun HomeScreen(
         offlineRouteSuffix = "top_50_espana"
     )
 
+    LaunchedEffect(Unit) {
+        authViewModel.loadModerationState()
+    }
+
     LaunchedEffect(currentMatch) {
         currentMatch?.let {
             if (it.matchId == "offline_test_id") {
@@ -79,11 +86,27 @@ fun HomeScreen(
         PlaylistModeDialog(
             playlistName = selectedPlaylist!!.displayName,
             onOnlineClick = {
-                navController.navigate("matchmaking/${selectedPlaylist!!.onlineValue}")
+                if (isBlocked) {
+                    Toast.makeText(
+                        context,
+                        "Tu cuenta está bloqueada y no puede jugar",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    navController.navigate("matchmaking/${selectedPlaylist!!.onlineValue}")
+                }
                 selectedPlaylist = null
             },
             onOfflineClick = {
-                navController.navigate("match/offline_${selectedPlaylist!!.offlineRouteSuffix}")
+                if (isBlocked) {
+                    Toast.makeText(
+                        context,
+                        "Tu cuenta está bloqueada y no puede jugar",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    navController.navigate("match/offline_${selectedPlaylist!!.offlineRouteSuffix}")
+                }
                 selectedPlaylist = null
             },
             onDismiss = {
@@ -126,21 +149,38 @@ fun HomeScreen(
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            "PLAYLIST DEL DÍA",
+                            text = "PLAYLIST DEL DÍA",
                             style = MaterialTheme.typography.labelLarge,
                             color = Color(0xFF7B1FA2)
                         )
+
                         Spacer(modifier = Modifier.height(8.dp))
+
                         Text(
-                            "Trivia del Retro",
+                            text = "Trivia del Retro",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold
                         )
+
                         Text("Pon a prueba tus oídos con tus canciones preferidas.")
+
                         Spacer(modifier = Modifier.height(16.dp))
+
                         Button(
-                            onClick = { onNavigateToFavorites() },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7B1FA2))
+                            onClick = {
+                                if (isBlocked) {
+                                    Toast.makeText(
+                                        context,
+                                        "Tu cuenta está bloqueada y no puede jugar",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    onNavigateToFavorites()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF7B1FA2)
+                            )
                         ) {
                             Text("Jugar con favoritos")
                         }
@@ -151,7 +191,7 @@ fun HomeScreen(
             item {
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
-                    "Partida por Playlist",
+                    text = "Partida por Playlist",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -164,10 +204,27 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     QuickButton("Reggaetón", Color(0xFFF8BBD0)) {
-                        selectedPlaylist = reggaeton
+                        if (isBlocked) {
+                            Toast.makeText(
+                                context,
+                                "Tu cuenta está bloqueada y no puede jugar",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            selectedPlaylist = reggaeton
+                        }
                     }
+
                     QuickButton("Rap Français", Color(0xFFBBDEFB)) {
-                        selectedPlaylist = rapFrances
+                        if (isBlocked) {
+                            Toast.makeText(
+                                context,
+                                "Tu cuenta está bloqueada y no puede jugar",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            selectedPlaylist = rapFrances
+                        }
                     }
                 }
 
@@ -178,10 +235,27 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     QuickButton("Rock Español", Color(0xFFFFE0B2)) {
-                        selectedPlaylist = rockEspanol
+                        if (isBlocked) {
+                            Toast.makeText(
+                                context,
+                                "Tu cuenta está bloqueada y no puede jugar",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            selectedPlaylist = rockEspanol
+                        }
                     }
+
                     QuickButton("Top 50 España", Color(0xFFC8E6C9)) {
-                        selectedPlaylist = top50Espana
+                        if (isBlocked) {
+                            Toast.makeText(
+                                context,
+                                "Tu cuenta está bloqueada y no puede jugar",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            selectedPlaylist = top50Espana
+                        }
                     }
                 }
             }
@@ -189,7 +263,7 @@ fun HomeScreen(
             item {
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
-                    "RETO DIARIO",
+                    text = "RETO DIARIO",
                     style = MaterialTheme.typography.labelLarge,
                     color = Color.Gray
                 )
@@ -202,7 +276,6 @@ fun HomeScreen(
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
                 ) {
-                    //Aqui construyo la pestaña, podria sacarse a otro compsable quiza?
                     Column(modifier = Modifier.padding(20.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -210,40 +283,57 @@ fun HomeScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "¡GANA LA RACHA!",
+                                text = "¡GANA LA RACHA!",
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                "Racha: ${dailyChallengeState.streak} 🔥",
+                                text = "Racha: ${dailyChallengeState.streak} 🔥",
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFFF9800)
                             )
                         }
+
                         Spacer(modifier = Modifier.height(8.dp))
+
                         Text(
                             text = "Adivina 6 canciones",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
+
                         Spacer(modifier = Modifier.height(4.dp))
-                        //Si esta completado pues eso
+
                         Text(
-                            if (dailyChallengeState.isCompletedToday) 
+                            text = if (dailyChallengeState.isCompletedToday) {
                                 "Ya has completado el reto de hoy. ¡Vuelve mañana para continuar tu racha!"
-                            else 
+                            } else {
                                 "6 canciones, 1 intento por canción. ¿Podrás adivinarlas todas y mantener tu racha?"
+                            }
                         )
+
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Button(
-                            onClick = { 
-                                val currentUser = FirebaseAuth.getInstance().currentUser
-                                if (currentUser == null || currentUser.uid.startsWith("guest")) {
-                                    Toast.makeText(context, "Debes iniciar sesión para jugar al Reto Diario", Toast.LENGTH_SHORT).show()
+                            onClick = {
+                                if (isBlocked) {
+                                    Toast.makeText(
+                                        context,
+                                        "Tu cuenta está bloqueada y no puede jugar",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 } else {
-                                    if (!dailyChallengeState.isCompletedToday) {
-                                        navController.navigate("daily_challenge")
+                                    val currentUser = FirebaseAuth.getInstance().currentUser
+                                    if (currentUser == null || currentUser.uid.startsWith("guest")) {
+                                        Toast.makeText(
+                                            context,
+                                            "Debes iniciar sesión para jugar al Reto Diario",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    } else {
+                                        if (!dailyChallengeState.isCompletedToday) {
+                                            navController.navigate("daily_challenge")
+                                        }
                                     }
                                 }
                             },
@@ -251,7 +341,13 @@ fun HomeScreen(
                             shape = RoundedCornerShape(12.dp),
                             enabled = !dailyChallengeState.isCompletedToday
                         ) {
-                            Text(if (dailyChallengeState.isCompletedToday) "COMPLETADO" else "JUGAR AHORA")
+                            Text(
+                                if (dailyChallengeState.isCompletedToday) {
+                                    "COMPLETADO"
+                                } else {
+                                    "JUGAR AHORA"
+                                }
+                            )
                         }
                     }
                 }
@@ -298,7 +394,11 @@ fun PlaylistModeDialog(
 }
 
 @Composable
-fun RowScope.QuickButton(text: String, color: Color, onClick: () -> Unit) {
+fun RowScope.QuickButton(
+    text: String,
+    color: Color,
+    onClick: () -> Unit
+) {
     Surface(
         modifier = Modifier
             .weight(1f)
