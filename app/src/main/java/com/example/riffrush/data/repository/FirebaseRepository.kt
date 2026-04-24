@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import com.example.riffrush.data.model.DailyChallengeConfig
 import com.google.firebase.firestore.FieldValue
+import com.example.riffrush.data.model.MatchHistoryModel
 class FirebaseRepository(private val firestore: FirebaseFirestore) {
 
     fun getFavorites(ownerId: String): Flow<List<Song>> = callbackFlow {
@@ -153,6 +154,34 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
 
         if (newStreak > currentMax) {
             ref.update("maxDailyStreak", newStreak)
+        }
+    }
+
+    suspend fun saveMatchHistory(history: MatchHistoryModel) {
+        val docRef = firestore.collection("users")
+            .document(history.userId)
+            .collection("match_history")
+            .document()
+
+        val historyWithId = history.copy(historyId = docRef.id)
+
+        docRef.set(historyWithId).await()
+    }
+
+    suspend fun getMatchHistory(userId: String): List<MatchHistoryModel> {
+        return try {
+            val snapshot = firestore.collection("users")
+                .document(userId)
+                .collection("match_history")
+                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .get()
+                .await()
+
+            snapshot.documents.mapNotNull {
+                it.toObject(MatchHistoryModel::class.java)
+            }
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 }

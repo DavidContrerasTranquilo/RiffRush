@@ -33,6 +33,7 @@ fun ProfileScreen(
     onNavigateToSocialList: (String) -> Unit = {},
     onNavigateToAdminPanel: () -> Unit = {},
     onNavigateToUserStats: (String) -> Unit = {},
+    onNavigateToMatchHistory: (String) -> Unit = {},
     authViewModel: AuthViewModel = koinViewModel()
 ) {
     val isLoggedIn by authViewModel.authState.collectAsState()
@@ -125,6 +126,19 @@ fun ProfileScreen(
                     onClick = {
                         if (isLoggedIn) {
                             onNavigateToUserStats(authViewModel.getCurrentUserId())
+                        } else {
+                            onNavigateToLogin()
+                        }
+                    }
+                )
+
+                ProfileMenuItem(
+                    icon = Icons.Default.History,
+                    title = "Historial de partidas",
+                    subtitle = "Online, offline y resultados",
+                    onClick = {
+                        if (isLoggedIn) {
+                            onNavigateToMatchHistory(authViewModel.getCurrentUserId())
                         } else {
                             onNavigateToLogin()
                         }

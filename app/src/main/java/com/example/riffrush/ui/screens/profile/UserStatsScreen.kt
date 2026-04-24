@@ -30,6 +30,7 @@ import org.koin.androidx.compose.koinViewModel
 fun UserStatsScreen(
     userId: String,
     onBack: () -> Unit,
+    onNavigateToMatchHistory: (String) -> Unit,
     authViewModel: AuthViewModel = koinViewModel()
 ) {
     val selectedUser by authViewModel.selectedUser.collectAsState()
@@ -101,6 +102,15 @@ fun UserStatsScreen(
                     CompatibilitySection(
                         compatibilityPercent = compatibilityPercent
                     )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    onClick = { onNavigateToMatchHistory(userId) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Ver historial de partidas")
                 }
             }
         } ?: run {
@@ -266,6 +276,7 @@ fun CompatibilitySection(
                     style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Center
                 )
+
             }
         }
     }

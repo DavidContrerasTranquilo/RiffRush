@@ -30,6 +30,7 @@ import com.example.riffrush.ui.screens.social.SocialScreen
 import org.koin.androidx.compose.koinViewModel
 import com.example.riffrush.ui.screens.match.MatchmakingScreen
 import com.example.riffrush.ui.screens.profile.UserStatsScreen
+import com.example.riffrush.ui.screens.profile.MatchHistoryScreen
 @Composable
 fun MainScreen(
     songViewModel: SongViewModel = koinViewModel()
@@ -119,6 +120,9 @@ fun MainScreen(
                     onNavigateToSocialList = { type -> navController.navigate("social_list/$type") } ,
                     onNavigateToUserStats = { uid ->
                         navController.navigate("user_stats/$uid")
+                    },
+                    onNavigateToMatchHistory = { uid ->
+                        navController.navigate("match_history/$uid")
                     },
                 )
             }
@@ -222,11 +226,22 @@ fun MainScreen(
                 )
             }
             composable("user_stats/{uid}") { backStackEntry ->
+                val uid = backStackEntry.arguments?.getString("uid") ?: ""
                 UserStatsScreen(
+                    userId = uid,
+                    onBack = { navController.popBackStack() },
+                    onNavigateToMatchHistory = {
+                        navController.navigate("match_history/$uid")
+                    }
+                )
+            }
+            composable("match_history/{uid}") { backStackEntry ->
+                MatchHistoryScreen(
                     userId = backStackEntry.arguments?.getString("uid") ?: "",
                     onBack = { navController.popBackStack() }
                 )
             }
+
         }
     }
 }

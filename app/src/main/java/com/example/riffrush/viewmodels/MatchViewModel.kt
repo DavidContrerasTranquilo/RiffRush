@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import com.example.riffrush.data.model.MatchmakingUiState
 import com.example.riffrush.data.model.MatchmakingResult
 import com.example.riffrush.data.repository.FirebaseRepository
+import com.example.riffrush.data.model.MatchHistoryModel
 
 class MatchViewModel(
     private val repository: MatchRepository,
@@ -48,7 +49,7 @@ class MatchViewModel(
     private var matchJob: Job? = null
     private val _matchmakingState = MutableStateFlow<MatchmakingUiState>(MatchmakingUiState.Idle)
     val matchmakingState: StateFlow<MatchmakingUiState> = _matchmakingState
-
+    private var historySavedForMatchId: String? = null
     private var queueJob: Job? = null
     private var currentQueueId: String? = null
     private var gamesPlayedRegisteredForMatchId: String? = null
@@ -90,6 +91,7 @@ class MatchViewModel(
                     val previousMatch = _currentMatch.value
                     val previousRound = previousMatch?.currentRound ?: -1
                     _currentMatch.value = match
+
                     if (
                         match?.status == MatchStatus.FINISHED &&
                         gamesPlayedRegisteredForMatchId != match.matchId
@@ -97,7 +99,11 @@ class MatchViewModel(
                         gamesPlayedRegisteredForMatchId = match.matchId
 
                         val currentUserId = repository.getCurrentUserId()
-                        firebaseRepository.incrementGamesPlayed(currentUserId)
+
+                        if (currentUserId.isNotBlank()) {
+                            firebaseRepository.incrementGamesPlayed(currentUserId)
+                            saveHistoryForCurrentUser(match)
+                        }
                     }
                     match?.let { currentMatch ->
                         val isOffline = currentMatch.matchId.startsWith("offline")
@@ -269,7 +275,14 @@ class MatchViewModel(
                 _currentMatch.value = finishedMatch
 
                 val currentUserId = repository.getCurrentUserId()
-                firebaseRepository.incrementGamesPlayed(currentUserId)
+
+                if (currentUserId.isNotBlank() && gamesPlayedRegisteredForMatchId != finishedMatch.matchId) {
+                    gamesPlayedRegisteredForMatchId = finishedMatch.matchId
+
+                    firebaseRepository.incrementGamesPlayed(currentUserId)
+                    saveHistoryForCurrentUser(finishedMatch)
+                }
+
             }
         }
     }
@@ -303,6 +316,8 @@ class MatchViewModel(
         _songs.value = emptyList()
         _currentRound.value = 0
         _currentMatch.value = null
+        gamesPlayedRegisteredForMatchId = null
+        historySavedForMatchId = null
         timerJob?.cancel()
 
         viewModelScope.launch {
@@ -407,5 +422,44 @@ class MatchViewModel(
         } else {
             match.answeredP2
         }
+    }
+
+    private suspend fun saveHistoryForCurrentUser(match: MatchModel) {
+        val currentUserId = repository.getCurrentUserId()
+        if (currentUserId.isBlank()) return
+
+        val amIPlayer1 = currentUserId == match.player1Id
+
+        val myScore = if (amIPlayer1) match.scoreP1 else match.scoreP2
+        val opponentScore = if (amIPlayer1) match.scoreP2 else match.scoreP1
+
+        val opponentId = if (amIPlayer1) match.player2Id else match.player1Id
+        val opponentName = if (amIPlayer1) {
+            match.player2Name.ifBlank { "Invitado" }
+        } else {
+            match.player1Name.ifBlank { "Invitado" }
+        }
+
+        val result = when {
+            myScore > opponentScore -> "WIN"
+            myScore < opponentScore -> "LOSE"
+            else -> "DRAW"
+        }
+
+        val mode = if (match.matchId.startsWith("offline")) "OFFLINE" else "ONLINE"
+
+        firebaseRepository.saveMatchHistory(
+            MatchHistoryModel(
+                matchId = match.matchId,
+                userId = currentUserId,
+                opponentId = opponentId,
+                opponentName = opponentName,
+                mode = mode,
+                playlist = "",
+                myScore = myScore,
+                opponentScore = opponentScore,
+                result = result
+            )
+        )
     }
 }
