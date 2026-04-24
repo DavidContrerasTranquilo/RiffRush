@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import com.example.riffrush.data.model.DailyChallengeConfig
+import com.google.firebase.firestore.FieldValue
 class FirebaseRepository(private val firestore: FirebaseFirestore) {
 
     fun getFavorites(ownerId: String): Flow<List<Song>> = callbackFlow {
@@ -126,6 +127,32 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
                 .await()
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    suspend fun incrementGamesPlayed(uid: String) {
+        firestore.collection("users").document(uid)
+            .update("gamesPlayed", FieldValue.increment(1))
+    }
+
+    suspend fun incrementSongsPlayed(uid: String) {
+        firestore.collection("users")
+            .document(uid)
+            .update(
+                "songsPlayed",
+                com.google.firebase.firestore.FieldValue.increment(1)
+            )
+            .await()
+    }
+
+    suspend fun updateMaxStreak(uid: String, newStreak: Int) {
+        val ref = firestore.collection("users").document(uid)
+        val doc = ref.get().await()
+
+        val currentMax = doc.getLong("maxDailyStreak") ?: 0
+
+        if (newStreak > currentMax) {
+            ref.update("maxDailyStreak", newStreak)
         }
     }
 }

@@ -7,8 +7,14 @@ import com.example.riffrush.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import com.example.riffrush.data.repository.FirebaseRepository
+import kotlinx.coroutines.flow.first
 
-class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
+
+class AuthViewModel(
+    private val repository: AuthRepository,
+    private val firebaseRepository: FirebaseRepository
+) : ViewModel() {
     private val _authState = MutableStateFlow<Boolean>(repository.getCurrentUser() != null)
     val authState: StateFlow<Boolean> = _authState
 
@@ -44,6 +50,14 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
 
     private val _isBlocked = MutableStateFlow(false)
     val isBlocked: StateFlow<Boolean> = _isBlocked
+    private val _compatibility = MutableStateFlow<Int?>(null)
+    val compatibility: StateFlow<Int?> = _compatibility
+    private val _selectedUser = MutableStateFlow<FriendModel?>(null)
+    val selectedUser: StateFlow<FriendModel?> = _selectedUser
+
+    private val _compatibilityPercent = MutableStateFlow<Int?>(null)
+    val compatibilityPercent: StateFlow<Int?> = _compatibilityPercent
+
     init {
         if (_authState.value) {
             loadUserBio()
@@ -178,6 +192,8 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 _uiMessage.value = "Sesión cerrada correctamente"
                 _userRole.value = "user"
                 _isBlocked.value = false
+                _selectedUser.value = null
+                _compatibilityPercent.value = null
             } catch (e: Exception) {
                 _uiMessage.value = "Error al cerrar sesión"
             }
@@ -222,6 +238,53 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
             val (role, blocked) = repository.getCurrentUserModerationData()
             _userRole.value = role
             _isBlocked.value = blocked
+        }
+    }
+
+    fun getCurrentUserId(): String {
+        return repository.getCurrentUser()?.uid ?: ""
+    }
+
+    fun loadSelectedUser(userId: String) {
+        viewModelScope.launch {
+            _selectedUser.value = repository.getUserById(userId)
+        }
+    }
+
+    fun clearCompatibility() {
+        _compatibilityPercent.value = null
+    }
+
+    fun calculateCompatibility(otherUserId: String) {
+        viewModelScope.launch {
+            try {
+                val myId = getCurrentUserId()
+
+                if (myId.isBlank() || otherUserId.isBlank() || myId == otherUserId) {
+                    _compatibilityPercent.value = null
+                    return@launch
+                }
+
+                val myFavs = firebaseRepository.getFavorites(myId).first()
+                val otherFavs = firebaseRepository.getFavorites(otherUserId).first()
+
+                val myIds = myFavs.map { it.id }.toSet()
+                val otherIds = otherFavs.map { it.id }.toSet()
+
+                val intersection = myIds.intersect(otherIds).size
+                val union = myIds.union(otherIds).size
+
+                val percent = if (union == 0) {
+                    0
+                } else {
+                    (intersection * 100) / union
+                }
+
+                _compatibilityPercent.value = percent
+
+            } catch (e: Exception) {
+                _compatibilityPercent.value = 0
+            }
         }
     }
 }

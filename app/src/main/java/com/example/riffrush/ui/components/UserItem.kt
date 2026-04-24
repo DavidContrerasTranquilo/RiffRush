@@ -19,16 +19,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.riffrush.data.model.FriendModel
-
+import androidx.compose.foundation.clickable
 @Composable
 fun UserItem(
     user: FriendModel,
     isFollowing: Boolean = false,
     onFollowClick: () -> Unit,
-    onMatchClick: (() -> Unit)? = null
+    onMatchClick: (() -> Unit)? = null,
+    onUserClick: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onUserClick(user.uid) },
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)

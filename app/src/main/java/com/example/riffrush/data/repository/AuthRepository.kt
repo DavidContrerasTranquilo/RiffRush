@@ -330,4 +330,30 @@ class AuthRepository(
             .update("pfpUrl", newUrl)
             .await()
     }
+
+    suspend fun getUserById(uid: String): FriendModel? {
+        return try {
+            val doc = firestore.collection("users")
+                .document(uid)
+                .get()
+                .await()
+
+            if (!doc.exists()) return null
+
+            FriendModel(
+                uid = doc.getString("uid") ?: doc.id,
+                name = doc.getString("name") ?: "Usuario",
+                pfpUrl = doc.getString("pfpUrl") ?: "",
+                status = doc.getString("status") ?: "",
+                email = doc.getString("email") ?: "",
+                role = doc.getString("role") ?: "user",
+                isBlocked = doc.getBoolean("isBlocked") ?: false,
+                gamesPlayed = (doc.getLong("gamesPlayed") ?: 0L).toInt(),
+                songsPlayed = (doc.getLong("songsPlayed") ?: 0L).toInt(),
+                maxDailyStreak = (doc.getLong("maxDailyStreak") ?: 0L).toInt()
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
 }

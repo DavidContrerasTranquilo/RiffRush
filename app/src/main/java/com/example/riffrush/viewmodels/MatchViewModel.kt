@@ -17,9 +17,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import com.example.riffrush.data.model.MatchmakingUiState
 import com.example.riffrush.data.model.MatchmakingResult
+import com.example.riffrush.data.repository.FirebaseRepository
 
 class MatchViewModel(
     private val repository: MatchRepository,
+    private val firebaseRepository: FirebaseRepository,
     private val deezerApi: DeezerApi,
     private val auth: FirebaseAuth,
     private val musicPlayer: MusicPlayer
@@ -187,16 +189,21 @@ class MatchViewModel(
     fun onAnswerSelected(isCorrect: Boolean) {
         timerJob?.cancel() // Detener el timer
         musicPlayer.stop()
+
         val match = _currentMatch.value ?: return
         val isOffline = match.matchId.startsWith("offline")
+        val currentUserId = repository.getCurrentUserId()
 
         viewModelScope.launch {
             try {
+                firebaseRepository.incrementSongsPlayed(currentUserId)
+
                 if (isOffline) {
                     handleOfflineAnswer(match, isCorrect)
                 } else {
                     repository.submitAnswer(match.matchId, isCorrect)
                 }
+
             } catch (e: Exception) {
                 Log.e("MatchViewModel", "Error submitting answer", e)
                 _error.value = "Error al enviar la respuesta: ${e.message}"
@@ -257,17 +264,6 @@ class MatchViewModel(
                 }
             } catch (e: Exception) {
                 Log.e("MatchViewModel", "Error updating score", e)
-            }
-        }
-    }
-
-    fun finishMatch() {
-        val match = _currentMatch.value ?: return
-        viewModelScope.launch {
-            try {
-                repository.updateMatchStatus(match.matchId, MatchStatus.FINISHED)
-            } catch (e: Exception) {
-                Log.e("MatchViewModel", "Error finishing match", e)
             }
         }
     }
@@ -351,5 +347,20 @@ class MatchViewModel(
 
     fun getCurrentPlayerId(): String {
         return repository.getCurrentUserId()
+    }
+
+    fun finishMatch() {
+        val match = _currentMatch.value ?: return
+
+        viewModelScope.launch {
+            try {
+                repository.updateMatchStatus(match.matchId, MatchStatus.FINISHED)
+                firebaseRepository.incrementGamesPlayed(match.player1Id)
+                firebaseRepository.incrementGamesPlayed(match.player2Id)
+
+            } catch (e: Exception) {
+                Log.e("MatchViewModel", "Error finishing match", e)
+            }
+        }
     }
 }

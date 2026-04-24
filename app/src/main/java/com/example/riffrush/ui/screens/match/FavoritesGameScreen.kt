@@ -76,6 +76,8 @@ fun FavoritesGameScreen(
                         player2Name = "Bot",
                         scoreP1 = score,
                         scoreP2 = 0,
+                        onPlayer1Click = {},
+                        onPlayer2Click = {},
                         onExit = onBack
                     )
                 }
@@ -95,6 +97,8 @@ fun FavoritesGameScreen(
                             onAnswer = { isCorrect ->
                                 favoritesViewModel.submitAnswer(isCorrect)
                             },
+                            onPlayer1Click = {},
+                            onPlayer2Click = {},
                             musicPlayer = musicPlayer
                         )
                     }

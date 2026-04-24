@@ -57,7 +57,15 @@ val appModule = module {
     singleOf(::PlayerIdentityManager)
     singleOf(::MusicPlayer)
     single { com.example.riffrush.data.local.GuestIdManager(androidContext()) }
-
+    singleOf(::FirebaseRepository)
+    single {
+        AuthRepository(
+            firebaseAuth = get(),
+            firestore = get(),
+            context = androidContext(),
+            okHttpClient = get()
+        )
+    }
     viewModelOf(::SongViewModel)
     viewModelOf(::AuthViewModel)
     viewModelOf(::MusicViewModel)

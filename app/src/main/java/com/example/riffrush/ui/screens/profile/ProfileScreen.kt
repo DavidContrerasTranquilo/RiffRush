@@ -32,6 +32,7 @@ fun ProfileScreen(
     onNavigateToEditProfile: () -> Unit = {},
     onNavigateToSocialList: (String) -> Unit = {},
     onNavigateToAdminPanel: () -> Unit = {},
+    onNavigateToUserStats: (String) -> Unit = {},
     authViewModel: AuthViewModel = koinViewModel()
 ) {
     val isLoggedIn by authViewModel.authState.collectAsState()
@@ -114,6 +115,19 @@ fun ProfileScreen(
                     subtitle = "Nombre, bio y foto",
                     onClick = {
                         if (isLoggedIn) onNavigateToEditProfile() else onNavigateToLogin()
+                    }
+                )
+
+                ProfileMenuItem(
+                    icon = Icons.Default.BarChart,
+                    title = "Mis Estadísticas",
+                    subtitle = "Partidas, racha y compatibilidad",
+                    onClick = {
+                        if (isLoggedIn) {
+                            onNavigateToUserStats(authViewModel.getCurrentUserId())
+                        } else {
+                            onNavigateToLogin()
+                        }
                     }
                 )
 

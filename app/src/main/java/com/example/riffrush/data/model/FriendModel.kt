@@ -7,5 +7,8 @@ data class FriendModel(
     val status: String = "",
     val email: String = "",
     val role: String = "user",
-    val isBlocked: Boolean = false
+    val isBlocked: Boolean = false,
+    val gamesPlayed: Int = 0,
+    val songsPlayed: Int = 0,
+    val maxDailyStreak: Int = 0
 )

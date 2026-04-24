@@ -168,7 +168,7 @@ class DailyChallengeViewModel(
         if (lastPlayedDate == getYesterdayDateString()) {
             streak += 1
         } else if (lastPlayedDate != todayStr) {
-            streak = 1 // Resetea a 1 si no jugó ayer
+            streak = 1
         }
 
         prefs.edit()
@@ -180,7 +180,15 @@ class DailyChallengeViewModel(
             isGameOver = true,
             streak = streak
         )
+
+        viewModelScope.launch {
+            val currentUser = authRepository.getCurrentUser()
+            if (currentUser != null) {
+                firebaseRepository.updateMaxStreak(currentUser.uid, streak)
+            }
+        }
     }
+
     //Para conseguir la rachaa
     fun getStreak(): Int {
         return prefs.getInt("current_streak", 0)

@@ -18,7 +18,8 @@ import org.koin.androidx.compose.koinViewModel
 fun SocialScreen(
     authViewModel: AuthViewModel = koinViewModel(),
     matchViewModel: MatchViewModel = koinViewModel(),
-    onNavigateToMatch: (String) -> Unit
+    onNavigateToMatch: (String) -> Unit,
+    onNavigateToUserStats: (String) -> Unit
 ) {
     val users by authViewModel.allUsers.collectAsState()
     val following by authViewModel.following.collectAsState()
@@ -59,6 +60,9 @@ fun SocialScreen(
                     items(users) { user ->
                         UserItem(
                             user = user,
+                            onUserClick = { uid ->
+                                onNavigateToUserStats(uid)
+                            },
                             isFollowing = following.contains(user.uid),
                             onFollowClick = { authViewModel.addFriend(user) },
                             onMatchClick = { matchViewModel.startMatchmaking(user.uid) }

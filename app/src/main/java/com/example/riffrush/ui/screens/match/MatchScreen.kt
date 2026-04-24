@@ -1,6 +1,7 @@
 package com.example.riffrush.ui.screens.match
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,6 +58,7 @@ import org.koin.compose.koinInject
 fun MatchScreen(
     matchId: String,
     onExit: () -> Unit,
+    onNavigateToUserStats: (String) -> Unit,
     viewModel: MatchViewModel = koinViewModel(),
     musicPlayer: MusicPlayer = koinInject()
 ) {
@@ -127,6 +129,7 @@ fun MatchScreen(
                                 val rawPlayer1Name = currentMatch.player1Name.ifBlank {
                                     if (isOffline) "Tú" else "Invitado"
                                 }
+
                                 val rawPlayer2Name = currentMatch.player2Name.ifBlank {
                                     if (isOffline) "Bot" else "Invitado"
                                 }
@@ -155,6 +158,16 @@ fun MatchScreen(
                                     onAnswer = { isCorrect ->
                                         viewModel.onAnswerSelected(isCorrect)
                                     },
+                                    onPlayer1Click = {
+                                        if (!isOffline) {
+                                            onNavigateToUserStats(currentMatch.player1Id)
+                                        }
+                                    },
+                                    onPlayer2Click = {
+                                        if (!isOffline) {
+                                            onNavigateToUserStats(currentMatch.player2Id)
+                                        }
+                                    },
                                     musicPlayer = musicPlayer
                                 )
                             }
@@ -168,6 +181,7 @@ fun MatchScreen(
                             val rawPlayer1Name = currentMatch.player1Name.ifBlank {
                                 if (isOffline) "Tú" else "Invitado"
                             }
+
                             val rawPlayer2Name = currentMatch.player2Name.ifBlank {
                                 if (isOffline) "Bot" else "Invitado"
                             }
@@ -183,6 +197,16 @@ fun MatchScreen(
                                 player2Name = player2DisplayName,
                                 scoreP1 = currentMatch.scoreP1,
                                 scoreP2 = currentMatch.scoreP2,
+                                onPlayer1Click = {
+                                    if (!isOffline) {
+                                        onNavigateToUserStats(currentMatch.player1Id)
+                                    }
+                                },
+                                onPlayer2Click = {
+                                    if (!isOffline) {
+                                        onNavigateToUserStats(currentMatch.player2Id)
+                                    }
+                                },
                                 onExit = onExit
                             )
                         }
@@ -245,6 +269,8 @@ fun GameView(
     allSongs: List<Song>,
     hasAnswered: Boolean = false,
     onAnswer: (Boolean) -> Unit,
+    onPlayer1Click: () -> Unit,
+    onPlayer2Click: () -> Unit,
     musicPlayer: MusicPlayer
 ) {
     val options = remember(song) {
@@ -273,7 +299,9 @@ fun GameView(
             player1Name = player1Name,
             player2Name = player2Name,
             scoreP1 = scoreP1,
-            scoreP2 = scoreP2
+            scoreP2 = scoreP2,
+            onPlayer1Click = onPlayer1Click,
+            onPlayer2Click = onPlayer2Click
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -333,7 +361,9 @@ fun ScoreBoard(
     player1Name: String,
     player2Name: String,
     scoreP1: Int,
-    scoreP2: Int
+    scoreP2: Int,
+    onPlayer1Click: () -> Unit,
+    onPlayer2Click: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -347,7 +377,8 @@ fun ScoreBoard(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = player1Name,
-                style = MaterialTheme.typography.labelSmall
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.clickable { onPlayer1Click() }
             )
             Text(
                 text = "$scoreP1",
@@ -365,7 +396,8 @@ fun ScoreBoard(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = player2Name,
-                style = MaterialTheme.typography.labelSmall
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.clickable { onPlayer2Click() }
             )
             Text(
                 text = "$scoreP2",
@@ -407,6 +439,8 @@ fun ResultView(
     player2Name: String,
     scoreP1: Int,
     scoreP2: Int,
+    onPlayer1Click: () -> Unit,
+    onPlayer2Click: () -> Unit,
     onExit: () -> Unit
 ) {
     val win = scoreP1 > scoreP2
@@ -440,7 +474,9 @@ fun ResultView(
             player1Name = player1Name,
             player2Name = player2Name,
             scoreP1 = scoreP1,
-            scoreP2 = scoreP2
+            scoreP2 = scoreP2,
+            onPlayer1Click = onPlayer1Click,
+            onPlayer2Click = onPlayer2Click
         )
 
         Spacer(modifier = Modifier.height(48.dp))

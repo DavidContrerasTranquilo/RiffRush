@@ -29,7 +29,7 @@ import com.example.riffrush.ui.screens.social.SocialListScreen
 import com.example.riffrush.ui.screens.social.SocialScreen
 import org.koin.androidx.compose.koinViewModel
 import com.example.riffrush.ui.screens.match.MatchmakingScreen
-
+import com.example.riffrush.ui.screens.profile.UserStatsScreen
 @Composable
 fun MainScreen(
     songViewModel: SongViewModel = koinViewModel()
@@ -92,6 +92,9 @@ fun MainScreen(
                 SocialScreen(
                     onNavigateToMatch = { matchId ->
                         navController.navigate("match/$matchId")
+                    },
+                    onNavigateToUserStats = { uid ->
+                        navController.navigate("user_stats/$uid")
                     }
                 )
             }
@@ -113,8 +116,10 @@ fun MainScreen(
                     onNavigateToAdminPanel = { navController.navigate("admin_panel") },
                     onNavigateToLogin = { navController.navigate("login") },
                     onNavigateToEditProfile = { navController.navigate("edit_profile") },
-                    onNavigateToSocialList = { type -> navController.navigate("social_list/$type") }
-
+                    onNavigateToSocialList = { type -> navController.navigate("social_list/$type") } ,
+                    onNavigateToUserStats = { uid ->
+                        navController.navigate("user_stats/$uid")
+                    },
                 )
             }
 
@@ -138,6 +143,9 @@ fun MainScreen(
                         navController.navigate(Screen.Social.route) {
                             popUpTo(navController.graph.findStartDestination().id)
                         }
+                    },
+                    onNavigateToUserStats = { uid ->
+                        navController.navigate("user_stats/$uid")
                     }
                 )
             }
@@ -149,7 +157,10 @@ fun MainScreen(
                 val matchId = backStackEntry.arguments?.getString("matchId") ?: ""
                 MatchScreen(
                     matchId = matchId,
-                    onExit = { navController.popBackStack() }
+                    onExit = { navController.popBackStack() },
+                    onNavigateToUserStats = { uid ->
+                        navController.navigate("user_stats/$uid")
+                    }
                 )
             }
 
@@ -207,6 +218,12 @@ fun MainScreen(
 
             composable("admin_panel") {
                 com.example.riffrush.ui.screens.admin.AdminPanelScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable("user_stats/{uid}") { backStackEntry ->
+                UserStatsScreen(
+                    userId = backStackEntry.arguments?.getString("uid") ?: "",
                     onBack = { navController.popBackStack() }
                 )
             }

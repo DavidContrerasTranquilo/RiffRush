@@ -19,9 +19,10 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SocialListScreen(
-    type: String, // "Seguidores" o "Siguiendo"
+    type: String,
     onNavigateBack: () -> Unit,
     onNavigateToSocial: () -> Unit,
+    onNavigateToUserStats: (String) -> Unit,
     authViewModel: AuthViewModel = koinViewModel()
 ) {
     val list by authViewModel.socialList.collectAsState()
@@ -118,7 +119,10 @@ fun SocialListScreen(
                     UserItem(
                         user = user,
                         isFollowing = following.contains(user.uid),
-                        onFollowClick = { authViewModel.addFriend(user) }
+                        onFollowClick = { authViewModel.addFriend(user) },
+                        onUserClick = { uid ->
+                            onNavigateToUserStats(uid)
+                        }
                     )
                 }
             }
