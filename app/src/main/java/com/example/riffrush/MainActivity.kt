@@ -6,9 +6,21 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.example.riffrush.ui.theme.RiffRushTheme
 import com.example.riffrush.ui.screens.main.MainScreen
+import android.Manifest
+import android.os.Build
+import androidx.activity.result.contract.ActivityResultContracts
+import com.example.riffrush.notifications.DailyChallengeNotificationScheduler
+
 class MainActivity : ComponentActivity() {
+    private val requestNotificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        DailyChallengeNotificationScheduler.scheduleDailyNotification(this)
         enableEdgeToEdge()
 
         setContent {
