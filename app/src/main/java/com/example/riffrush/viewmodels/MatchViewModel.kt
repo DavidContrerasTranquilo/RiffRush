@@ -51,7 +51,7 @@ class MatchViewModel(
 
     private var queueJob: Job? = null
     private var currentQueueId: String? = null
-
+    private var gamesPlayedRegisteredForMatchId: String? = null
     fun startMatchmaking(opponentId: String) {
         _isLoading.value = true
         _error.value = null
@@ -90,7 +90,15 @@ class MatchViewModel(
                     val previousMatch = _currentMatch.value
                     val previousRound = previousMatch?.currentRound ?: -1
                     _currentMatch.value = match
+                    if (
+                        match?.status == MatchStatus.FINISHED &&
+                        gamesPlayedRegisteredForMatchId != match.matchId
+                    ) {
+                        gamesPlayedRegisteredForMatchId = match.matchId
 
+                        val currentUserId = repository.getCurrentUserId()
+                        firebaseRepository.incrementGamesPlayed(currentUserId)
+                    }
                     match?.let { currentMatch ->
                         val isOffline = currentMatch.matchId.startsWith("offline")
 
@@ -244,9 +252,14 @@ class MatchViewModel(
                 )
                 startTimer() // Reiniciamos el timer para la nueva ronda
             } else {
-                _currentMatch.value = updatedMatch.copy(
+                val finishedMatch = updatedMatch.copy(
                     status = MatchStatus.FINISHED
                 )
+
+                _currentMatch.value = finishedMatch
+
+                val currentUserId = repository.getCurrentUserId()
+                firebaseRepository.incrementGamesPlayed(currentUserId)
             }
         }
     }
