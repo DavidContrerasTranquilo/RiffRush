@@ -94,6 +94,7 @@ fun FavoritesGameScreen(
                             scoreP2 = 0,
                             allSongs = favorites,
                             hasAnswered = false,
+                            timeLeft = 1f,
                             onAnswer = { isCorrect ->
                                 favoritesViewModel.submitAnswer(isCorrect)
                             },

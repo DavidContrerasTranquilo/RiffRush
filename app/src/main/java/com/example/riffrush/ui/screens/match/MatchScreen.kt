@@ -52,7 +52,7 @@ import com.example.riffrush.data.player.MusicPlayer
 import com.example.riffrush.viewmodels.MatchViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
-
+import androidx.compose.material3.LinearProgressIndicatord
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MatchScreen(
@@ -65,6 +65,7 @@ fun MatchScreen(
     val match by viewModel.currentMatch.collectAsState()
     val songs by viewModel.songs.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val timeLeft by viewModel.timeLeft.collectAsState()
 
     LaunchedEffect(matchId) {
         if (matchId.startsWith("offline_")) {
@@ -155,6 +156,7 @@ fun MatchScreen(
                                     scoreP2 = currentMatch.scoreP2,
                                     allSongs = songs,
                                     hasAnswered = hasAnswered,
+                                    timeLeft = timeLeft,
                                     onAnswer = { isCorrect ->
                                         viewModel.onAnswerSelected(isCorrect)
                                     },
@@ -268,6 +270,7 @@ fun GameView(
     scoreP2: Int,
     allSongs: List<Song>,
     hasAnswered: Boolean = false,
+    timeLeft: Float,
     onAnswer: (Boolean) -> Unit,
     onPlayer1Click: () -> Unit,
     onPlayer2Click: () -> Unit,
@@ -311,6 +314,10 @@ fun GameView(
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        TimerView(timeLeft = timeLeft)
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -405,6 +412,37 @@ fun ScoreBoard(
                 fontWeight = FontWeight.Black
             )
         }
+    }
+}
+
+@Composable
+fun TimerView(timeLeft: Float) {
+    val secondsLeft = kotlin.math.ceil(timeLeft * 15).toInt().coerceIn(0, 15)
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "⏱ ${secondsLeft}s",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = when {
+                secondsLeft <= 3 -> Color.Red
+                secondsLeft <= 7 -> Color(0xFFFF9800)
+                else -> MaterialTheme.colorScheme.primary
+            }
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        LinearProgressIndicator(
+            progress = { timeLeft.coerceIn(0f, 1f) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(10.dp)
+                .clip(RoundedCornerShape(50.dp))
+        )
     }
 }
 

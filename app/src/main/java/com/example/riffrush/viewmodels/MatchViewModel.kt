@@ -114,20 +114,31 @@ class MatchViewModel(
                             }
                         }
 
-                        // En online, la ronda real viene del documento compartido
                         if (!isOffline) {
                             _currentRound.value = currentMatch.currentRound
-                            
-                            // Lógica de timer para Online
+
                             if (currentMatch.status == MatchStatus.PLAYING && _songs.value.isNotEmpty()) {
-                                val amIPlayer1 = getCurrentPlayerId() == currentMatch.player1Id
-                                val hasAnswered = if (amIPlayer1) currentMatch.answeredP1 else currentMatch.answeredP2
-                                
+                                val hasAnswered = haveIAnswered(currentMatch)
+                                val opponentAnswered = hasOpponentAnswered(currentMatch)
+
                                 val roundChanged = currentMatch.currentRound != previousRound
                                 val justStarted = previousMatch?.status == MatchStatus.WAITING
-                                
-                                if ((roundChanged || justStarted) && !hasAnswered) {
-                                    startTimer()
+
+                                if (roundChanged || justStarted) {
+                                    opponentAnsweredTimerStartedForRound = null
+
+                                    if (!hasAnswered) {
+                                        startTimer(15000L)
+                                    }
+                                }
+
+                                if (
+                                    opponentAnswered &&
+                                    !hasAnswered &&
+                                    opponentAnsweredTimerStartedForRound != currentMatch.currentRound
+                                ) {
+                                    opponentAnsweredTimerStartedForRound = currentMatch.currentRound
+                                    startTimer(7000L)
                                 }
                             }
                         }
@@ -173,23 +184,22 @@ class MatchViewModel(
     }
 
     private var timerJob: Job? = null
+    private var opponentAnsweredTimerStartedForRound: Int? = null
 
-    private fun startTimer() {
+    private fun startTimer(totalTime: Long = 15000L) {
         timerJob?.cancel()
         _timeLeft.value = 1f
+
         timerJob = viewModelScope.launch {
-            val totalTime = 15000L // 15 segundos
             val interval = 100L
             var elapsed = 0L
-            
+
             while (elapsed < totalTime) {
                 delay(interval)
                 elapsed += interval
                 _timeLeft.value = 1f - (elapsed.toFloat() / totalTime)
-                
-                // Si el usuario responde mientras el timer corre, el job se cancelará en onAnswerSelected
             }
-            // Si llega aquí, el tiempo se agotó
+
             onAnswerSelected(false)
         }
     }
@@ -374,6 +384,28 @@ class MatchViewModel(
             } catch (e: Exception) {
                 Log.e("MatchViewModel", "Error finishing match", e)
             }
+        }
+    }
+
+    private fun hasOpponentAnswered(match: MatchModel): Boolean {
+        val currentUserId = getCurrentPlayerId()
+        val amIPlayer1 = currentUserId == match.player1Id
+
+        return if (amIPlayer1) {
+            match.answeredP2
+        } else {
+            match.answeredP1
+        }
+    }
+
+    private fun haveIAnswered(match: MatchModel): Boolean {
+        val currentUserId = getCurrentPlayerId()
+        val amIPlayer1 = currentUserId == match.player1Id
+
+        return if (amIPlayer1) {
+            match.answeredP1
+        } else {
+            match.answeredP2
         }
     }
 }
