@@ -52,7 +52,7 @@ import com.example.riffrush.data.player.MusicPlayer
 import com.example.riffrush.viewmodels.MatchViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
-import androidx.compose.material3.LinearProgressIndicatord
+import androidx.compose.material3.LinearProgressIndicator
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MatchScreen(
