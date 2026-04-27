@@ -31,6 +31,8 @@ import org.koin.androidx.compose.koinViewModel
 import com.example.riffrush.ui.screens.match.MatchmakingScreen
 import com.example.riffrush.ui.screens.profile.UserStatsScreen
 import com.example.riffrush.ui.screens.profile.MatchHistoryScreen
+import com.example.riffrush.ui.screens.music.PlaylistDetailScreen
+import com.example.riffrush.ui.screens.match.PlaylistGameScreen
 @Composable
 fun MainScreen(
     songViewModel: SongViewModel = koinViewModel()
@@ -99,8 +101,16 @@ fun MainScreen(
                     }
                 )
             }
-            
-            composable(Screen.MyMusic.route) { MusicScreen() }
+
+            composable(Screen.MyMusic.route) {
+                MusicScreen(
+                    onNavigateToPlaylistDetail = { playlistId, playlistName ->
+                        navController.navigate(
+                            "playlist_detail/$playlistId/${android.net.Uri.encode(playlistName)}"
+                        )
+                    }
+                )
+            }
 
             composable(Screen.Profile.route) {
                 ProfileScreen(
@@ -238,6 +248,37 @@ fun MainScreen(
             composable("match_history/{uid}") { backStackEntry ->
                 MatchHistoryScreen(
                     userId = backStackEntry.arguments?.getString("uid") ?: "",
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                "playlist_detail/{playlistId}/{playlistName}",
+                arguments = listOf(
+                    navArgument("playlistId") { type = NavType.StringType },
+                    navArgument("playlistName") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val playlistId = backStackEntry.arguments?.getString("playlistId") ?: ""
+                val playlistName = android.net.Uri.decode(
+                    backStackEntry.arguments?.getString("playlistName") ?: "Playlist"
+                )
+                PlaylistDetailScreen(
+                    playlistId = playlistId,
+                    playlistName = playlistName,
+                    onBack = { navController.popBackStack() },
+                    onPlayPlaylist = { id ->
+                        navController.navigate("playlist_game/$id")
+                    }
+                )
+            }
+
+            composable(
+                "playlist_game/{playlistId}",
+                arguments = listOf(navArgument("playlistId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                PlaylistGameScreen(
+                    playlistId = backStackEntry.arguments?.getString("playlistId") ?: "",
                     onBack = { navController.popBackStack() }
                 )
             }

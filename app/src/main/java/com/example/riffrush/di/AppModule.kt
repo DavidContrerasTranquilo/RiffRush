@@ -24,7 +24,7 @@ import com.example.riffrush.data.local.PlayerIdentityManager
 import com.example.riffrush.viewmodels.DailyChallengeViewModel
 import com.example.riffrush.viewmodels.AdminViewModel
 import com.example.riffrush.viewmodels.MatchHistoryViewModel
-
+import com.example.riffrush.viewmodels.PlaylistViewModel
 val appModule = module {
     single { FirebaseAuth.getInstance() }
     single { FirebaseFirestore.getInstance() }
@@ -75,4 +75,5 @@ val appModule = module {
     viewModelOf(::MatchHistoryViewModel)
     viewModelOf(::DailyChallengeViewModel)
     viewModelOf(::AdminViewModel)
+    viewModelOf(::PlaylistViewModel)
 }
