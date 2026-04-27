@@ -146,6 +146,19 @@ fun EditProfileScreen(
                     }
                 }
             }
+            if (profileImageUrl.isNotBlank() || selectedImageUri != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedButton(
+                    onClick = {
+                        selectedImageUri = null
+                        authViewModel.removeProfilePicture()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Eliminar foto de perfil")
+                }
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 

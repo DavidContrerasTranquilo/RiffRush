@@ -9,6 +9,7 @@ import kotlinx.coroutines.tasks.await
 import com.example.riffrush.data.model.DailyChallengeConfig
 import com.google.firebase.firestore.FieldValue
 import com.example.riffrush.data.model.MatchHistoryModel
+import com.example.riffrush.data.model.PlaylistModel
 class FirebaseRepository(private val firestore: FirebaseFirestore) {
 
     fun getFavorites(ownerId: String): Flow<List<Song>> = callbackFlow {
@@ -183,5 +184,128 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
         } catch (e: Exception) {
             emptyList()
         }
+    }
+
+    fun getPlaylists(ownerId: String): Flow<List<PlaylistModel>> = callbackFlow {
+        val subscription = firestore.collection("users")
+            .document(ownerId)
+            .collection("playlists")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val playlists = snapshot?.documents?.mapNotNull { doc ->
+                    PlaylistModel(
+                        id = doc.getString("id") ?: doc.id,
+                        name = doc.getString("name") ?: "",
+                        createdAt = doc.getLong("createdAt") ?: 0L,
+                        songsCount = (doc.getLong("songsCount") ?: 0L).toInt()
+                    )
+                } ?: emptyList()
+
+                trySend(playlists)
+            }
+
+        awaitClose { subscription.remove() }
+    }
+
+    suspend fun createPlaylist(ownerId: String, name: String) {
+        val ref = firestore.collection("users")
+            .document(ownerId)
+            .collection("playlists")
+            .document()
+
+        val playlist = PlaylistModel(
+            id = ref.id,
+            name = name,
+            createdAt = System.currentTimeMillis(),
+            songsCount = 0
+        )
+
+        ref.set(playlist).await()
+    }
+
+    suspend fun deletePlaylist(ownerId: String, playlistId: String) {
+        firestore.collection("users")
+            .document(ownerId)
+            .collection("playlists")
+            .document(playlistId)
+            .delete()
+            .await()
+    }
+
+    fun getPlaylistSongs(ownerId: String, playlistId: String): Flow<List<Song>> = callbackFlow {
+        val subscription = firestore.collection("users")
+            .document(ownerId)
+            .collection("playlists")
+            .document(playlistId)
+            .collection("songs")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val songs = snapshot?.documents?.mapNotNull { doc ->
+                    Song(
+                        id = doc.getLong("id") ?: 0L,
+                        title = doc.getString("title") ?: "",
+                        artist = doc.getString("artist") ?: "",
+                        album = doc.getString("album") ?: "",
+                        preview = doc.getString("preview") ?: "",
+                        cover = doc.getString("cover") ?: ""
+                    )
+                } ?: emptyList()
+
+                trySend(songs)
+            }
+
+        awaitClose { subscription.remove() }
+    }
+
+    suspend fun addSongToPlaylist(ownerId: String, playlistId: String, song: Song) {
+        val playlistRef = firestore.collection("users")
+            .document(ownerId)
+            .collection("playlists")
+            .document(playlistId)
+
+        val songRef = playlistRef
+            .collection("songs")
+            .document(song.id.toString())
+
+        val songData = hashMapOf(
+            "id" to song.id,
+            "title" to song.title,
+            "artist" to song.artist,
+            "album" to song.album,
+            "preview" to song.preview,
+            "cover" to song.cover
+        )
+
+        songRef.set(songData).await()
+
+        playlistRef.update(
+            "songsCount",
+            com.google.firebase.firestore.FieldValue.increment(1)
+        ).await()
+    }
+
+    suspend fun removeSongFromPlaylist(ownerId: String, playlistId: String, songId: String) {
+        val playlistRef = firestore.collection("users")
+            .document(ownerId)
+            .collection("playlists")
+            .document(playlistId)
+
+        playlistRef.collection("songs")
+            .document(songId)
+            .delete()
+            .await()
+
+        playlistRef.update(
+            "songsCount",
+            com.google.firebase.firestore.FieldValue.increment(-1)
+        ).await()
     }
 }
