@@ -1,11 +1,16 @@
 package com.example.riffrush.viewmodels
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.riffrush.data.model.Song
+import com.example.riffrush.data.repository.DeezerRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
-class FavoritesGameViewModel : ViewModel() {
+class FavoritesGameViewModel(
+    private val deezerRepository: DeezerRepository
+) : ViewModel() {
     private val _playingSongs = MutableStateFlow<List<Song>>(emptyList())
     val playingSongs = _playingSongs.asStateFlow()
 
@@ -21,10 +26,16 @@ class FavoritesGameViewModel : ViewModel() {
     enum class FavoritesState { PLAYING, FINISHED }
 
     fun initGame(favorites: List<Song>) {
-        _playingSongs.value = favorites.shuffled().take(5)
-        _currentIndex.value = 0
-        _score.value = 0
-        _gameState.value = FavoritesState.PLAYING
+        viewModelScope.launch {
+            val selected = favorites.shuffled().take(5)
+            val refreshedSongs = selected.map { song ->
+                deezerRepository.getSong(song.id) ?: song
+            }
+            _playingSongs.value = refreshedSongs
+            _currentIndex.value = 0
+            _score.value = 0
+            _gameState.value = FavoritesState.PLAYING
+        }
     }
 
     fun submitAnswer(isCorrect: Boolean) {

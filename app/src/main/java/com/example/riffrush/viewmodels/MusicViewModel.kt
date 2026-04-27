@@ -130,8 +130,19 @@ class MusicViewModel(
                         if (isLoggedIn()) {
                             // Actualizar en Firebase para no tener que buscar de nuevo
                             firebaseRepository.addFavorite(getOwnerId(), fSong)
+
+                            // También actualizar localmente para que el preview funcione inmediatamente
+                            val currentFavs = _favoriteSongs.value.toMutableList()
+                            val index = currentFavs.indexOfFirst { it.id == fSong.id }
+                            if (index != -1) {
+                                currentFavs[index] = fSong
+                                _favoriteSongs.value = currentFavs
+                                if (!_isSearching.value) {
+                                    _songs.value = currentFavs
+                                }
+                            }
+
                         } else {
-                            
                             val currentFavs = _favoriteSongs.value.toMutableList()
                             val index = currentFavs.indexOfFirst { it.id == fSong.id }
                             if (index != -1) {

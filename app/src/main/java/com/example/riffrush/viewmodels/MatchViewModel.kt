@@ -19,6 +19,8 @@ import com.example.riffrush.data.model.MatchmakingUiState
 import com.example.riffrush.data.model.MatchmakingResult
 import com.example.riffrush.data.repository.FirebaseRepository
 import com.example.riffrush.data.model.MatchHistoryModel
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 class MatchViewModel(
     private val repository: MatchRepository,
@@ -61,10 +63,31 @@ class MatchViewModel(
                 val currentUserId = repository.getCurrentUserId()
                 val matchId = java.util.UUID.randomUUID().toString()
                 val songIds = listOf(1109152L, 2109522L, 3109522L, 4109522L, 5109522L)
+
+                // Obtener información del oponente desde Firebase
+                val firestore = FirebaseFirestore.getInstance()
+                val opponentDoc = firestore.collection("users").document(opponentId).get().await()
+                val opponentName = opponentDoc.getString("name")
+                    ?: opponentDoc.getString("username")
+                    ?: opponentDoc.getString("displayName")
+                    ?: "Invitado"
+                val opponentPfp = opponentDoc.getString("pfpUrl") ?: ""
+
+                // Obtener información del jugador actual
+                val currentPlayerDoc = firestore.collection("users").document(currentUserId).get().await()
+                val currentPlayerName = currentPlayerDoc.getString("name")
+                    ?: currentPlayerDoc.getString("username")
+                    ?: currentPlayerDoc.getString("displayName")
+                    ?: "Tú"
+                val currentPlayerPfp = currentPlayerDoc.getString("pfpUrl") ?: ""
                 val newMatch = MatchModel(
                     matchId = matchId,
                     player1Id = currentUserId,
                     player2Id = opponentId,
+                    player1Name = currentPlayerName,
+                    player2Name = opponentName,
+                    player1PfpUrl = currentPlayerPfp,
+                    player2PfpUrl = opponentPfp,
                     status = MatchStatus.WAITING,
                     staticSongList = songIds
                 )
