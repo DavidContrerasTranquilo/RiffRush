@@ -356,4 +356,12 @@ class AuthRepository(
             null
         }
     }
+    suspend fun removeMyProfilePicture() {
+        val uid = firebaseAuth.currentUser?.uid ?: return
+
+        firestore.collection("users")
+            .document(uid)
+            .update("pfpUrl", "")
+            .await()
+    }
 }

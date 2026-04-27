@@ -12,12 +12,14 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.riffrush.R
+import android.util.Log
 
 class DailyChallengeNotificationReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent?) {
-        createNotificationChannel(context)
+        Log.d("NOTIF_DEBUG", "Receiver ejecutado")
 
+        createNotificationChannel(context)
         if (
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
@@ -25,7 +27,7 @@ class DailyChallengeNotificationReceiver : BroadcastReceiver() {
         ) {
             return
         }
-
+        Log.d("NOTIF_DEBUG", "Mostrando notificación")
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.music_note_24px)
             .setContentTitle("Nuevo reto diario disponible")

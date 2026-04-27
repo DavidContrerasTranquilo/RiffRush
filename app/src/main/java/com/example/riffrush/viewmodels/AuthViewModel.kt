@@ -287,4 +287,18 @@ class AuthViewModel(
             }
         }
     }
+
+    fun removeProfilePicture() {
+        viewModelScope.launch {
+            try {
+                repository.removeMyProfilePicture()
+                _profileImageUrl.value = ""
+                _uiMessage.value = "Foto de perfil eliminada"
+                loadAllUsers()
+                loadUserStats()
+            } catch (e: Exception) {
+                _uiMessage.value = "Error al eliminar la foto: ${e.message}"
+            }
+        }
+    }
 }
