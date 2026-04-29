@@ -15,7 +15,7 @@ class AuthViewModel(
     private val repository: AuthRepository,
     private val firebaseRepository: FirebaseRepository
 ) : ViewModel() {
-    private val _authState = MutableStateFlow<Boolean>(repository.getCurrentUser() != null)
+    private val _authState = MutableStateFlow<Boolean>(repository.getCurrentUser()?.isAnonymous == false)
     val authState: StateFlow<Boolean> = _authState
 
     private val _uiMessage = MutableStateFlow<String?>(null)
