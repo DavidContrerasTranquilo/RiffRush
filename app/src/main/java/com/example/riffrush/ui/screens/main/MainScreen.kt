@@ -18,6 +18,8 @@ import com.example.riffrush.navigation.items
 import com.example.riffrush.viewmodels.SongViewModel
 import com.example.riffrush.ui.screens.auth.LoginScreen
 import com.example.riffrush.ui.screens.auth.SignUpScreen
+import com.example.riffrush.ui.screens.auth.WelcomeScreen
+import com.google.firebase.auth.FirebaseAuth
 import com.example.riffrush.ui.screens.home.HomeScreen
 import com.example.riffrush.ui.screens.match.FavoritesGameScreen
 import com.example.riffrush.ui.screens.match.MatchScreen
@@ -46,7 +48,8 @@ fun MainScreen(
             val currentRoute = currentDestination?.route
             //Cuando estamos no estamos en la pestaña d elogin la mostramos
             //Lo dejo asi porque no tenia sentido que pudieses ver la parte de abajo de la barra cuando estas inciado sesion
-            if (currentRoute != "login" && currentRoute != "signup") {
+            //Tambien añadir cuando estas en la pestaña de iniico "welcome"
+            if (currentRoute != "login" && currentRoute != "signup" && currentRoute != "welcome") {
                 NavigationBar {
                     items.forEach { screen ->
                         NavigationBarItem(
@@ -74,9 +77,13 @@ fun MainScreen(
             }
         }
     ) { innerPadding ->
+        val initialRoute = remember { 
+            if (FirebaseAuth.getInstance().currentUser == null) "welcome" else Screen.Home.route 
+        }
+        
         NavHost(
             navController = navController,
-            startDestination = Screen.Home.route,
+            startDestination = initialRoute,
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.Home.route) {
@@ -187,6 +194,18 @@ fun MainScreen(
             composable("daily_challenge") {
                 com.example.riffrush.ui.screens.challenge.DailyChallengeScreen(
                     onExit = { navController.popBackStack() }
+                )
+            }
+
+            composable("welcome") {
+                WelcomeScreen(
+                    onNavigateToLogin = { navController.navigate("login") },
+                    onNavigateToSignUp = { navController.navigate("signup") },
+                    onContinueAsGuest = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo("welcome") { inclusive = true }
+                        }
+                    }
                 )
             }
 

@@ -139,6 +139,18 @@ class AuthViewModel(
             }
         }
     }
+    //Inicio como invitado, no tienes cuenta pero puedes jugar
+    fun signInAnonymously(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                repository.signInAnonymously()
+                _authState.value = false // Invitado no está full logged in
+                onSuccess()
+            } catch (e: Exception) {
+                _uiMessage.value = "Error al entrar como invitado: ${e.localizedMessage}"
+            }
+        }
+    }
     //Añado funcion para recuperar la contraseña, firestore lo hace el solo
     fun resetPassword(email: String) {
         if (email.isBlank()) {

@@ -52,6 +52,8 @@ class AuthRepository(
 
     suspend fun signIn(email: String, pass: String) =
         firebaseAuth.signInWithEmailAndPassword(email, pass).await()
+    //Añado esto para lo de inicar sesion como invitado
+    suspend fun signInAnonymously() = firebaseAuth.signInAnonymously().await()
 
     //Funcion para mandar el mail de reseteo de contraseña, firebase se encarga!
     suspend fun sendPasswordResetEmail(email: String) {
