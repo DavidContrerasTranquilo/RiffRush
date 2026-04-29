@@ -209,7 +209,8 @@ fun MatchScreen(
                                         onNavigateToUserStats(currentMatch.player2Id)
                                     }
                                 },
-                                onExit = onExit
+                                onExit = onExit,
+                                viewModel = viewModel
                             )
                         }
                     }
@@ -479,10 +480,18 @@ fun ResultView(
     scoreP2: Int,
     onPlayer1Click: () -> Unit,
     onPlayer2Click: () -> Unit,
-    onExit: () -> Unit
+    onExit: () -> Unit,
+    viewModel: MatchViewModel = koinViewModel()
 ) {
-    val win = scoreP1 > scoreP2
-    val draw = scoreP1 == scoreP2
+    val currentPlayerId = viewModel.getCurrentPlayerId()
+    val currentMatch = viewModel.currentMatch.collectAsState().value
+    val amIPlayer1 = currentMatch?.let { currentPlayerId == it.player1Id } ?: false
+
+    val myScore = if (amIPlayer1) scoreP1 else scoreP2
+    val opponentScore = if (amIPlayer1) scoreP2 else scoreP1
+
+    val win = myScore > opponentScore
+    val draw = myScore == opponentScore
 
     Column(
         modifier = Modifier
