@@ -10,6 +10,7 @@ import com.example.riffrush.data.model.DailyChallengeConfig
 import com.google.firebase.firestore.FieldValue
 import com.example.riffrush.data.model.MatchHistoryModel
 import com.example.riffrush.data.model.PlaylistModel
+import com.google.firebase.firestore.SetOptions
 class FirebaseRepository(private val firestore: FirebaseFirestore) {
 
     fun getFavorites(ownerId: String): Flow<List<Song>> = callbackFlow {
@@ -133,16 +134,31 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
     }
 
     suspend fun incrementGamesPlayed(uid: String) {
-        firestore.collection("users").document(uid)
-            .update("gamesPlayed", FieldValue.increment(1))
+        if (uid.isBlank()) return
+
+        firestore.collection("users")
+            .document(uid)
+            .set(
+                mapOf(
+                    "uid" to uid,
+                    "gamesPlayed" to FieldValue.increment(1)
+                ),
+                SetOptions.merge()
+            )
+            .await()
     }
 
     suspend fun incrementSongsPlayed(uid: String) {
+        if (uid.isBlank()) return
+
         firestore.collection("users")
             .document(uid)
-            .update(
-                "songsPlayed",
-                com.google.firebase.firestore.FieldValue.increment(1)
+            .set(
+                mapOf(
+                    "uid" to uid,
+                    "songsPlayed" to FieldValue.increment(1)
+                ),
+                SetOptions.merge()
             )
             .await()
     }

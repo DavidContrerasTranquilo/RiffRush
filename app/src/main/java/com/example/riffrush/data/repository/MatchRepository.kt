@@ -22,16 +22,85 @@ class MatchRepository(
 
     private val playlists = mapOf(
         "REGGAETON" to listOf(
-            2223276187L, 143781198L, 3776310102L, 2758436071L, 3498392331L, 3104740891L, 857827232L, 731498882L, 3179773841L, 1759650657L, 3298075621L, 3276167871L, 2473410281L, 3422751531L, 1704442217L, 2322228845L, 2074439067L
+            2223276187L,
+            143781198L,
+            3776310102L,
+            2758436071L,
+            3498392331L,
+            3104740891L,
+            857827232L,
+            731498882L,
+            3179773841L,
+            1759650657L,
+            3298075621L,
+            3276167871L,
+            2473410281L,
+            3422751531L,
+            1704442217L,
+            2322228845L,
+            2074439067L
         ),
         "RAP FRANCÉS" to listOf(
-            600107922L, 122927610L, 132950108L, 783256992L, 3055454281L, 429975052L, 823093212L, 3242688291L, 450100912L, 132123630L, 1555328112L, 3023399701L, 2892578472L, 106095086L, 2781673612L, 1426733732L, 519797812L, 519797762L
+            600107922L,
+            122927610L,
+            132950108L,
+            783256992L,
+            3055454281L,
+            429975052L,
+            823093212L,
+            3242688291L,
+            450100912L,
+            132123630L,
+            1555328112L,
+            3023399701L,
+            2892578472L,
+            106095086L,
+            2781673612L,
+            1426733732L,
+            519797812L,
+            519797762L
         ),
         "ROCK ESPAÑOL" to listOf(
-            707777L, 778608L, 9943121L, 3234733081L, 2935686241L, 988453L, 11746766L, 778615L, 3241426491L, 3912803111L, 3234733041L, 7701507L, 14645355L, 3539198461L, 3092625L, 7701520L, 3539198321L, 3234306461L, 2471353181L, 4738765L
+            707777L,
+            778608L,
+            9943121L,
+            3234733081L,
+            2935686241L,
+            988453L,
+            11746766L,
+            778615L,
+            3241426491L,
+            3912803111L,
+            3234733041L,
+            7701507L,
+            14645355L,
+            3539198461L,
+            3092625L,
+            7701520L,
+            3539198321L,
+            3234306461L,
+            2471353181L,
+            4738765L
         ),
         "TOP 50 ESPAÑA" to listOf(
-            3947383241L, 3852034981L, 37027991L, 3843020331L, 3733293352L, 3677908682L, 3911872941L, 3852034871L, 3380325281L, 3776310102L, 3852034971L, 3613707422L, 3241972661L, 3640310582L, 3856864621L, 3407512021L, 3640140952L, 3171002981L
+            3947383241L,
+            3852034981L,
+            37027991L,
+            3843020331L,
+            3733293352L,
+            3677908682L,
+            3911872941L,
+            3852034871L,
+            3380325281L,
+            3776310102L,
+            3852034971L,
+            3613707422L,
+            3241972661L,
+            3640310582L,
+            3856864621L,
+            3407512021L,
+            3640140952L,
+            3171002981L
         )
     )
 
@@ -88,7 +157,7 @@ class MatchRepository(
     }
 
     fun getCurrentUserId(): String {
-        return auth.currentUser?.uid ?: "guest_user"
+        return playerIdentityManager.getPlayerId()
     }
 
     private fun buildMatch(
@@ -151,10 +220,12 @@ class MatchRepository(
 
             firestore.runBatch { batch ->
                 batch.set(matchesCollection.document(matchId), match)
-                batch.update(queueCollection.document(rivalDoc.id), mapOf(
-                    "status" to "MATCHED",
-                    "matchId" to matchId
-                ))
+                batch.update(
+                    queueCollection.document(rivalDoc.id), mapOf(
+                        "status" to "MATCHED",
+                        "matchId" to matchId
+                    )
+                )
             }.await()
 
             MatchmakingResult.Matched(matchId)
@@ -195,75 +266,111 @@ class MatchRepository(
     }
 
     suspend fun submitAnswer(matchId: String, isCorrect: Boolean) {
-        val playerId = getCurrentUserId()
-        val matchRef = matchesCollection.document(matchId)
+        val currentUserId = getCurrentUserId()
+        val matchRef = firestore.collection("matches").document(matchId)
+
+        android.util.Log.d(
+            "MATCH_DEBUG",
+            "submitAnswer START matchId=$matchId currentUserId=$currentUserId isCorrect=$isCorrect"
+        )
 
         firestore.runTransaction { transaction ->
             val snapshot = transaction.get(matchRef)
-            val match = snapshot.toObject(MatchModel::class.java) ?: return@runTransaction
+            val match = snapshot.toObject(MatchModel::class.java)
+                ?: throw Exception("Partida no encontrada")
 
-            if (match.status != MatchStatus.PLAYING) return@runTransaction
+            android.util.Log.d(
+                "MATCH_DEBUG",
+                "submitAnswer READ match=${match.matchId} p1=${match.player1Id} p2=${match.player2Id} round=${match.currentRound} score=${match.scoreP1}-${match.scoreP2} answered=${match.answeredP1}-${match.answeredP2} status=${match.status}"
+            )
 
-            val isPlayer1 = match.player1Id == playerId
-            val isPlayer2 = match.player2Id == playerId
+            val amIPlayer1 = currentUserId == match.player1Id
+            val amIPlayer2 = currentUserId == match.player2Id
 
-            if (!isPlayer1 && !isPlayer2) return@runTransaction
+            android.util.Log.d(
+                "MATCH_DEBUG",
+                "submitAnswer ID_CHECK amIPlayer1=$amIPlayer1 amIPlayer2=$amIPlayer2"
+            )
 
-            var scoreP1 = match.scoreP1
-            var scoreP2 = match.scoreP2
-            var answeredP1 = match.answeredP1
-            var answeredP2 = match.answeredP2
-            var currentRound = match.currentRound
-            var status = match.status
-
-            // Si ya había respondido, no hacer nada
-            if (isPlayer1 && answeredP1) return@runTransaction
-            if (isPlayer2 && answeredP2) return@runTransaction
-
-            // Registrar respuesta
-            if (isPlayer1) {
-                answeredP1 = true
-                if (isCorrect) scoreP1 += 1
+            if (!amIPlayer1 && !amIPlayer2) {
+                throw Exception("No perteneces a esta partida. current=$currentUserId p1=${match.player1Id} p2=${match.player2Id}")
             }
 
-            if (isPlayer2) {
-                answeredP2 = true
-                if (isCorrect) scoreP2 += 1
+            if (match.status != MatchStatus.PLAYING) {
+                android.util.Log.d("MATCH_DEBUG", "submitAnswer STOP status no PLAYING")
+                return@runTransaction null
             }
 
-            // Solo avanzar si ambos respondieron
-            if (answeredP1 && answeredP2) {
-                val isLastRound = currentRound >= match.staticSongList.size - 1
+            val alreadyAnswered = if (amIPlayer1) match.answeredP1 else match.answeredP2
+
+            if (alreadyAnswered) {
+                android.util.Log.d("MATCH_DEBUG", "submitAnswer STOP alreadyAnswered=true")
+                return@runTransaction null
+            }
+
+            var newScoreP1 = match.scoreP1
+            var newScoreP2 = match.scoreP2
+
+            if (isCorrect) {
+                if (amIPlayer1) newScoreP1 += 1 else newScoreP2 += 1
+            }
+
+            val newAnsweredP1 = if (amIPlayer1) true else match.answeredP1
+            val newAnsweredP2 = if (amIPlayer2) true else match.answeredP2
+
+            val bothAnswered = newAnsweredP1 && newAnsweredP2
+            val isLastRound = match.currentRound >= match.staticSongList.size - 1
+
+            android.util.Log.d(
+                "MATCH_DEBUG",
+                "submitAnswer CALC newScore=$newScoreP1-$newScoreP2 newAnswered=$newAnsweredP1-$newAnsweredP2 bothAnswered=$bothAnswered isLastRound=$isLastRound"
+            )
+
+            if (bothAnswered) {
                 if (isLastRound) {
-                    status = MatchStatus.FINISHED
+                    android.util.Log.d("MATCH_DEBUG", "submitAnswer UPDATE finishing match")
+                    transaction.update(
+                        matchRef,
+                        mapOf(
+                            "scoreP1" to newScoreP1,
+                            "scoreP2" to newScoreP2,
+                            "answeredP1" to true,
+                            "answeredP2" to true,
+                            "status" to MatchStatus.FINISHED
+                        )
+                    )
                 } else {
-                    currentRound += 1
-                    answeredP1 = false
-                    answeredP2 = false
+                    android.util.Log.d(
+                        "MATCH_DEBUG",
+                        "submitAnswer UPDATE next round ${match.currentRound + 1}"
+                    )
+                    transaction.update(
+                        matchRef,
+                        mapOf(
+                            "scoreP1" to newScoreP1,
+                            "scoreP2" to newScoreP2,
+                            "answeredP1" to false,
+                            "answeredP2" to false,
+                            "currentRound" to match.currentRound + 1
+                        )
+                    )
                 }
+            } else {
+                android.util.Log.d("MATCH_DEBUG", "submitAnswer UPDATE waiting other player")
+                transaction.update(
+                    matchRef,
+                    mapOf(
+                        "scoreP1" to newScoreP1,
+                        "scoreP2" to newScoreP2,
+                        "answeredP1" to newAnsweredP1,
+                        "answeredP2" to newAnsweredP2
+                    )
+                )
             }
 
-            transaction.update(matchRef, mapOf(
-                "scoreP1" to scoreP1,
-                "scoreP2" to scoreP2,
-                "answeredP1" to answeredP1,
-                "answeredP2" to answeredP2,
-                "currentRound" to currentRound,
-                "status" to status
-            ))
+            null
         }.await()
-    }
-    private suspend fun getCurrentPlayerProfileData(): Triple<String, String, String> {
-        val playerId = getCurrentUserId()
-        val userDoc = firestore.collection("users").document(playerId).get().await()
 
-        val name = userDoc.getString("name")
-            ?: userDoc.getString("username")
-            ?: userDoc.getString("displayName")
-            ?: "Invitado"
-
-        val pfpUrl = userDoc.getString("pfpUrl") ?: ""
-
-        return Triple(playerId, name, pfpUrl)
+        android.util.Log.d("MATCH_DEBUG", "submitAnswer END OK")
     }
 }

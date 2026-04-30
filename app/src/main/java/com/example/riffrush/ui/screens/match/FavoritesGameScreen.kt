@@ -100,7 +100,8 @@ fun FavoritesGameScreen(
                             },
                             onPlayer1Click = {},
                             onPlayer2Click = {},
-                            musicPlayer = musicPlayer
+                            musicPlayer = musicPlayer,
+                            timerDuration = 15000L
                         )
                     }
                 }

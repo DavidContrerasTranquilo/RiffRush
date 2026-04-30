@@ -66,6 +66,7 @@ fun MatchScreen(
     val songs by viewModel.songs.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val timeLeft by viewModel.timeLeft.collectAsState()
+    val timerDuration by viewModel.currentTimerDuration.collectAsState()
 
     LaunchedEffect(matchId) {
         if (matchId.startsWith("offline_")) {
@@ -170,7 +171,8 @@ fun MatchScreen(
                                             onNavigateToUserStats(currentMatch.player2Id)
                                         }
                                     },
-                                    musicPlayer = musicPlayer
+                                    musicPlayer = musicPlayer,
+                                    timerDuration = timerDuration
                                 )
                             }
                         }
@@ -275,7 +277,8 @@ fun GameView(
     onAnswer: (Boolean) -> Unit,
     onPlayer1Click: () -> Unit,
     onPlayer2Click: () -> Unit,
-    musicPlayer: MusicPlayer
+    musicPlayer: MusicPlayer,
+    timerDuration: Long
 ) {
     val options = remember(song) {
         val wrongOptions = allSongs
@@ -318,7 +321,10 @@ fun GameView(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        TimerView(timeLeft = timeLeft)
+        TimerView(
+            timeLeft = timeLeft,
+            timerDuration = timerDuration
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -417,8 +423,14 @@ fun ScoreBoard(
 }
 
 @Composable
-fun TimerView(timeLeft: Float) {
-    val secondsLeft = kotlin.math.ceil(timeLeft * 15).toInt().coerceIn(0, 15)
+fun TimerView(
+    timeLeft: Float,
+    timerDuration: Long
+) {
+    val totalSeconds = timerDuration / 1000f
+    val secondsLeft = kotlin.math.ceil(timeLeft * totalSeconds)
+        .toInt()
+        .coerceIn(0, totalSeconds.toInt())
 
     Column(
         modifier = Modifier.fillMaxWidth(),

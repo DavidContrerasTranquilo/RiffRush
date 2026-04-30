@@ -113,7 +113,8 @@ fun PlaylistGameScreen(
                             },
                             onPlayer1Click = {},
                             onPlayer2Click = {},
-                            musicPlayer = musicPlayer
+                            musicPlayer = musicPlayer,
+                            timerDuration = 15000L,
                         )
                     } else {
                         EmptyPlaylistGameView()

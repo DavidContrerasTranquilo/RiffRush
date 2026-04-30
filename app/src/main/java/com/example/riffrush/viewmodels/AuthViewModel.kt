@@ -15,7 +15,8 @@ class AuthViewModel(
     private val repository: AuthRepository,
     private val firebaseRepository: FirebaseRepository
 ) : ViewModel() {
-    private val _authState = MutableStateFlow<Boolean>(repository.getCurrentUser()?.isAnonymous == false)
+    private val _authState =
+        MutableStateFlow<Boolean>(repository.getCurrentUser()?.isAnonymous == false)
     val authState: StateFlow<Boolean> = _authState
 
     private val _uiMessage = MutableStateFlow<String?>(null)
@@ -68,8 +69,13 @@ class AuthViewModel(
         }
     }
 
-    fun clearMessage() { _uiMessage.value = null }
-    fun resetUpdateStatus() { _updateSuccess.value = false }
+    fun clearMessage() {
+        _uiMessage.value = null
+    }
+
+    fun resetUpdateStatus() {
+        _updateSuccess.value = false
+    }
 
     fun loadUserBio() {
         viewModelScope.launch {
@@ -84,7 +90,7 @@ class AuthViewModel(
                 _songsCount.value = repository.getUserSongsCount()
                 val followersList = repository.getSocialList(uid, "Seguidores")
                 val followingList = repository.getSocialList(uid, "Siguiendo")
-                
+
                 _followers.value = followersList.map { it.uid }
                 _following.value = followingList.map { it.uid }
             } catch (e: Exception) {
@@ -139,6 +145,7 @@ class AuthViewModel(
             }
         }
     }
+
     //Inicio como invitado, no tienes cuenta pero puedes jugar
     fun signInAnonymously(onSuccess: () -> Unit) {
         viewModelScope.launch {
@@ -151,6 +158,7 @@ class AuthViewModel(
             }
         }
     }
+
     //Añado funcion para recuperar la contraseña, firestore lo hace el solo
     fun resetPassword(email: String) {
         if (email.isBlank()) {
@@ -176,7 +184,8 @@ class AuthViewModel(
                     try {
                         repository.updatePassword(newPass)
                     } catch (e: Exception) {
-                        _uiMessage.value = "Para cambiar contraseña debes haber iniciado sesión recientemente."
+                        _uiMessage.value =
+                            "Para cambiar contraseña debes haber iniciado sesión recientemente."
                         return@launch
                     }
                 }
@@ -211,7 +220,7 @@ class AuthViewModel(
             }
         }
     }
-    
+
     fun addFriend(friend: FriendModel) {
         viewModelScope.launch {
             try {
