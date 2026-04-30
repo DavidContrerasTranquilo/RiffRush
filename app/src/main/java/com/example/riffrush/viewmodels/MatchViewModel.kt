@@ -21,6 +21,7 @@ import com.example.riffrush.data.repository.FirebaseRepository
 import com.example.riffrush.data.model.MatchHistoryModel
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import com.example.riffrush.data.model.RoundResultModel
 
 class MatchViewModel(
     private val repository: MatchRepository,
@@ -57,6 +58,13 @@ class MatchViewModel(
     private var gamesPlayedRegisteredForMatchId: String? = null
     private val _currentTimerDuration = MutableStateFlow(15000L)
     val currentTimerDuration: StateFlow<Long> = _currentTimerDuration
+    private val _showAnswerResult = MutableStateFlow<Boolean>(false)
+    val showAnswerResult: StateFlow<Boolean> = _showAnswerResult
+
+    private val _lastAnswerCorrect = MutableStateFlow<Boolean?>(null)
+    val lastAnswerCorrect: StateFlow<Boolean?> = _lastAnswerCorrect
+    private var presenceJob: Job? = null
+    private var disconnectWatcherJob: Job? = null
     fun startMatchmaking(opponentId: String) {
         _isLoading.value = true
         _error.value = null
@@ -91,7 +99,9 @@ class MatchViewModel(
                     player1PfpUrl = currentPlayerPfp,
                     player2PfpUrl = opponentPfp,
                     status = MatchStatus.WAITING,
-                    staticSongList = songIds
+                    staticSongList = songIds,
+                    player1LastSeen = System.currentTimeMillis(),
+                    player2LastSeen = System.currentTimeMillis()
                 )
                 repository.createMatch(newMatch)
                 listenToMatch(matchId)
@@ -165,6 +175,11 @@ class MatchViewModel(
 
                     match?.let { currentMatch ->
                         val isOffline = currentMatch.matchId.startsWith("offline")
+
+                        if (!isOffline && currentMatch.status == MatchStatus.PLAYING) {
+                            startPresence(currentMatch.matchId)
+                            watchOpponentConnection(currentMatch)
+                        }
 
                         android.util.Log.d(
                             "MATCH_DEBUG",
@@ -364,14 +379,24 @@ class MatchViewModel(
         val isOffline = match.matchId.startsWith("offline")
         val currentUserId = repository.getCurrentUserId()
 
-        android.util.Log.d(
-            "MATCH_DEBUG",
-            "onAnswerSelected matchId=${match.matchId} currentUserId=$currentUserId isOffline=$isOffline isCorrect=$isCorrect round=${match.currentRound} answeredP1=${match.answeredP1} answeredP2=${match.answeredP2}"
-        )
+        _lastAnswerCorrect.value = isCorrect
+        _showAnswerResult.value = true
 
         viewModelScope.launch {
             try {
-                firebaseRepository.incrementSongsPlayed(currentUserId)
+                delay(1000)
+
+                _showAnswerResult.value = false
+
+                try {
+                    firebaseRepository.incrementSongsPlayed(currentUserId)
+                } catch (e: Exception) {
+                    android.util.Log.e(
+                        "MATCH_DEBUG",
+                        "No se pudo incrementar songsPlayed, pero la partida continúa",
+                        e
+                    )
+                }
 
                 if (isOffline) {
                     handleOfflineAnswer(match, isCorrect)
@@ -380,6 +405,7 @@ class MatchViewModel(
                 }
 
             } catch (e: Exception) {
+                _showAnswerResult.value = false
                 android.util.Log.e("MATCH_DEBUG", "Error submitting answer", e)
                 _error.value = "Error al enviar la respuesta: ${e.message}"
             }
@@ -405,6 +431,22 @@ class MatchViewModel(
             if (botHits) {
                 updatedMatch = updatedMatch.copy(scoreP2 = updatedMatch.scoreP2 + 1)
             }
+
+            val playerCorrect = isCorrect
+            val botCorrect = botHits
+            val currentSong = _songs.value.getOrNull(updatedMatch.currentRound)
+
+            val newRoundResult = RoundResultModel(
+                round = updatedMatch.currentRound + 1,
+                songTitle = currentSong?.title ?: "Canción desconocida",
+                songArtist = currentSong?.artist ?: "",
+                player1Correct = playerCorrect,
+                player2Correct = botCorrect
+            )
+
+            updatedMatch = updatedMatch.copy(
+                roundResults = updatedMatch.roundResults + newRoundResult
+            )
 
             val totalSongs = _songs.value.size
             val currentRoundValue = updatedMatch.currentRound
@@ -459,6 +501,8 @@ class MatchViewModel(
         super.onCleared()
         matchJob?.cancel()
         queueJob?.cancel()
+        presenceJob?.cancel()
+        disconnectWatcherJob?.cancel()
     }
 
     fun startOfflineMode(category: String) {
@@ -612,5 +656,73 @@ class MatchViewModel(
                 result = result
             )
         )
+    }
+
+    fun abandonCurrentMatch() {
+        val match = _currentMatch.value ?: return
+        val isOffline = match.matchId.startsWith("offline")
+
+        if (isOffline || match.status != MatchStatus.PLAYING) return
+
+        viewModelScope.launch {
+            try {
+                repository.abandonMatch(match.matchId)
+            } catch (e: Exception) {
+                android.util.Log.e("MATCH_DEBUG", "Error abandoning match", e)
+            }
+        }
+    }
+
+    private fun startPresence(matchId: String) {
+        presenceJob?.cancel()
+
+        presenceJob = viewModelScope.launch {
+            while (true) {
+                try {
+                    repository.updatePresence(matchId)
+                } catch (e: Exception) {
+                    android.util.Log.e("MATCH_DEBUG", "Error updating presence", e)
+                }
+
+                delay(3000)
+            }
+        }
+    }
+
+    private fun watchOpponentConnection(match: MatchModel) {
+        disconnectWatcherJob?.cancel()
+
+        disconnectWatcherJob = viewModelScope.launch {
+            while (match.status == MatchStatus.PLAYING) {
+                delay(5000)
+
+                val current = _currentMatch.value ?: continue
+                val currentUserId = repository.getCurrentUserId()
+                val now = System.currentTimeMillis()
+
+                val opponentId: String
+                val opponentLastSeen: Long
+
+                if (currentUserId == current.player1Id) {
+                    opponentId = current.player2Id
+                    opponentLastSeen = current.player2LastSeen
+                } else {
+                    opponentId = current.player1Id
+                    opponentLastSeen = current.player1LastSeen
+                }
+
+                if (opponentLastSeen > 0L && now - opponentLastSeen > 12000L) {
+                    val winnerId = currentUserId
+
+                    repository.endMatchByConnectionLoss(
+                        matchId = current.matchId,
+                        disconnectedPlayerId = opponentId,
+                        winnerId = winnerId
+                    )
+
+                    break
+                }
+            }
+        }
     }
 }

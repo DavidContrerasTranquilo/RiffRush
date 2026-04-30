@@ -16,6 +16,12 @@ data class MatchModel(
     val answeredP2: Boolean = false,
     val player1PfpUrl: String = "",
     val player2PfpUrl: String = "",
+    val roundResults: List<RoundResultModel> = emptyList(),
+    val abandonedBy: String = "",
+    val winnerId: String = "",
+    val endReason: String = "",
+    val player1LastSeen: Long = 0L,
+    val player2LastSeen: Long = 0L
 )
 
 enum class MatchStatus {

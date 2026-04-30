@@ -53,6 +53,8 @@ import com.example.riffrush.viewmodels.MatchViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import androidx.compose.material3.LinearProgressIndicator
+import com.example.riffrush.data.model.RoundResultModel
+import androidx.compose.material3.Card
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MatchScreen(
@@ -67,6 +69,8 @@ fun MatchScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val timeLeft by viewModel.timeLeft.collectAsState()
     val timerDuration by viewModel.currentTimerDuration.collectAsState()
+    val showResult by viewModel.showAnswerResult.collectAsState()
+    val isCorrect by viewModel.lastAnswerCorrect.collectAsState()
 
     LaunchedEffect(matchId) {
         if (matchId.startsWith("offline_")) {
@@ -93,7 +97,12 @@ fun MatchScreen(
             CenterAlignedTopAppBar(
                 title = { Text("DUELO 1VS1", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onExit) {
+                    IconButton(
+                        onClick = {
+                            viewModel.abandonCurrentMatch()
+                            onExit()
+                        }
+                    ) {
                         Icon(Icons.Default.Close, contentDescription = "Salir")
                     }
                 },
@@ -192,10 +201,19 @@ fun MatchScreen(
 
                             val player1DisplayName =
                                 if (amIPlayer1 && !isOffline) "$rawPlayer1Name (Tú)" else rawPlayer1Name
-
                             val player2DisplayName =
                                 if (!amIPlayer1 && !isOffline) "$rawPlayer2Name (Tú)" else rawPlayer2Name
 
+                            val opponentAbandoned = currentMatch.endReason == "ABANDONED" &&
+                                    currentMatch.abandonedBy != currentPlayerId
+
+                            val iAbandoned = currentMatch.endReason == "ABANDONED" &&
+                                    currentMatch.abandonedBy == currentPlayerId
+                            val opponentLostConnection = currentMatch.endReason == "CONNECTION_LOST" &&
+                                    currentMatch.abandonedBy != currentPlayerId
+                            val iLostConnection = currentMatch.endReason == "CONNECTION_LOST" &&
+                                    currentMatch.abandonedBy == currentPlayerId
+                            val iWinByEndReason = currentMatch.winnerId == currentPlayerId
                             ResultView(
                                 player1Name = player1DisplayName,
                                 player2Name = player2DisplayName,
@@ -212,11 +230,21 @@ fun MatchScreen(
                                     }
                                 },
                                 onExit = onExit,
-                                viewModel = viewModel
+                                viewModel = viewModel,
+                                roundResults = currentMatch.roundResults,
+                                endReason = currentMatch.endReason,
+                                opponentAbandoned = opponentAbandoned,
+                                iAbandoned = iAbandoned,
+                                opponentLostConnection = opponentLostConnection,
+                                iLostConnection = iLostConnection,
+                                iWinByEndReason = iWinByEndReason
                             )
                         }
                     }
                 }
+            }
+            if (showResult && isCorrect != null) {
+                AnswerResultOverlay(isCorrect = isCorrect == true)
             }
         }
     }
@@ -327,15 +355,6 @@ fun GameView(
         )
 
         Spacer(modifier = Modifier.height(24.dp))
-
-        IconButton(
-            onClick = { musicPlayer.playPreview(song.preview) },
-            modifier = Modifier.size(120.dp)
-        ) {
-            PlayMusicIndicator()
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
 
         options.forEach { option ->
             Button(
@@ -493,7 +512,14 @@ fun ResultView(
     onPlayer1Click: () -> Unit,
     onPlayer2Click: () -> Unit,
     onExit: () -> Unit,
-    viewModel: MatchViewModel = koinViewModel()
+    viewModel: MatchViewModel = koinViewModel(),
+    roundResults: List<RoundResultModel>,
+    endReason: String = "",
+    opponentAbandoned: Boolean = false,
+    iAbandoned: Boolean = false,
+    opponentLostConnection: Boolean = false,
+    iLostConnection: Boolean = false,
+    iWinByEndReason: Boolean = false
 ) {
     val currentPlayerId = viewModel.getCurrentPlayerId()
     val currentMatch = viewModel.currentMatch.collectAsState().value
@@ -502,8 +528,19 @@ fun ResultView(
     val myScore = if (amIPlayer1) scoreP1 else scoreP2
     val opponentScore = if (amIPlayer1) scoreP2 else scoreP1
 
-    val win = myScore > opponentScore
-    val draw = myScore == opponentScore
+    val hasSpecialWinner = endReason == "ABANDONED" || endReason == "CONNECTION_LOST"
+
+    val win = if (hasSpecialWinner) {
+        iWinByEndReason
+    } else {
+        myScore > opponentScore
+    }
+
+    val draw = if (hasSpecialWinner) {
+        false
+    } else {
+        myScore == opponentScore
+    }
 
     Column(
         modifier = Modifier
@@ -512,6 +549,40 @@ fun ResultView(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        if (endReason == "ABANDONED") {
+            Text(
+                text = if (opponentAbandoned) {
+                    "El rival ha abandonado la partida"
+                } else if (iAbandoned) {
+                    "Has abandonado la partida"
+                } else {
+                    "La partida terminó por abandono"
+                },
+                color = MaterialTheme.colorScheme.error,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        if (endReason == "CONNECTION_LOST") {
+            Text(
+                text = if (opponentLostConnection) {
+                    "El rival ha perdido la conexión"
+                } else if (iLostConnection) {
+                    "Has perdido la conexión"
+                } else {
+                    "La conexión se ha perdido"
+                },
+                color = MaterialTheme.colorScheme.error,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
         Text(
             text = when {
                 win -> "¡VICTORIA!"
@@ -537,6 +608,49 @@ fun ResultView(
             onPlayer1Click = onPlayer1Click,
             onPlayer2Click = onPlayer2Click
         )
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Resumen de rondas",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            roundResults.forEach { result ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            text = "Ronda ${result.round}",
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Text(
+                            text = result.songTitle.ifBlank { "Canción ID: desconocida" },
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("$player1Name: ${if (result.player1Correct) "✔" else "✖"}")
+                            Text("$player2Name: ${if (result.player2Correct) "✔" else "✖"}")
+                        }
+                    }
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(48.dp))
 
@@ -548,5 +662,28 @@ fun ResultView(
         ) {
             Text("VOLVER AL INICIO")
         }
+    }
+}
+
+@Composable
+fun AnswerResultOverlay(isCorrect: Boolean) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                if (isCorrect) {
+                    Color(0xFF4CAF50).copy(alpha = 0.28f)
+                } else {
+                    Color.Red.copy(alpha = 0.28f)
+                }
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = if (isCorrect) "✔" else "✖",
+            fontSize = 90.sp,
+            fontWeight = FontWeight.Black,
+            color = Color.White
+        )
     }
 }

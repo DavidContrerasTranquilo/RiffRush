@@ -90,7 +90,8 @@ fun PlaylistGameScreen(
                         scoreP2 = 0,
                         onPlayer1Click = {},
                         onPlayer2Click = {},
-                        onExit = onBack
+                        onExit = onBack,
+                        roundResults = emptyList()
                     )
                 }
 
