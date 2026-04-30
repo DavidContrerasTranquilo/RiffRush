@@ -13,11 +13,24 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.riffrush.R
 import android.util.Log
+import com.example.riffrush.MainActivity
+import android.app.PendingIntent
 
 class DailyChallengeNotificationReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent?) {
         Log.d("NOTIF_DEBUG", "Receiver ejecutado")
+
+        val openAppIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+
+        val openAppPendingIntent = PendingIntent.getActivity(
+            context,
+            1001,
+            openAppIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         createNotificationChannel(context)
         if (
@@ -32,6 +45,7 @@ class DailyChallengeNotificationReceiver : BroadcastReceiver() {
             .setSmallIcon(R.drawable.music_note_24px)
             .setContentTitle("Nuevo reto diario disponible")
             .setContentText("Ya puedes jugar el reto diario de RiffRush 🎵")
+            .setContentIntent(openAppPendingIntent)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
             .build()
