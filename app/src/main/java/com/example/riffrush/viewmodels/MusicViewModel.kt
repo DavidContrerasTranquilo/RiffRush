@@ -177,8 +177,4 @@ class MusicViewModel(
         _playingSongId.value = null
     }
 
-    fun clearLocalData() {
-        _favoriteSongs.value = emptyList()
-        _songs.value = emptyList()
-    }
 }

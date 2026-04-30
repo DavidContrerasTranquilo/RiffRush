@@ -10,7 +10,6 @@ import android.net.Uri
 import android.webkit.MimeTypeMap
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.json.JSONObject
@@ -323,13 +322,6 @@ class AuthRepository(
         firestore.collection("users")
             .document(targetUid)
             .update("pfpUrl", "")
-            .await()
-    }
-
-    suspend fun setUserProfilePictureUrl(targetUid: String, newUrl: String) {
-        firestore.collection("users")
-            .document(targetUid)
-            .update("pfpUrl", newUrl)
             .await()
     }
 

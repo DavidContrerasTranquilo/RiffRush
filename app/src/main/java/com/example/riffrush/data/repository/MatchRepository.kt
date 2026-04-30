@@ -2,7 +2,6 @@ package com.example.riffrush.data.repository
 
 import com.example.riffrush.data.model.MatchModel
 import com.example.riffrush.data.model.MatchStatus
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -14,7 +13,6 @@ import com.example.riffrush.data.model.MatchmakingQueueEntry
 import com.example.riffrush.data.model.RoundResultModel
 class MatchRepository(
     private val firestore: FirebaseFirestore,
-    private val auth: FirebaseAuth,
     private val playerIdentityManager: PlayerIdentityManager
 ) {
     private val matchesCollection = firestore.collection("matches")
@@ -106,7 +104,6 @@ class MatchRepository(
 
     suspend fun createMatch(match: MatchModel) {
         if (match.matchId == "offline_test_id") return
-        val userId = auth.currentUser?.uid ?: throw Exception("User not logged in")
 
         firestore.collection("matches")
             .document(match.matchId)
@@ -125,11 +122,6 @@ class MatchRepository(
                 trySend(match)
             }
         awaitClose { registration.remove() }
-    }
-
-    suspend fun updateScore(matchId: String, playerNumber: Int, newScore: Int) {
-        val field = if (playerNumber == 1) "scoreP1" else "scoreP2"
-        matchesCollection.document(matchId).update(field, newScore).await()
     }
 
     suspend fun updateMatchStatus(matchId: String, status: MatchStatus) {

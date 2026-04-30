@@ -9,7 +9,6 @@ import com.example.riffrush.data.model.MatchStatus
 import com.example.riffrush.data.model.Song
 import com.example.riffrush.data.repository.DeezerApi
 import com.example.riffrush.data.repository.MatchRepository
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +26,6 @@ class MatchViewModel(
     private val repository: MatchRepository,
     private val firebaseRepository: FirebaseRepository,
     private val deezerApi: DeezerApi,
-    private val auth: FirebaseAuth,
     private val musicPlayer: MusicPlayer
 ) : ViewModel() {
 
@@ -38,7 +36,6 @@ class MatchViewModel(
     val songs: StateFlow<List<Song>> = _songs
 
     private val _currentRound = MutableStateFlow(0)
-    val currentRound: StateFlow<Int> = _currentRound
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -121,12 +118,12 @@ class MatchViewModel(
         _currentRound.value = 0
         _isLoading.value = true
 
-        android.util.Log.d("MATCH_DEBUG", "listenToMatch START matchId=$matchId")
+        Log.d("MATCH_DEBUG", "listenToMatch START matchId=$matchId")
 
         matchJob = viewModelScope.launch {
             try {
                 repository.listenToMatch(matchId).collect { match ->
-                    android.util.Log.d(
+                    Log.d(
                         "MATCH_DEBUG",
                         "listenToMatch RECEIVED matchId=${match?.matchId} " +
                                 "round=${match?.currentRound} " +
@@ -140,7 +137,7 @@ class MatchViewModel(
                     val previousMatch = _currentMatch.value
                     val previousRound = previousMatch?.currentRound ?: -1
 
-                    android.util.Log.d(
+                    Log.d(
                         "MATCH_DEBUG",
                         "listenToMatch PREVIOUS previousRound=$previousRound " +
                                 "previousStatus=${previousMatch?.status} " +
@@ -153,7 +150,7 @@ class MatchViewModel(
                         match?.status == MatchStatus.FINISHED &&
                         gamesPlayedRegisteredForMatchId != match.matchId
                     ) {
-                        android.util.Log.d(
+                        Log.d(
                             "MATCH_DEBUG",
                             "listenToMatch FINISHED detected. Registering stats/history for match=${match.matchId}"
                         )
@@ -162,7 +159,7 @@ class MatchViewModel(
 
                         val currentUserId = repository.getCurrentUserId()
 
-                        android.util.Log.d(
+                        Log.d(
                             "MATCH_DEBUG",
                             "listenToMatch FINISHED currentUserId=$currentUserId"
                         )
@@ -181,7 +178,7 @@ class MatchViewModel(
                             watchOpponentConnection(currentMatch)
                         }
 
-                        android.util.Log.d(
+                        Log.d(
                             "MATCH_DEBUG",
                             "listenToMatch CURRENT isOffline=$isOffline " +
                                     "songsLoaded=${_songs.value.size} " +
@@ -190,13 +187,13 @@ class MatchViewModel(
 
                         // Cargar canciones solo una vez por partida
                         if (_songs.value.isEmpty() && currentMatch.staticSongList.isNotEmpty()) {
-                            android.util.Log.d(
+                            Log.d(
                                 "MATCH_DEBUG",
                                 "listenToMatch LOAD_SONGS starting with ${currentMatch.staticSongList.size} songs"
                             )
 
                             loadSongs(currentMatch.staticSongList) {
-                                android.util.Log.d(
+                                Log.d(
                                     "MATCH_DEBUG",
                                     "listenToMatch LOAD_SONGS complete. status=${currentMatch.status} isOffline=$isOffline"
                                 )
@@ -210,7 +207,7 @@ class MatchViewModel(
                                         currentMatch.answeredP2
                                     }
 
-                                    android.util.Log.d(
+                                    Log.d(
                                         "MATCH_DEBUG",
                                         "listenToMatch LOAD_SONGS timerCheck " +
                                                 "currentPlayer=${getCurrentPlayerId()} " +
@@ -219,7 +216,7 @@ class MatchViewModel(
                                     )
 
                                     if (!hasAnswered) {
-                                        android.util.Log.d("MATCH_DEBUG", "listenToMatch LOAD_SONGS startTimer 15000")
+                                        Log.d("MATCH_DEBUG", "listenToMatch LOAD_SONGS startTimer 15000")
                                         startTimer()
                                     }
                                 }
@@ -236,7 +233,7 @@ class MatchViewModel(
                                 val roundChanged = currentMatch.currentRound != previousRound
                                 val justStarted = previousMatch?.status == MatchStatus.WAITING
 
-                                android.util.Log.d(
+                                Log.d(
                                     "MATCH_DEBUG",
                                     "listenToMatch TIMER currentPlayer=${getCurrentPlayerId()} " +
                                             "hasAnswered=$hasAnswered " +
@@ -249,7 +246,7 @@ class MatchViewModel(
                                 )
 
                                 if (roundChanged || justStarted) {
-                                    android.util.Log.d(
+                                    Log.d(
                                         "MATCH_DEBUG",
                                         "listenToMatch TIMER roundChanged/justStarted -> reset opponentAnsweredTimerStartedForRound"
                                     )
@@ -257,13 +254,13 @@ class MatchViewModel(
                                     opponentAnsweredTimerStartedForRound = null
 
                                     if (!hasAnswered) {
-                                        android.util.Log.d(
+                                        Log.d(
                                             "MATCH_DEBUG",
                                             "listenToMatch TIMER startTimer 15000"
                                         )
                                         startTimer(15000L)
                                     } else {
-                                        android.util.Log.d(
+                                        Log.d(
                                             "MATCH_DEBUG",
                                             "listenToMatch TIMER not starting 15000 because hasAnswered=true"
                                         )
@@ -275,7 +272,7 @@ class MatchViewModel(
                                     !hasAnswered &&
                                     opponentAnsweredTimerStartedForRound != currentMatch.currentRound
                                 ) {
-                                    android.util.Log.d(
+                                    Log.d(
                                         "MATCH_DEBUG",
                                         "listenToMatch TIMER opponent answered -> startTimer 7000"
                                     )
@@ -283,7 +280,7 @@ class MatchViewModel(
                                     opponentAnsweredTimerStartedForRound = currentMatch.currentRound
                                     startTimer(7000L)
                                 } else {
-                                    android.util.Log.d(
+                                    Log.d(
                                         "MATCH_DEBUG",
                                         "listenToMatch TIMER no 7s timer. " +
                                                 "condition opponentAnswered=$opponentAnswered " +
@@ -292,7 +289,7 @@ class MatchViewModel(
                                     )
                                 }
                             } else {
-                                android.util.Log.d(
+                                Log.d(
                                     "MATCH_DEBUG",
                                     "listenToMatch TIMER skipped. " +
                                             "status=${currentMatch.status} songsLoaded=${_songs.value.size}"
@@ -307,7 +304,7 @@ class MatchViewModel(
                             currentMatch.player1Id.isNotEmpty() &&
                             currentMatch.player2Id.isNotEmpty()
                         ) {
-                            android.util.Log.d(
+                            Log.d(
                                 "MATCH_DEBUG",
                                 "listenToMatch WAITING with two players -> update PLAYING"
                             )
@@ -317,7 +314,7 @@ class MatchViewModel(
                     }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("MATCH_DEBUG", "listenToMatch ERROR", e)
+                Log.e("MATCH_DEBUG", "listenToMatch ERROR", e)
                 Log.e("MatchViewModel", "Error listening to match", e)
                 _error.value = "Error de conexión: ${e.message}"
             }
@@ -391,7 +388,7 @@ class MatchViewModel(
                 try {
                     firebaseRepository.incrementSongsPlayed(currentUserId)
                 } catch (e: Exception) {
-                    android.util.Log.e(
+                    Log.e(
                         "MATCH_DEBUG",
                         "No se pudo incrementar songsPlayed, pero la partida continúa",
                         e
@@ -406,7 +403,7 @@ class MatchViewModel(
 
             } catch (e: Exception) {
                 _showAnswerResult.value = false
-                android.util.Log.e("MATCH_DEBUG", "Error submitting answer", e)
+                Log.e("MATCH_DEBUG", "Error submitting answer", e)
                 _error.value = "Error al enviar la respuesta: ${e.message}"
             }
         }
@@ -476,23 +473,6 @@ class MatchViewModel(
                     saveHistoryForCurrentUser(finishedMatch)
                 }
 
-            }
-        }
-    }
-
-    private fun incrementScore() {
-        val match = _currentMatch.value ?: return
-        val isOffline = match.matchId == "offline_test_id"
-
-        viewModelScope.launch {
-            try {
-                if (isOffline) {
-                    _currentMatch.value = match.copy(
-                        scoreP1 = match.scoreP1 + 1
-                    )
-                }
-            } catch (e: Exception) {
-                Log.e("MatchViewModel", "Error updating score", e)
             }
         }
     }
@@ -582,21 +562,6 @@ class MatchViewModel(
         return repository.getCurrentUserId()
     }
 
-    fun finishMatch() {
-        val match = _currentMatch.value ?: return
-
-        viewModelScope.launch {
-            try {
-                repository.updateMatchStatus(match.matchId, MatchStatus.FINISHED)
-                firebaseRepository.incrementGamesPlayed(match.player1Id)
-                firebaseRepository.incrementGamesPlayed(match.player2Id)
-
-            } catch (e: Exception) {
-                Log.e("MatchViewModel", "Error finishing match", e)
-            }
-        }
-    }
-
     private fun hasOpponentAnswered(match: MatchModel): Boolean {
         val currentUserId = getCurrentPlayerId()
         val amIPlayer1 = currentUserId == match.player1Id
@@ -668,7 +633,7 @@ class MatchViewModel(
             try {
                 repository.abandonMatch(match.matchId)
             } catch (e: Exception) {
-                android.util.Log.e("MATCH_DEBUG", "Error abandoning match", e)
+                Log.e("MATCH_DEBUG", "Error abandoning match", e)
             }
         }
     }
@@ -681,7 +646,7 @@ class MatchViewModel(
                 try {
                     repository.updatePresence(matchId)
                 } catch (e: Exception) {
-                    android.util.Log.e("MATCH_DEBUG", "Error updating presence", e)
+                    Log.e("MATCH_DEBUG", "Error updating presence", e)
                 }
 
                 delay(3000)

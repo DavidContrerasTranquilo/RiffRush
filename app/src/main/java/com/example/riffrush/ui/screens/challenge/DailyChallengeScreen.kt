@@ -196,7 +196,6 @@ fun DailyChallengeGameView(
         Spacer(modifier = Modifier.height(48.dp))
 
         options.forEach { option ->
-            val isSelectedCorrect = hasAnswered && option.id == song.id
             val buttonColor = if (hasAnswered) {
                 if (option.id == song.id) Color(0xFF4CAF50) // Verde si es la correcta
                 else MaterialTheme.colorScheme.surfaceVariant // Gris las demás

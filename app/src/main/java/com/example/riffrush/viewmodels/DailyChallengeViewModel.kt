@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Calendar
-import kotlin.random.Random
 
 data class DailyChallengeUiState(
     val isLoading: Boolean = true,

@@ -15,7 +15,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.riffrush.navigation.Screen
 import com.example.riffrush.navigation.items
-import com.example.riffrush.viewmodels.SongViewModel
 import com.example.riffrush.ui.screens.auth.LoginScreen
 import com.example.riffrush.ui.screens.auth.SignUpScreen
 import com.example.riffrush.ui.screens.auth.WelcomeScreen
@@ -29,7 +28,6 @@ import com.example.riffrush.ui.screens.profile.ProfileScreen
 import com.example.riffrush.ui.screens.settings.SettingsScreen
 import com.example.riffrush.ui.screens.social.SocialListScreen
 import com.example.riffrush.ui.screens.social.SocialScreen
-import org.koin.androidx.compose.koinViewModel
 import com.example.riffrush.ui.screens.match.MatchmakingScreen
 import com.example.riffrush.ui.screens.profile.UserStatsScreen
 import com.example.riffrush.ui.screens.profile.MatchHistoryScreen
@@ -37,7 +35,6 @@ import com.example.riffrush.ui.screens.music.PlaylistDetailScreen
 import com.example.riffrush.ui.screens.match.PlaylistGameScreen
 @Composable
 fun MainScreen(
-    songViewModel: SongViewModel = koinViewModel()
 ) {
     val navController = rememberNavController()
 

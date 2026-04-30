@@ -83,11 +83,11 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
 
             val incrementField = if (isWin) "wins" else "losses"
             val updates = hashMapOf<String, Any>(
-                incrementField to com.google.firebase.firestore.FieldValue.increment(1)
+                incrementField to FieldValue.increment(1)
             )
 
             // Usamos set con merge por si el documento no existe
-            statsRef.set(updates, com.google.firebase.firestore.SetOptions.merge()).await()
+            statsRef.set(updates, SetOptions.merge()).await()
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -304,7 +304,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
 
         playlistRef.update(
             "songsCount",
-            com.google.firebase.firestore.FieldValue.increment(1)
+            FieldValue.increment(1)
         ).await()
     }
 
@@ -321,7 +321,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
 
         playlistRef.update(
             "songsCount",
-            com.google.firebase.firestore.FieldValue.increment(-1)
+            FieldValue.increment(-1)
         ).await()
     }
 }
