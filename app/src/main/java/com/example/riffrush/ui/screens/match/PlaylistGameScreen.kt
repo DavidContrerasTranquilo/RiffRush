@@ -11,6 +11,8 @@ import androidx.compose.ui.text.font.FontWeight
 import com.example.riffrush.data.player.MusicPlayer
 import com.example.riffrush.viewmodels.FavoritesGameViewModel
 import com.example.riffrush.viewmodels.PlaylistViewModel
+import com.example.riffrush.ui.screens.challenge.DailyChallengeGameView
+import com.example.riffrush.ui.screens.challenge.DailyChallengeResultView
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -28,6 +30,8 @@ fun PlaylistGameScreen(
     val currentIndex by gameViewModel.currentIndex.collectAsState()
     val score by gameViewModel.score.collectAsState()
     val gameState by gameViewModel.gameState.collectAsState()
+    val hasAnswered by gameViewModel.hasAnsweredCurrent.collectAsState()
+    val answerCorrect by gameViewModel.currentAnswerCorrect.collectAsState()
 
     LaunchedEffect(playlistId) {
         playlistViewModel.loadPlaylistSongs(playlistId)
@@ -83,15 +87,11 @@ fun PlaylistGameScreen(
                 }
 
                 gameState == FavoritesGameViewModel.FavoritesState.FINISHED -> {
-                    ResultView(
-                        player1Name = "Tú",
-                        player2Name = "Playlist",
-                        scoreP1 = score,
-                        scoreP2 = 0,
-                        onPlayer1Click = {},
-                        onPlayer2Click = {},
-                        onExit = onBack,
-                        roundResults = emptyList()
+                    DailyChallengeResultView(
+                        score = score,
+                        streak = -1,
+                        totalRounds = playingSongs.size,
+                        onExit = onBack
                     )
                 }
 
@@ -99,23 +99,20 @@ fun PlaylistGameScreen(
                     val currentSong = playingSongs.getOrNull(currentIndex)
 
                     if (currentSong != null) {
-                        GameView(
+                        DailyChallengeGameView(
                             song = currentSong,
                             round = currentIndex + 1,
-                            player1Name = "Tú",
-                            player2Name = "Playlist",
-                            scoreP1 = score,
-                            scoreP2 = 0,
-                            allSongs = songs,
-                            hasAnswered = false,
-                            timeLeft = 1f,
+                            score = score,
+                            allSongs = playingSongs,
+                            hasAnswered = hasAnswered,
+                            answerCorrect = answerCorrect,
                             onAnswer = { isCorrect ->
                                 gameViewModel.submitAnswer(isCorrect)
                             },
-                            onPlayer1Click = {},
-                            onPlayer2Click = {},
-                            musicPlayer = musicPlayer,
-                            timerDuration = 15000L,
+                            onNextRound = {
+                                gameViewModel.nextRound()
+                            },
+                            musicPlayer = musicPlayer
                         )
                     } else {
                         EmptyPlaylistGameView()

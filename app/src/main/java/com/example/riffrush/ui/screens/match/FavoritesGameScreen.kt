@@ -11,6 +11,8 @@ import androidx.compose.ui.text.font.FontWeight
 import com.example.riffrush.data.player.MusicPlayer
 import com.example.riffrush.viewmodels.MusicViewModel
 import com.example.riffrush.viewmodels.FavoritesGameViewModel
+import com.example.riffrush.ui.screens.challenge.DailyChallengeGameView
+import com.example.riffrush.ui.screens.challenge.DailyChallengeResultView
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -27,6 +29,8 @@ fun FavoritesGameScreen(
     val currentIndex by favoritesViewModel.currentIndex.collectAsState()
     val score by favoritesViewModel.score.collectAsState()
     val gameState by favoritesViewModel.gameState.collectAsState()
+    val hasAnswered by favoritesViewModel.hasAnsweredCurrent.collectAsState()
+    val answerCorrect by favoritesViewModel.currentAnswerCorrect.collectAsState()
 
     // Inicializamos la partida con los favoritos cargados
     LaunchedEffect(favorites) {
@@ -71,38 +75,31 @@ fun FavoritesGameScreen(
                 }
 
                 gameState == FavoritesGameViewModel.FavoritesState.FINISHED -> {
-                    ResultView(
-                        player1Name = "Tú",
-                        player2Name = "Bot",
-                        scoreP1 = score,
-                        scoreP2 = 0,
-                        onPlayer1Click = {},
-                        onPlayer2Click = {},
-                        onExit = onBack,
-                        roundResults = emptyList()
+                    DailyChallengeResultView(
+                        score = score,
+                        streak = -1,
+                        totalRounds = playingSongs.size,
+                        onExit = onBack
                     )
                 }
 
                 else -> {
                     val currentSong = playingSongs.getOrNull(currentIndex)
                     if (currentSong != null) {
-                        GameView(
+                        DailyChallengeGameView(
                             song = currentSong,
                             round = currentIndex + 1,
-                            player1Name = "Tú",
-                            player2Name = "Bot",
-                            scoreP1 = score,
-                            scoreP2 = 0,
-                            allSongs = favorites,
-                            hasAnswered = false,
-                            timeLeft = 1f,
+                            score = score,
+                            allSongs = playingSongs,
+                            hasAnswered = hasAnswered,
+                            answerCorrect = answerCorrect,
                             onAnswer = { isCorrect ->
                                 favoritesViewModel.submitAnswer(isCorrect)
                             },
-                            onPlayer1Click = {},
-                            onPlayer2Click = {},
-                            musicPlayer = musicPlayer,
-                            timerDuration = 15000L
+                            onNextRound = {
+                                favoritesViewModel.nextRound()
+                            },
+                            musicPlayer = musicPlayer
                         )
                     }
                 }

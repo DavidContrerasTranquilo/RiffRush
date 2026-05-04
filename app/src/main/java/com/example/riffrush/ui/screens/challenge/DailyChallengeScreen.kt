@@ -160,7 +160,7 @@ fun DailyChallengeGameView(
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
-                text = "Ronda $round / 6",
+                text = "Ronda $round / ${allSongs.size}",
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.titleMedium
@@ -216,7 +216,7 @@ fun DailyChallengeGameView(
                 onClick = onNextRound,
                 modifier = Modifier.fillMaxWidth().height(50.dp)
             ) {
-                Text(if (round == 6) "VER RESULTADOS" else "SIGUIENTE CANCIÓN")
+                Text(if (round == allSongs.size) "VER RESULTADOS" else "SIGUIENTE CANCIÓN")
             }
         }
     }
@@ -226,6 +226,7 @@ fun DailyChallengeGameView(
 fun DailyChallengeResultView(
     score: Int,
     streak: Int,
+    totalRounds: Int = 6,
     isGuest: Boolean = false,
     onExit: () -> Unit
 ) {
@@ -256,21 +257,23 @@ fun DailyChallengeResultView(
             ) {
                 Text("Puntuación de hoy", fontSize = 18.sp)
                 Text(
-                    text = "$score / 6",
+                    text = "$score / $totalRounds",
                     fontSize = 48.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
                 
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text("Racha actual", fontSize = 18.sp)
-                Text(
-                    text = "$streak 🔥",
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFFF9800)
-                )
+                if (streak >= 0) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text("Racha actual", fontSize = 18.sp)
+                    Text(
+                        text = "$streak 🔥",
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFF9800)
+                    )
+                }
             }
         }
 

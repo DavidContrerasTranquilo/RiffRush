@@ -23,6 +23,12 @@ class FavoritesGameViewModel(
     private val _gameState = MutableStateFlow(FavoritesState.PLAYING)
     val gameState = _gameState.asStateFlow()
 
+    private val _hasAnsweredCurrent = MutableStateFlow(false)
+    val hasAnsweredCurrent = _hasAnsweredCurrent.asStateFlow()
+
+    private val _currentAnswerCorrect = MutableStateFlow<Boolean?>(null)
+    val currentAnswerCorrect = _currentAnswerCorrect.asStateFlow()
+
     enum class FavoritesState { PLAYING, FINISHED }
 
     fun initGame(favorites: List<Song>) {
@@ -34,17 +40,27 @@ class FavoritesGameViewModel(
             _playingSongs.value = refreshedSongs
             _currentIndex.value = 0
             _score.value = 0
+            _hasAnsweredCurrent.value = false
+            _currentAnswerCorrect.value = null
             _gameState.value = FavoritesState.PLAYING
         }
     }
 
     fun submitAnswer(isCorrect: Boolean) {
+        if (_hasAnsweredCurrent.value) return
+        _hasAnsweredCurrent.value = true
+        _currentAnswerCorrect.value = isCorrect
+        
         if (isCorrect) {
             _score.value++
         }
-        
+    }
+    
+    fun nextRound() {
         if (_currentIndex.value < _playingSongs.value.size - 1) {
             _currentIndex.value++
+            _hasAnsweredCurrent.value = false
+            _currentAnswerCorrect.value = null
         } else {
             _gameState.value = FavoritesState.FINISHED
         }

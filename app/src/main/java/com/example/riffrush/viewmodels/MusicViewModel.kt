@@ -123,41 +123,40 @@ class MusicViewModel(
         viewModelScope.launch {
             var url = song.preview
 
-            if (url.isBlank()) {
-                try {
-                    val fSong = deezerRepository.getSong(song.id)
-                    if (fSong != null && fSong.preview.isNotBlank()) {
-                        url = fSong.preview
-                        if (isLoggedIn()) {
-                            // Actualizar en Firebase para no tener que buscar de nuevo
-                            firebaseRepository.addFavorite(getOwnerId(), fSong)
+            // Siempre obtenemos la canción fresca para evitar que el token del preview expire
+            try {
+                val fSong = deezerRepository.getSong(song.id)
+                if (fSong != null && fSong.preview.isNotBlank()) {
+                    url = fSong.preview
+                    if (isLoggedIn()) {
+                        // Actualizar en Firebase para no tener que buscar de nuevo
+                        firebaseRepository.addFavorite(getOwnerId(), fSong)
 
-                            // También actualizar localmente para que el preview funcione inmediatamente
-                            val currentFavs = _favoriteSongs.value.toMutableList()
-                            val index = currentFavs.indexOfFirst { it.id == fSong.id }
-                            if (index != -1) {
-                                currentFavs[index] = fSong
-                                _favoriteSongs.value = currentFavs
-                                if (!_isSearching.value) {
-                                    _songs.value = currentFavs
-                                }
+                        // También actualizar localmente para que el preview funcione inmediatamente
+                        val currentFavs = _favoriteSongs.value.toMutableList()
+                        val index = currentFavs.indexOfFirst { it.id == fSong.id }
+                        if (index != -1) {
+                            currentFavs[index] = fSong
+                            _favoriteSongs.value = currentFavs
+                            if (!_isSearching.value) {
+                                _songs.value = currentFavs
                             }
+                        }
 
-                        } else {
-                            val currentFavs = _favoriteSongs.value.toMutableList()
-                            val index = currentFavs.indexOfFirst { it.id == fSong.id }
-                            if (index != -1) {
-                                currentFavs[index] = fSong
-                                _favoriteSongs.value = currentFavs
-                                if (!_isSearching.value) {
-                                    _songs.value = currentFavs
-                                }
+                    } else {
+                        val currentFavs = _favoriteSongs.value.toMutableList()
+                        val index = currentFavs.indexOfFirst { it.id == fSong.id }
+                        if (index != -1) {
+                            currentFavs[index] = fSong
+                            _favoriteSongs.value = currentFavs
+                            if (!_isSearching.value) {
+                                _songs.value = currentFavs
                             }
                         }
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
 
             if (url.isNotBlank()) {
