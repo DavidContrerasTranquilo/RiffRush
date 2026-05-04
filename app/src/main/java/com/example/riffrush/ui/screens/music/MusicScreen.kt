@@ -10,12 +10,17 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlaylistPlay
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import com.example.riffrush.data.model.Song
 import com.example.riffrush.ui.components.SongItem
 import com.example.riffrush.viewmodels.MusicViewModel
@@ -87,28 +92,27 @@ fun MusicScreen(
                     }
                 }
 
-                OutlinedTextField(
+                TextField(
                     value = query,
                     onValueChange = { query = it },
                     modifier = Modifier.weight(1f),
                     placeholder = { Text("Buscar canciones...") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     singleLine = true,
-                    shape = MaterialTheme.shapes.medium
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Button(
-                    onClick = {
+                    shape = CircleShape,
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent
+                    ),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = {
                         if (query.isNotBlank()) {
                             selectedTab = 0
                             viewModel.searchSongs(query)
                         }
-                    },
-                    contentPadding = PaddingValues(horizontal = 16.dp)
-                ) {
-                    Text("Buscar")
-                }
+                    })
+                )
             }
 
             if (!isSearching) {

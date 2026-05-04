@@ -138,7 +138,7 @@ fun MainScreen(
                     onNavigateToMatchHistory = { uid ->
                         navController.navigate("match_history/$uid")
                     },
-                    /Para navergar a la pestaña de inicio/registor
+                    //Para navergar a la pestaña de inicio/registor
                     onNavigateToWelcome = {
                         navController.navigate("welcome") {
                             popUpTo(navController.graph.findStartDestination().id) {
