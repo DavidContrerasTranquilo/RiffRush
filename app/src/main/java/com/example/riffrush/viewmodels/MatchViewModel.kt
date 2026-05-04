@@ -165,8 +165,11 @@ class MatchViewModel(
                         )
 
                         if (currentUserId.isNotBlank()) {
-                            firebaseRepository.incrementGamesPlayed(currentUserId)
-                            saveHistoryForCurrentUser(match)
+                            val isAnonymous = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.isAnonymous == true
+                            if (!isAnonymous) {
+                                firebaseRepository.incrementGamesPlayed(currentUserId)
+                                saveHistoryForCurrentUser(match)
+                            }
                         }
                     }
 
@@ -386,7 +389,10 @@ class MatchViewModel(
                 _showAnswerResult.value = false
 
                 try {
-                    firebaseRepository.incrementSongsPlayed(currentUserId)
+                    val isAnonymous = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.isAnonymous == true
+                    if (!isAnonymous) {
+                        firebaseRepository.incrementSongsPlayed(currentUserId)
+                    }
                 } catch (e: Exception) {
                     Log.e(
                         "MATCH_DEBUG",
@@ -469,8 +475,11 @@ class MatchViewModel(
                 if (currentUserId.isNotBlank() && gamesPlayedRegisteredForMatchId != finishedMatch.matchId) {
                     gamesPlayedRegisteredForMatchId = finishedMatch.matchId
 
-                    firebaseRepository.incrementGamesPlayed(currentUserId)
-                    saveHistoryForCurrentUser(finishedMatch)
+                    val isAnonymous = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.isAnonymous == true
+                    if (!isAnonymous) {
+                        firebaseRepository.incrementGamesPlayed(currentUserId)
+                        saveHistoryForCurrentUser(finishedMatch)
+                    }
                 }
 
             }

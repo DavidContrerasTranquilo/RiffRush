@@ -175,20 +175,28 @@ class AuthViewModel(
         }
     }
 
-    fun updateFullProfile(newName: String, newBio: String, newPass: String?) {
+    //Funcion par resetear la contraseña a mano
+    fun sendPasswordResetToCurrentUser() {
+        val email = repository.getCurrentUser()?.email
+        if (email.isNullOrBlank()) {
+            _uiMessage.value = "No se ha encontrado el correo del usuario actual."
+            return
+        }
+        viewModelScope.launch {
+            try {
+                repository.sendPasswordResetEmail(email)
+                _uiMessage.value = "Se ha enviado un correo de recuperación a $email"
+            } catch (e: Exception) {
+                _uiMessage.value = "Error: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    fun updateFullProfile(newName: String, newBio: String) {
         viewModelScope.launch {
             try {
                 repository.updateUsername(newName)
                 repository.updateBio(newBio)
-                if (!newPass.isNullOrBlank()) {
-                    try {
-                        repository.updatePassword(newPass)
-                    } catch (e: Exception) {
-                        _uiMessage.value =
-                            "Para cambiar contraseña debes haber iniciado sesión recientemente."
-                        return@launch
-                    }
-                }
                 _uiMessage.value = "Perfil actualizado correctamente"
                 loadUserBio()
                 _updateSuccess.value = true

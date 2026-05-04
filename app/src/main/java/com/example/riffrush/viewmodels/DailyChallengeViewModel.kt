@@ -44,9 +44,10 @@ class DailyChallengeViewModel(
 
     private fun checkDailyStatusAndLoad() {
         viewModelScope.launch {
+            val uid = authRepository.getCurrentUser()?.uid ?: "guest"
             val todayStr = getCurrentDateString()
-            val lastPlayedDate = prefs.getString("last_played_date", "")
-            val currentStreak = prefs.getInt("current_streak", 0)
+            val lastPlayedDate = prefs.getString("last_played_date_$uid", "")
+            val currentStreak = prefs.getInt("current_streak_$uid", 0)
 
             android.util.Log.d("DAILY_DEBUG", "todayStr=$todayStr lastPlayedDate=$lastPlayedDate")
 
@@ -138,7 +139,7 @@ class DailyChallengeViewModel(
     private fun saveResultToFirebase(isCorrect: Boolean) {
         viewModelScope.launch {
             val currentUser = authRepository.getCurrentUser()
-            if (currentUser != null) {
+            if (currentUser != null && !currentUser.isAnonymous) {
                 firebaseRepository.saveDailyChallengeResult(currentUser.uid, isCorrect)
             }
         }
@@ -160,9 +161,10 @@ class DailyChallengeViewModel(
     }
 
     private fun finishGame() {
+        val uid = authRepository.getCurrentUser()?.uid ?: "guest"
         val todayStr = getCurrentDateString()
-        val lastPlayedDate = prefs.getString("last_played_date", "")
-        var streak = prefs.getInt("current_streak", 0)
+        val lastPlayedDate = prefs.getString("last_played_date_$uid", "")
+        var streak = prefs.getInt("current_streak_$uid", 0)
 
         if (lastPlayedDate == getYesterdayDateString()) {
             streak += 1
@@ -171,8 +173,8 @@ class DailyChallengeViewModel(
         }
 
         prefs.edit()
-            .putString("last_played_date", todayStr)
-            .putInt("current_streak", streak)
+            .putString("last_played_date_$uid", todayStr)
+            .putInt("current_streak_$uid", streak)
             .apply()
 
         _uiState.value = _uiState.value.copy(
@@ -182,7 +184,7 @@ class DailyChallengeViewModel(
 
         viewModelScope.launch {
             val currentUser = authRepository.getCurrentUser()
-            if (currentUser != null) {
+            if (currentUser != null && !currentUser.isAnonymous) {
                 firebaseRepository.updateMaxStreak(currentUser.uid, streak)
             }
         }
@@ -190,7 +192,8 @@ class DailyChallengeViewModel(
 
     //Para conseguir la rachaa
     fun getStreak(): Int {
-        return prefs.getInt("current_streak", 0)
+        val uid = authRepository.getCurrentUser()?.uid ?: "guest"
+        return prefs.getInt("current_streak_$uid", 0)
     }
 
     private fun getCurrentDateString(): String {

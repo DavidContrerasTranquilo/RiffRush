@@ -38,6 +38,7 @@ fun MusicScreen(
     val uiMessage by playlistViewModel.uiMessage.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     var query by remember { mutableStateOf("") }
     var selectedTab by remember { mutableStateOf(0) }
@@ -58,7 +59,8 @@ fun MusicScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        contentWindowInsets = WindowInsets(0.dp)
     ) { padding ->
         Column(
             modifier = Modifier
@@ -131,8 +133,23 @@ fun MusicScreen(
                         favoriteSongs = favoriteSongs,
                         playingSongId = playingSongId,
                         onPlayPause = { song -> viewModel.playPause(song) },
-                        onFavoriteToggle = { song -> viewModel.toggleFavorite(song) },
-                        onAddToPlaylist = { song -> songToAddToPlaylist = song }
+                        onFavoriteToggle = { song ->
+                        //Si quiere guardar favs que inicie sesion!
+                            val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+                            if (currentUser == null || currentUser.isAnonymous) {
+                                android.widget.Toast.makeText(context, "Debes iniciar sesión para guardar canciones en favoritos", android.widget.Toast.LENGTH_SHORT).show()
+                            } else {
+                                viewModel.toggleFavorite(song)
+                            }
+                        },
+                        onAddToPlaylist = { song ->
+                            val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+                            if (currentUser == null || currentUser.isAnonymous) {
+                                android.widget.Toast.makeText(context, "Debes iniciar sesión para crear playlists", android.widget.Toast.LENGTH_SHORT).show()
+                            } else {
+                                songToAddToPlaylist = song
+                            }
+                        }
                     )
                 }
 
@@ -141,14 +158,28 @@ fun MusicScreen(
                         songs = songs,
                         playingSongId = playingSongId,
                         onPlayPause = { song -> viewModel.playPause(song) },
-                        onFavoriteToggle = { song -> viewModel.toggleFavorite(song) }
+                        onFavoriteToggle = { song ->
+                            val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+                            if (currentUser == null || currentUser.isAnonymous) {
+                                android.widget.Toast.makeText(context, "Debes iniciar sesión para guardar canciones en favoritos", android.widget.Toast.LENGTH_SHORT).show()
+                            } else {
+                                viewModel.toggleFavorite(song)
+                            }
+                        }
                     )
                 }
 
                 selectedTab == 1 -> {
                     PlaylistsList(
                         playlists = playlists,
-                        onCreatePlaylistClick = { showCreatePlaylistDialog = true },
+                        onCreatePlaylistClick = {
+                            val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+                            if (currentUser == null || currentUser.isAnonymous) {
+                                android.widget.Toast.makeText(context, "Debes iniciar sesión para crear playlists", android.widget.Toast.LENGTH_SHORT).show()
+                            } else {
+                                showCreatePlaylistDialog = true
+                            }
+                        },
                         onPlaylistClick = { playlist ->
                             onNavigateToPlaylistDetail(playlist.id, playlist.name)
                         },

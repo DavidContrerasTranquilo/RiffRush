@@ -175,7 +175,17 @@ fun HomeScreen(
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 } else {
-                                    onNavigateToFavorites()
+                                    //Le decimos que si no tiene cuenta no puede jugar con los favoritos (que inicies sesion si quiere)
+                                    val currentUser = FirebaseAuth.getInstance().currentUser
+                                    if (currentUser == null || currentUser.isAnonymous) {
+                                        Toast.makeText(
+                                            context,
+                                            "Debes iniciar sesión para jugar con tus favoritos",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    } else {
+                                        onNavigateToFavorites()
+                                    }
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
@@ -323,17 +333,8 @@ fun HomeScreen(
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 } else {
-                                    val currentUser = FirebaseAuth.getInstance().currentUser
-                                    if (currentUser == null || currentUser.uid.startsWith("guest")) {
-                                        Toast.makeText(
-                                            context,
-                                            "Debes iniciar sesión para jugar al Reto Diario",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    } else {
-                                        if (!dailyChallengeState.isCompletedToday) {
-                                            navController.navigate("daily_challenge")
-                                        }
+                                    if (!dailyChallengeState.isCompletedToday) {
+                                        navController.navigate("daily_challenge")
                                     }
                                 }
                             },

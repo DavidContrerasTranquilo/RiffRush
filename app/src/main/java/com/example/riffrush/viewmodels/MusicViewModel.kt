@@ -44,7 +44,8 @@ class MusicViewModel(
     }
     //David, Añado para ver si esta logueado
     fun isLoggedIn(): Boolean {
-        return authRepository.getCurrentUser() != null
+        val user = authRepository.getCurrentUser()
+        return user != null && !user.isAnonymous
     }
     //Si no esta logueado no cargamos la musica
     fun loadMyMusic() {

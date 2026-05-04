@@ -34,6 +34,7 @@ fun ProfileScreen(
     onNavigateToAdminPanel: () -> Unit = {},
     onNavigateToUserStats: (String) -> Unit = {},
     onNavigateToMatchHistory: (String) -> Unit = {},
+    onNavigateToWelcome: () -> Unit = {},
     authViewModel: AuthViewModel = koinViewModel()
 ) {
     val isLoggedIn by authViewModel.authState.collectAsState()
@@ -175,7 +176,11 @@ fun ProfileScreen(
                         icon = Icons.AutoMirrored.Filled.ExitToApp,
                         title = "Cerrar Sesión",
                         color = MaterialTheme.colorScheme.error,
-                        onClick = { authViewModel.signOut() }
+                        onClick = {
+                            //Le envio al inico de sesion/registro
+                            authViewModel.signOut()
+                            onNavigateToWelcome()
+                        }
                     )
                 } else {
                     ProfileMenuItem(

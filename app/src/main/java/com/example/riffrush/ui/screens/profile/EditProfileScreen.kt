@@ -38,7 +38,6 @@ fun EditProfileScreen(
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var name by remember { mutableStateOf(authViewModel.currentUserName) }
     var bio by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -208,24 +207,18 @@ fun EditProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Nueva Contraseña") },
-                placeholder = { Text("Dejar en blanco para no cambiar") },
-                visualTransformation = PasswordVisualTransformation(),
+            OutlinedButton(
+                onClick = { authViewModel.sendPasswordResetToCurrentUser() },
                 modifier = Modifier.fillMaxWidth()
-            )
+            ) {
+                Text("Cambiar Contraseña (Enviar correo)")
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
                 onClick = {
-                    authViewModel.updateFullProfile(
-                        name,
-                        bio,
-                        if (password.isBlank()) null else password
-                    )
+                    authViewModel.updateFullProfile(name, bio)
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = name.isNotBlank()

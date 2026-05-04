@@ -71,10 +71,13 @@ fun DailyChallengeScreen(
                         Text("Cargando reto de hoy...")
                     }
                 }
+                //Añado esto para el tema invitados, que si no se crea un usuario en firebase
                 uiState.isCompletedToday || uiState.isGameOver -> {
+                    val isGuest = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.isAnonymous == true
                     DailyChallengeResultView(
                         score = uiState.score,
                         streak = uiState.streak,
+                        isGuest = isGuest,
                         onExit = onExit
                     )
                 }
@@ -166,35 +169,6 @@ fun DailyChallengeGameView(
 
         Spacer(modifier = Modifier.height(48.dp))
 
-        IconButton(
-            onClick = { musicPlayer.playPreview(song.preview) },
-            modifier = Modifier.size(140.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(140.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.radialGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.primaryContainer
-                            )
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = "Reproducir audio",
-                    modifier = Modifier.size(70.dp),
-                    tint = Color.White
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(48.dp))
-
         options.forEach { option ->
             val buttonColor = if (hasAnswered) {
                 if (option.id == song.id) Color(0xFF4CAF50) // Verde si es la correcta
@@ -252,6 +226,7 @@ fun DailyChallengeGameView(
 fun DailyChallengeResultView(
     score: Int,
     streak: Int,
+    isGuest: Boolean = false,
     onExit: () -> Unit
 ) {
     Column(
@@ -299,7 +274,24 @@ fun DailyChallengeResultView(
             }
         }
 
-        Spacer(modifier = Modifier.height(48.dp))
+        if (isGuest) {
+            Spacer(modifier = Modifier.height(24.dp))
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Para guardar tu racha en la nube y competir con amigos, ¡créate una cuenta desde tu Perfil!",
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.padding(16.dp),
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(if (isGuest) 24.dp else 48.dp))
 
         Button(
             onClick = onExit,
