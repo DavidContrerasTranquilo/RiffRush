@@ -2,130 +2,81 @@ package com.example.riffrush.data.repository
 
 import com.example.riffrush.data.model.MatchModel
 import com.example.riffrush.data.model.MatchStatus
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.Transaction
+import com.google.firebase.database.MutableData
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import com.example.riffrush.data.local.PlayerIdentityManager
 import com.example.riffrush.data.model.MatchmakingResult
 import com.example.riffrush.data.model.MatchmakingQueueEntry
 import com.example.riffrush.data.model.RoundResultModel
+
 class MatchRepository(
-    private val firestore: FirebaseFirestore,
+    private val database: FirebaseDatabase,
     private val playerIdentityManager: PlayerIdentityManager
 ) {
-    private val matchesCollection = firestore.collection("matches")
-    private val queueCollection = firestore.collection("matchmaking_queue")
+    private val matchesRef: DatabaseReference = database.getReference("matches")
+    private val queueRef: DatabaseReference = database.getReference("matchmaking_queue")
 
     private val playlists = mapOf(
         "REGGAETON" to listOf(
-            2223276187L,
-            143781198L,
-            3776310102L,
-            2758436071L,
-            3498392331L,
-            3104740891L,
-            857827232L,
-            731498882L,
-            3179773841L,
-            1759650657L,
-            3298075621L,
-            3276167871L,
-            2473410281L,
-            3422751531L,
-            1704442217L,
-            2322228845L,
-            2074439067L
+            2223276187L, 143781198L, 3776310102L, 2758436071L, 3498392331L,
+            3104740891L, 857827232L, 731498882L, 3179773841L, 1759650657L,
+            3298075621L, 3276167871L, 2473410281L, 3422751531L, 1704442217L,
+            2322228845L, 2074439067L
         ),
         "RAP FRANCÉS" to listOf(
-            600107922L,
-            122927610L,
-            132950108L,
-            783256992L,
-            3055454281L,
-            429975052L,
-            823093212L,
-            3242688291L,
-            450100912L,
-            132123630L,
-            1555328112L,
-            3023399701L,
-            2892578472L,
-            106095086L,
-            2781673612L,
-            1426733732L,
-            519797812L,
-            519797762L
+            600107922L, 122927610L, 132950108L, 783256992L, 3055454281L,
+            429975052L, 823093212L, 3242688291L, 450100912L, 132123630L,
+            1555328112L, 3023399701L, 2892578472L, 106095086L, 2781673612L,
+            1426733732L, 519797812L, 519797762L
         ),
         "ROCK ESPAÑOL" to listOf(
-            707777L,
-            778608L,
-            9943121L,
-            3234733081L,
-            2935686241L,
-            988453L,
-            11746766L,
-            778615L,
-            3241426491L,
-            3912803111L,
-            3234733041L,
-            7701507L,
-            14645355L,
-            3539198461L,
-            3092625L,
-            7701520L,
-            3539198321L,
-            3234306461L,
-            2471353181L,
-            4738765L
+            707777L, 778608L, 9943121L, 3234733081L, 2935686241L,
+            988453L, 11746766L, 778615L, 3241426491L, 3912803111L,
+            3234733041L, 7701507L, 14645355L, 3539198461L, 3092625L,
+            7701520L, 3539198321L, 3234306461L, 2471353181L, 4738765L
         ),
         "TOP 50 ESPAÑA" to listOf(
-            3947383241L,
-            3852034981L,
-            37027991L,
-            3843020331L,
-            3733293352L,
-            3677908682L,
-            3911872941L,
-            3852034871L,
-            3380325281L,
-            3776310102L,
-            3852034971L,
-            3613707422L,
-            3241972661L,
-            3640310582L,
-            3856864621L,
-            3407512021L,
-            3640140952L,
-            3171002981L
+            3947383241L, 3852034981L, 37027991L, 3843020331L, 3733293352L,
+            3677908682L, 3911872941L, 3852034871L, 3380325281L, 3776310102L,
+            3852034971L, 3613707422L, 3241972661L, 3640310582L, 3856864621L,
+            3407512021L, 3640140952L, 3171002981L
         )
     )
 
     suspend fun createMatch(match: MatchModel) {
         if (match.matchId == "offline_test_id") return
-
-        firestore.collection("matches")
-            .document(match.matchId)
-            .set(match)
-            .await()
+        matchesRef.child(match.matchId).setValue(match).await()
     }
 
     fun listenToMatch(matchId: String): Flow<MatchModel?> = callbackFlow {
-        val registration = matchesCollection.document(matchId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-                val match = snapshot?.toObject(MatchModel::class.java)
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val match = snapshot.getValue(MatchModel::class.java)
                 trySend(match)
             }
-        awaitClose { registration.remove() }
+            override fun onCancelled(error: DatabaseError) {
+                close(error.toException())
+            }
+        }
+        val ref = matchesRef.child(matchId)
+        ref.addValueEventListener(listener)
+        awaitClose { ref.removeEventListener(listener) }
     }
 
     suspend fun updateMatchStatus(matchId: String, status: MatchStatus) {
-        matchesCollection.document(matchId).update("status", status).await()
+        matchesRef.child(matchId).child("status").setValue(status.name).await()
     }
 
     fun getOfflineMatch(category: String): MatchModel {
@@ -134,7 +85,7 @@ class MatchRepository(
 
         return MatchModel(
             matchId = "offline_${category.lowercase()}",
-            player1Id = "me",
+            player1Id = getCurrentUserId(),
             player2Id = "bot",
             player1Name = "Tú",
             player2Name = "Bot",
@@ -188,20 +139,17 @@ class MatchRepository(
         val playerName = playerIdentityManager.getPlayerName()
         val isGuest = playerIdentityManager.isGuest()
 
-        val waitingSnapshot = queueCollection
-            .whereEqualTo("playlist", playlist)
-            .whereEqualTo("status", "WAITING")
-            .get()
-            .await()
+        val snapshot = queueRef.orderByChild("status").equalTo("WAITING").get().await()
 
-        val rivalDoc = waitingSnapshot.documents.firstOrNull {
-            it.getString("playerId") != playerId
+        val rivalDoc = snapshot.children.firstOrNull {
+            it.child("playlist").getValue(String::class.java) == playlist &&
+            it.child("playerId").getValue(String::class.java) != playerId
         }
 
         return if (rivalDoc != null) {
-            val rivalPlayerId = rivalDoc.getString("playerId") ?: ""
-            val rivalPlayerName = rivalDoc.getString("playerName") ?: "Invitado"
-            val matchId = queueCollection.document().id
+            val rivalPlayerId = rivalDoc.child("playerId").getValue(String::class.java) ?: ""
+            val rivalPlayerName = rivalDoc.child("playerName").getValue(String::class.java) ?: "Invitado"
+            val matchId = matchesRef.push().key ?: "unknown_match"
 
             val match = buildMatch(
                 matchId = matchId,
@@ -212,19 +160,16 @@ class MatchRepository(
                 playlist = playlist
             )
 
-            firestore.runBatch { batch ->
-                batch.set(matchesCollection.document(matchId), match)
-                batch.update(
-                    queueCollection.document(rivalDoc.id), mapOf(
-                        "status" to "MATCHED",
-                        "matchId" to matchId
-                    )
-                )
-            }.await()
+            matchesRef.child(matchId).setValue(match).await()
+            val updates = mapOf(
+                "status" to "MATCHED",
+                "matchId" to matchId
+            )
+            rivalDoc.ref.updateChildren(updates).await()
 
             MatchmakingResult.Matched(matchId)
         } else {
-            val queueId = queueCollection.document().id
+            val queueId = queueRef.push().key ?: return MatchmakingResult.Waiting("")
             val entry = MatchmakingQueueEntry(
                 queueId = queueId,
                 playerId = playerId,
@@ -235,261 +180,216 @@ class MatchRepository(
                 isGuest = isGuest
             )
 
-            queueCollection.document(queueId).set(entry).await()
+            queueRef.child(queueId).setValue(entry).await()
             MatchmakingResult.Waiting(queueId)
         }
     }
 
     fun listenToQueueEntry(queueId: String): Flow<MatchmakingQueueEntry?> = callbackFlow {
-        val registration = queueCollection.document(queueId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-
-                val entry = snapshot?.toObject(MatchmakingQueueEntry::class.java)
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val entry = snapshot.getValue(MatchmakingQueueEntry::class.java)
                 trySend(entry)
             }
-
-        awaitClose { registration.remove() }
+            override fun onCancelled(error: DatabaseError) {
+                close(error.toException())
+            }
+        }
+        val ref = queueRef.child(queueId)
+        ref.addValueEventListener(listener)
+        awaitClose { ref.removeEventListener(listener) }
     }
 
     suspend fun cancelMatchmaking(queueId: String) {
-        queueCollection.document(queueId).delete().await()
+        queueRef.child(queueId).removeValue().await()
     }
 
-    suspend fun submitAnswer(matchId: String, isCorrect: Boolean) {
+    suspend fun submitAnswer(matchId: String, isCorrect: Boolean) = suspendCancellableCoroutine<Unit> { continuation ->
         val currentUserId = getCurrentUserId()
-        val matchRef = firestore.collection("matches").document(matchId)
+        val matchRef = matchesRef.child(matchId)
 
-        android.util.Log.d(
-            "MATCH_DEBUG",
-            "submitAnswer START matchId=$matchId currentUserId=$currentUserId isCorrect=$isCorrect"
-        )
+        android.util.Log.d("MATCH_DEBUG", "submitAnswer START matchId=$matchId")
 
-        firestore.runTransaction { transaction ->
-            val snapshot = transaction.get(matchRef)
-            val match = snapshot.toObject(MatchModel::class.java)
-                ?: throw Exception("Partida no encontrada")
+        matchRef.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(currentData: MutableData): Transaction.Result {
+                val match = currentData.getValue(MatchModel::class.java)
+                    ?: return Transaction.abort()
 
-            android.util.Log.d(
-                "MATCH_DEBUG",
-                "submitAnswer READ match=${match.matchId} p1=${match.player1Id} p2=${match.player2Id} round=${match.currentRound} score=${match.scoreP1}-${match.scoreP2} answered=${match.answeredP1}-${match.answeredP2} status=${match.status}"
-            )
+                val amIPlayer1 = currentUserId == match.player1Id
+                val amIPlayer2 = currentUserId == match.player2Id
 
-            val amIPlayer1 = currentUserId == match.player1Id
-            val amIPlayer2 = currentUserId == match.player2Id
+                if (!amIPlayer1 && !amIPlayer2) return Transaction.abort()
+                if (match.status != MatchStatus.PLAYING) return Transaction.success(currentData)
 
-            android.util.Log.d(
-                "MATCH_DEBUG",
-                "submitAnswer ID_CHECK amIPlayer1=$amIPlayer1 amIPlayer2=$amIPlayer2"
-            )
+                val alreadyAnswered = if (amIPlayer1) match.answeredP1 else match.answeredP2
+                if (alreadyAnswered) return Transaction.success(currentData)
 
-            if (!amIPlayer1 && !amIPlayer2) {
-                throw Exception("No perteneces a esta partida. current=$currentUserId p1=${match.player1Id} p2=${match.player2Id}")
-            }
+                var newScoreP1 = match.scoreP1
+                var newScoreP2 = match.scoreP2
 
-            if (match.status != MatchStatus.PLAYING) {
-                android.util.Log.d("MATCH_DEBUG", "submitAnswer STOP status no PLAYING")
-                return@runTransaction null
-            }
+                if (isCorrect) {
+                    if (amIPlayer1) newScoreP1 += 1 else newScoreP2 += 1
+                }
 
-            val alreadyAnswered = if (amIPlayer1) match.answeredP1 else match.answeredP2
+                val newAnsweredP1 = if (amIPlayer1) true else match.answeredP1
+                val newAnsweredP2 = if (amIPlayer2) true else match.answeredP2
 
-            if (alreadyAnswered) {
-                android.util.Log.d("MATCH_DEBUG", "submitAnswer STOP alreadyAnswered=true")
-                return@runTransaction null
-            }
+                val bothAnswered = newAnsweredP1 && newAnsweredP2
+                val isLastRound = match.currentRound >= match.staticSongList.size - 1
 
-            var newScoreP1 = match.scoreP1
-            var newScoreP2 = match.scoreP2
-
-            if (isCorrect) {
-                if (amIPlayer1) newScoreP1 += 1 else newScoreP2 += 1
-            }
-
-            val newAnsweredP1 = if (amIPlayer1) true else match.answeredP1
-            val newAnsweredP2 = if (amIPlayer2) true else match.answeredP2
-
-            val bothAnswered = newAnsweredP1 && newAnsweredP2
-            val isLastRound = match.currentRound >= match.staticSongList.size - 1
-
-            android.util.Log.d(
-                "MATCH_DEBUG",
-                "submitAnswer CALC newScore=$newScoreP1-$newScoreP2 newAnswered=$newAnsweredP1-$newAnsweredP2 bothAnswered=$bothAnswered isLastRound=$isLastRound"
-            )
-
-            if (bothAnswered) {
-                val currentSongId = match.staticSongList.getOrNull(match.currentRound)
-
-                val newRoundResults = match.roundResults + RoundResultModel(
-                    round = match.currentRound + 1,
-                    songTitle = currentSongId?.toString() ?: "Canción desconocida",
-                    songArtist = "",
-                    player1Correct = newScoreP1 > match.scoreP1,
-                    player2Correct = newScoreP2 > match.scoreP2
-                )
-
-                if (isLastRound) {
-                    android.util.Log.d("MATCH_DEBUG", "submitAnswer UPDATE finishing match")
-
-                    transaction.update(
-                        matchRef,
-                        mapOf(
-                            "scoreP1" to newScoreP1,
-                            "scoreP2" to newScoreP2,
-                            "answeredP1" to true,
-                            "answeredP2" to true,
-                            "status" to MatchStatus.FINISHED,
-                            "roundResults" to newRoundResults
+                if (bothAnswered) {
+                    val currentSongId = match.staticSongList.getOrNull(match.currentRound)
+                    val newRoundResults = match.roundResults.toMutableList()
+                    newRoundResults.add(
+                        RoundResultModel(
+                            round = match.currentRound + 1,
+                            songTitle = currentSongId?.toString() ?: "Canción desconocida",
+                            songArtist = "",
+                            player1Correct = newScoreP1 > match.scoreP1,
+                            player2Correct = newScoreP2 > match.scoreP2
                         )
                     )
+
+                    if (isLastRound) {
+                        currentData.value = match.copy(
+                            scoreP1 = newScoreP1,
+                            scoreP2 = newScoreP2,
+                            answeredP1 = true,
+                            answeredP2 = true,
+                            status = MatchStatus.FINISHED,
+                            roundResults = newRoundResults
+                        )
+                    } else {
+                        currentData.value = match.copy(
+                            scoreP1 = newScoreP1,
+                            scoreP2 = newScoreP2,
+                            answeredP1 = false,
+                            answeredP2 = false,
+                            currentRound = match.currentRound + 1,
+                            roundResults = newRoundResults
+                        )
+                    }
                 } else {
-                    android.util.Log.d(
-                        "MATCH_DEBUG",
-                        "submitAnswer UPDATE next round ${match.currentRound + 1}"
-                    )
-
-                    transaction.update(
-                        matchRef,
-                        mapOf(
-                            "scoreP1" to newScoreP1,
-                            "scoreP2" to newScoreP2,
-                            "answeredP1" to false,
-                            "answeredP2" to false,
-                            "currentRound" to match.currentRound + 1,
-                            "roundResults" to newRoundResults
-                        )
+                    currentData.value = match.copy(
+                        scoreP1 = newScoreP1,
+                        scoreP2 = newScoreP2,
+                        answeredP1 = newAnsweredP1,
+                        answeredP2 = newAnsweredP2
                     )
                 }
-            } else {
-                android.util.Log.d("MATCH_DEBUG", "submitAnswer UPDATE waiting other player")
 
-                transaction.update(
-                    matchRef,
-                    mapOf(
-                        "scoreP1" to newScoreP1,
-                        "scoreP2" to newScoreP2,
-                        "answeredP1" to newAnsweredP1,
-                        "answeredP2" to newAnsweredP2
-                    )
-                )
+                return Transaction.success(currentData)
             }
 
-            null
-        }.await()
-
-        android.util.Log.d("MATCH_DEBUG", "submitAnswer END OK")
+            override fun onComplete(error: DatabaseError?, committed: Boolean, snapshot: DataSnapshot?) {
+                if (error != null) {
+                    android.util.Log.e("MATCH_DEBUG", "submitAnswer error: ${error.message}")
+                    continuation.resumeWithException(error.toException())
+                } else {
+                    continuation.resume(Unit)
+                }
+            }
+        })
     }
-    suspend fun abandonMatch(matchId: String) {
+
+    suspend fun abandonMatch(matchId: String) = suspendCancellableCoroutine<Unit> { continuation ->
         val currentUserId = getCurrentUserId()
-        val matchRef = matchesCollection.document(matchId)
+        val matchRef = matchesRef.child(matchId)
 
-        firestore.runTransaction { transaction ->
-            val snapshot = transaction.get(matchRef)
-            val match = snapshot.toObject(MatchModel::class.java)
-                ?: throw Exception("Partida no encontrada")
+        matchRef.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(currentData: MutableData): Transaction.Result {
+                val match = currentData.getValue(MatchModel::class.java)
+                    ?: return Transaction.abort()
 
-            if (match.status != MatchStatus.PLAYING) {
-                return@runTransaction null
-            }
+                if (match.status != MatchStatus.PLAYING) return Transaction.success(currentData)
 
-            val winnerId = when (currentUserId) {
-                match.player1Id -> match.player2Id
-                match.player2Id -> match.player1Id
-                else -> ""
-            }
+                val winnerId = when (currentUserId) {
+                    match.player1Id -> match.player2Id
+                    match.player2Id -> match.player1Id
+                    else -> ""
+                }
 
-            transaction.update(
-                matchRef,
-                mapOf(
-                    "status" to MatchStatus.FINISHED,
-                    "abandonedBy" to currentUserId,
-                    "winnerId" to winnerId,
-                    "endReason" to "ABANDONED"
+                currentData.value = match.copy(
+                    status = MatchStatus.FINISHED,
+                    abandonedBy = currentUserId,
+                    winnerId = winnerId,
+                    endReason = "ABANDONED"
                 )
-            )
 
-            null
-        }.await()
+                return Transaction.success(currentData)
+            }
+
+            override fun onComplete(error: DatabaseError?, committed: Boolean, snapshot: DataSnapshot?) {
+                if (error != null) {
+                    continuation.resumeWithException(error.toException())
+                } else {
+                    continuation.resume(Unit)
+                }
+            }
+        })
     }
-    suspend fun updatePresence(matchId: String) {
-        val currentUserId = getCurrentUserId()
-        val matchRef = matchesCollection.document(matchId)
 
-        firestore.runTransaction { transaction ->
-            val snapshot = transaction.get(matchRef)
-            val match = snapshot.toObject(MatchModel::class.java)
-                ?: return@runTransaction null
-
-            if (match.status != MatchStatus.PLAYING) {
-                return@runTransaction null
-            }
-
-            val field = when (currentUserId) {
-                match.player1Id -> "player1LastSeen"
-                match.player2Id -> "player2LastSeen"
-                else -> return@runTransaction null
-            }
-
-            transaction.update(
-                matchRef,
-                field,
-                System.currentTimeMillis()
-            )
-
-            null
-        }.await()
+    suspend fun updatePresence(matchId: String, isPlayer1: Boolean) {
+        val field = if (isPlayer1) "player1LastSeen" else "player2LastSeen"
+        try {
+            matchesRef.child(matchId).child(field).setValue(System.currentTimeMillis()).await()
+        } catch (e: Exception) {
+            android.util.Log.e("MATCH_DEBUG", "Error updating presence: ${e.message}")
+        }
     }
 
     suspend fun sendHeartbeat(matchId: String) {
         val currentUserId = getCurrentUserId()
-        val matchRef = firestore.collection("matches").document(matchId)
+        val matchRef = matchesRef.child(matchId)
 
-        firestore.runTransaction { transaction ->
-            val snapshot = transaction.get(matchRef)
-            val match = snapshot.toObject(MatchModel::class.java) ?: return@runTransaction
-
-            val amIPlayer1 = currentUserId == match.player1Id
-
-            val updates = if (amIPlayer1) {
-                mapOf("player1LastSeen" to System.currentTimeMillis())
-            } else {
-                mapOf("player2LastSeen" to System.currentTimeMillis())
+        matchRef.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(currentData: MutableData): Transaction.Result {
+                val match = currentData.getValue(MatchModel::class.java) ?: return Transaction.abort()
+                
+                val amIPlayer1 = currentUserId == match.player1Id
+                if (amIPlayer1) {
+                    currentData.value = match.copy(player1LastSeen = System.currentTimeMillis())
+                } else {
+                    currentData.value = match.copy(player2LastSeen = System.currentTimeMillis())
+                }
+                
+                return Transaction.success(currentData)
             }
-
-            transaction.update(matchRef, updates)
-        }.await()
+            override fun onComplete(error: DatabaseError?, committed: Boolean, snapshot: DataSnapshot?) {}
+        })
     }
 
     suspend fun endMatchByConnectionLoss(
         matchId: String,
         disconnectedPlayerId: String,
         winnerId: String
-    ) {
-        val matchRef = matchesCollection.document(matchId)
+    ) = suspendCancellableCoroutine<Unit> { continuation ->
+        val matchRef = matchesRef.child(matchId)
 
-        firestore.runTransaction { transaction ->
-            val snapshot = transaction.get(matchRef)
-            val match = snapshot.toObject(MatchModel::class.java)
-                ?: return@runTransaction null
+        matchRef.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(currentData: MutableData): Transaction.Result {
+                val match = currentData.getValue(MatchModel::class.java)
+                    ?: return Transaction.abort()
 
-            if (match.status != MatchStatus.PLAYING) {
-                return@runTransaction null
+                if (match.status != MatchStatus.PLAYING) return Transaction.success(currentData)
+
+                currentData.value = match.copy(
+                    status = MatchStatus.FINISHED,
+                    endReason = "CONNECTION_LOST",
+                    abandonedBy = disconnectedPlayerId,
+                    winnerId = winnerId
+                )
+
+                return Transaction.success(currentData)
             }
 
-            transaction.update(
-                matchRef,
-                mapOf(
-                    "status" to MatchStatus.FINISHED,
-                    "endReason" to "CONNECTION_LOST",
-                    "abandonedBy" to disconnectedPlayerId,
-                    "winnerId" to winnerId
-                )
-            )
-
-            null
-        }.await()
+            override fun onComplete(error: DatabaseError?, committed: Boolean, snapshot: DataSnapshot?) {
+                if (error != null) {
+                    continuation.resumeWithException(error.toException())
+                } else {
+                    continuation.resume(Unit)
+                }
+            }
+        })
     }
 }

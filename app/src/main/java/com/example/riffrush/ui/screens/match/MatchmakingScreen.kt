@@ -39,11 +39,27 @@ fun MatchmakingScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            CircularProgressIndicator()
-            Spacer(modifier = Modifier.height(24.dp))
-            Text("Buscando rival para $playlist")
-            Spacer(modifier = Modifier.height(12.dp))
-            Text("Espera mientras encontramos una partida")
+            when (val state = matchmakingState) {
+                is MatchmakingUiState.Error -> {
+                    Text(
+                        text = "Oops! Ocurrió un error:",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = state.message,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+                else -> {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text("Buscando rival para $playlist")
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("Espera mientras encontramos una partida")
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -53,7 +69,7 @@ fun MatchmakingScreen(
                     onBack()
                 }
             ) {
-                Text("Cancelar")
+                Text(if (matchmakingState is MatchmakingUiState.Error) "Volver" else "Cancelar")
             }
         }
     }

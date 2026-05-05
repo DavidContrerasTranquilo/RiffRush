@@ -177,7 +177,8 @@ class MatchViewModel(
                         val isOffline = currentMatch.matchId.startsWith("offline")
 
                         if (!isOffline && currentMatch.status == MatchStatus.PLAYING) {
-                            startPresence(currentMatch.matchId)
+                            val amIPlayer1 = getCurrentPlayerId() == currentMatch.player1Id
+                            startPresence(currentMatch.matchId, amIPlayer1)
                             watchOpponentConnection(currentMatch)
                         }
 
@@ -647,13 +648,13 @@ class MatchViewModel(
         }
     }
 
-    private fun startPresence(matchId: String) {
-        presenceJob?.cancel()
+    private fun startPresence(matchId: String, isPlayer1: Boolean) {
+        if (presenceJob?.isActive == true) return
 
         presenceJob = viewModelScope.launch {
             while (true) {
                 try {
-                    repository.updatePresence(matchId)
+                    repository.updatePresence(matchId, isPlayer1)
                 } catch (e: Exception) {
                     Log.e("MATCH_DEBUG", "Error updating presence", e)
                 }
@@ -664,7 +665,7 @@ class MatchViewModel(
     }
 
     private fun watchOpponentConnection(match: MatchModel) {
-        disconnectWatcherJob?.cancel()
+        if (disconnectWatcherJob?.isActive == true) return
 
         disconnectWatcherJob = viewModelScope.launch {
             while (match.status == MatchStatus.PLAYING) {

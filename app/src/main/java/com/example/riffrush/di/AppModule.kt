@@ -15,6 +15,7 @@ import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.database.FirebaseDatabase
 import com.example.riffrush.data.repository.FirebaseRepository
 import org.koin.android.ext.koin.androidContext
 import com.example.riffrush.data.repository.DeezerApi
@@ -27,6 +28,7 @@ import com.example.riffrush.viewmodels.PlaylistViewModel
 val appModule = module {
     single { FirebaseAuth.getInstance() }
     single { FirebaseFirestore.getInstance() }
+    single { FirebaseDatabase.getInstance("https://riffrush-229d4-default-rtdb.europe-west1.firebasedatabase.app") }
 
 
     singleOf(::FirebaseRepository)
