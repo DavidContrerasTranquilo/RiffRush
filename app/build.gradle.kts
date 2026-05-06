@@ -80,4 +80,5 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     debugImplementation(libs.androidx.ui.tooling)
     implementation("com.google.firebase:firebase-database")
+    implementation("androidx.datastore:datastore-preferences:1.2.1")
 }

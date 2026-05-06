@@ -123,9 +123,6 @@ class AuthRepository(
                 if (uid.startsWith("guest") || uid == currentUid || isBlocked) {
                     null
                 } else {
-                if (uid.startsWith("guest") || uid == currentUid) {
-                    null
-                } else {
                     val nameFromFirestore = doc.getString("name")
                         ?: doc.getString("username")
                         ?: doc.getString("displayName")
@@ -138,9 +135,9 @@ class AuthRepository(
                         status = doc.getString("status") ?: "¡Hola! Estoy usando RiffRush",
                         email = doc.getString("email") ?: "",
                         role = doc.getString("role") ?: "user",
-                        isBlocked = isBlocked
+                        isBlocked = false
                     )
-                }}
+                }
             }
         } catch (e: Exception) {
             emptyList()

@@ -170,7 +170,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
         val currentMax = doc.getLong("maxDailyStreak") ?: 0
 
         if (newStreak > currentMax) {
-            ref.update("maxDailyStreak", newStreak)
+            ref.update("maxDailyStreak", newStreak).await()
         }
     }
 
@@ -291,21 +291,28 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
             .collection("songs")
             .document(song.id.toString())
 
-        val songData = hashMapOf(
-            "id" to song.id,
-            "title" to song.title,
-            "artist" to song.artist,
-            "album" to song.album,
-            "preview" to song.preview,
-            "cover" to song.cover
-        )
+        firestore.runTransaction { transaction ->
+            val existingSong = transaction.get(songRef)
 
-        songRef.set(songData).await()
+            val songData = hashMapOf(
+                "id" to song.id,
+                "title" to song.title,
+                "artist" to song.artist,
+                "album" to song.album,
+                "preview" to song.preview,
+                "cover" to song.cover
+            )
 
-        playlistRef.update(
-            "songsCount",
-            FieldValue.increment(1)
-        ).await()
+            transaction.set(songRef, songData)
+
+            if (!existingSong.exists()) {
+                transaction.update(
+                    playlistRef,
+                    "songsCount",
+                    FieldValue.increment(1)
+                )
+            }
+        }.await()
     }
 
     suspend fun removeSongFromPlaylist(ownerId: String, playlistId: String, songId: String) {
@@ -314,14 +321,21 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
             .collection("playlists")
             .document(playlistId)
 
-        playlistRef.collection("songs")
+        val songRef = playlistRef
+            .collection("songs")
             .document(songId)
-            .delete()
-            .await()
 
-        playlistRef.update(
-            "songsCount",
-            FieldValue.increment(-1)
-        ).await()
+        firestore.runTransaction { transaction ->
+            val playlistSnapshot = transaction.get(playlistRef)
+            val songSnapshot = transaction.get(songRef)
+
+            if (songSnapshot.exists()) {
+                val currentCount = playlistSnapshot.getLong("songsCount") ?: 0L
+                val newCount = (currentCount - 1).coerceAtLeast(0L)
+
+                transaction.delete(songRef)
+                transaction.update(playlistRef, "songsCount", newCount)
+            }
+        }.await()
     }
 }

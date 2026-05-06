@@ -37,8 +37,8 @@ fun PlaylistGameScreen(
         playlistViewModel.loadPlaylistSongs(playlistId)
     }
 
-    LaunchedEffect(songs) {
-        if (songs.isNotEmpty() && playingSongs.isEmpty()) {
+    LaunchedEffect(playlistId, songs) {
+        if (songs.size >= 4) {
             gameViewModel.initGame(songs)
         }
     }
@@ -77,12 +77,12 @@ fun PlaylistGameScreen(
                     EmptyPlaylistGameView()
                 }
 
-                songs.size < 2 -> {
+                songs.size < 4 -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Necesitas al menos 2 canciones para jugar")
+                        Text("Necesitas al menos 4 canciones para jugar")
                     }
                 }
 

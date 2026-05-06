@@ -94,7 +94,10 @@ fun UserItem(
                 }
             }
 
-            IconButton(onClick = onFollowClick) {
+            IconButton(
+                onClick = onFollowClick,
+                enabled = !isFollowing
+            ) {
                 Icon(
                     imageVector = if (isFollowing) Icons.Default.Check else Icons.Default.PersonAdd,
                     contentDescription = if (isFollowing) "Siguiendo" else "Seguir",

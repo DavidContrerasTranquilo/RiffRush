@@ -33,8 +33,8 @@ fun FavoritesGameScreen(
     val answerCorrect by favoritesViewModel.currentAnswerCorrect.collectAsState()
 
     // Inicializamos la partida con los favoritos cargados
-    LaunchedEffect(favorites) {
-        if (favorites.isNotEmpty() && playingSongs.isEmpty()) {
+    LaunchedEffect(Unit) {
+        if (favorites.size >= 4) {
             favoritesViewModel.initGame(favorites)
         }
     }
@@ -63,14 +63,20 @@ fun FavoritesGameScreen(
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             when {
-                favorites.isEmpty() -> {
+                favorites.size < 4 -> {
                     Column(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("No tienes canciones favoritas", style = MaterialTheme.typography.headlineSmall)
-                        Text("Añade algunas en la sección de música", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                        Text(
+                            "Necesitas al menos 4 canciones favoritas",
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        Text(
+                            "Añade más canciones en la sección de música",
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
                     }
                 }
 

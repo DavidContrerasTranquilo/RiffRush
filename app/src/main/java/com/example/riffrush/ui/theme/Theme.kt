@@ -24,13 +24,10 @@ private val LightColorScheme = lightColorScheme(
     tertiary = Pink40
 )
 
-var isAppInDarkMode by mutableStateOf(false)
-
 @Composable
 fun RiffRushTheme(
-    darkTheme: Boolean = isAppInDarkMode,
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = false, // Desactivamos por defecto para que el cambio manual se note más
+    darkTheme: Boolean = false,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

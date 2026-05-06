@@ -11,7 +11,7 @@ import com.example.riffrush.data.repository.FirebaseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-
+import kotlinx.coroutines.Job
 class MusicViewModel(
     private val firebaseRepository: FirebaseRepository,
     private val authRepository: AuthRepository,
@@ -34,7 +34,7 @@ class MusicViewModel(
     // Estado para la canción que se está reproduciendo
     private val _playingSongId = MutableStateFlow<Long?>(null)
     val playingSongId: StateFlow<Long?> = _playingSongId
-
+    private var favoritesJob: Job? = null
     init {
         loadMyMusic()
     }
@@ -50,9 +50,12 @@ class MusicViewModel(
     //Si no esta logueado no cargamos la musica
     fun loadMyMusic() {
         _isSearching.value = false
+        favoritesJob?.cancel()
+
         if (isLoggedIn()) {
             val ownerId = getOwnerId()
-            viewModelScope.launch {
+
+            favoritesJob = viewModelScope.launch {
                 firebaseRepository.getFavorites(ownerId).collect { favs ->
                     _favoriteSongs.value = favs
                     if (!_isSearching.value) {
@@ -61,7 +64,6 @@ class MusicViewModel(
                 }
             }
         } else {
-            // RAM only mode
             if (!_isSearching.value) {
                 _songs.value = _favoriteSongs.value
             }
@@ -173,7 +175,8 @@ class MusicViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        musicPlayer.release()
+        favoritesJob?.cancel()
+        musicPlayer.stop()
         _playingSongId.value = null
     }
 

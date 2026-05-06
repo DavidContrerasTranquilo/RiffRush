@@ -10,7 +10,7 @@ import com.example.riffrush.data.repository.FirebaseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-
+import kotlinx.coroutines.Job
 class PlaylistViewModel(
     private val firebaseRepository: FirebaseRepository,
     private val authRepository: AuthRepository,
@@ -25,7 +25,8 @@ class PlaylistViewModel(
 
     private val _uiMessage = MutableStateFlow<String?>(null)
     val uiMessage: StateFlow<String?> = _uiMessage
-
+    private var playlistsJob: Job? = null
+    private var playlistSongsJob: Job? = null
     private fun getOwnerId(): String {
         return authRepository.getCurrentUser()?.uid ?: guestIdManager.getGuestId()
     }
@@ -37,7 +38,8 @@ class PlaylistViewModel(
     fun loadPlaylists() {
         val ownerId = getOwnerId()
 
-        viewModelScope.launch {
+        playlistsJob?.cancel()
+        playlistsJob = viewModelScope.launch {
             firebaseRepository.getPlaylists(ownerId).collect { list ->
                 _playlists.value = list
             }
@@ -47,6 +49,14 @@ class PlaylistViewModel(
     fun createPlaylist(name: String) {
         if (name.isBlank()) {
             _uiMessage.value = "El nombre no puede estar vacío"
+            return
+        }
+        if (name.length > 30) {
+            _uiMessage.value = "Máximo 30 caracteres"
+            return
+        }
+        if (_playlists.value.any { it.name.equals(name.trim(), true) }) {
+            _uiMessage.value = "Ya existe una playlist con ese nombre"
             return
         }
 
@@ -78,7 +88,8 @@ class PlaylistViewModel(
     fun loadPlaylistSongs(playlistId: String) {
         val ownerId = getOwnerId()
 
-        viewModelScope.launch {
+        playlistSongsJob?.cancel()
+        playlistSongsJob = viewModelScope.launch {
             firebaseRepository.getPlaylistSongs(ownerId, playlistId).collect { songs ->
                 _selectedPlaylistSongs.value = songs
             }
@@ -109,5 +120,11 @@ class PlaylistViewModel(
                 _uiMessage.value = "Error al eliminar canción"
             }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        playlistsJob?.cancel()
+        playlistSongsJob?.cancel()
     }
 }

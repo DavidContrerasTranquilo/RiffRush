@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 data class DailyChallengeUiState(
     val isLoading: Boolean = true,
@@ -132,17 +134,6 @@ class DailyChallengeViewModel(
             currentAnswerCorrect = isCorrect,
             score = newScore
         )
-        
-        saveResultToFirebase(isCorrect)
-    }
-    
-    private fun saveResultToFirebase(isCorrect: Boolean) {
-        viewModelScope.launch {
-            val currentUser = authRepository.getCurrentUser()
-            if (currentUser != null && !currentUser.isAnonymous) {
-                firebaseRepository.saveDailyChallengeResult(currentUser.uid, isCorrect)
-            }
-        }
     }
 
     fun nextRound() {
@@ -185,6 +176,8 @@ class DailyChallengeViewModel(
         viewModelScope.launch {
             val currentUser = authRepository.getCurrentUser()
             if (currentUser != null && !currentUser.isAnonymous) {
+                val isWin = _uiState.value.score == _uiState.value.songs.size
+                firebaseRepository.saveDailyChallengeResult(currentUser.uid, isWin)
                 firebaseRepository.updateMaxStreak(currentUser.uid, streak)
             }
         }
@@ -197,14 +190,16 @@ class DailyChallengeViewModel(
     }
 
     private fun getCurrentDateString(): String {
-        val calendar = Calendar.getInstance()
-        return "${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.MONTH) + 1}-${calendar.get(Calendar.DAY_OF_MONTH)}"
+        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        return formatter.format(Calendar.getInstance().time)
     }
 
     private fun getYesterdayDateString(): String {
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_MONTH, -1)
-        return "${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.MONTH) + 1}-${calendar.get(Calendar.DAY_OF_MONTH)}"
+
+        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        return formatter.format(calendar.time)
     }
 
     private fun getDailySeed(): Long {

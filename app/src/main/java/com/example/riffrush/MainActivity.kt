@@ -10,7 +10,8 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.result.contract.ActivityResultContracts
 import com.example.riffrush.notifications.DailyChallengeNotificationScheduler
-
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 class MainActivity : ComponentActivity() {
     private val requestNotificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -24,7 +25,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            RiffRushTheme {
+            val settingsViewModel: com.example.riffrush.viewmodels.SettingsViewModel =
+                org.koin.androidx.compose.koinViewModel()
+
+            val darkMode by settingsViewModel.darkMode.collectAsState()
+
+            RiffRushTheme(darkTheme = darkMode) {
                 MainScreen()
             }
         }

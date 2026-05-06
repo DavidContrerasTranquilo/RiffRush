@@ -12,16 +12,22 @@ class MusicPlayer {
         if (mediaPlayer == null) {
             mediaPlayer = MediaPlayer().apply {
                 setOnPreparedListener { mp ->
-                    Log.d("MusicPlayer", "Audio listo, iniciando...")
                     mp.start()
                 }
+
                 setOnErrorListener { mp, what, extra ->
-                    Log.e("MusicPlayer", "Error: $what, $extra")
-                    mp.reset()
-                    false
+                    Log.e("MusicPlayer", "Error MediaPlayer: what=$what extra=$extra")
+                    try {
+                        mp.reset()
+                    } catch (e: Exception) {
+                        Log.e("MusicPlayer", "Error reseteando player", e)
+                    }
+                    currentUrl = null
+                    true
                 }
             }
         }
+
         return mediaPlayer!!
     }
 
@@ -35,29 +41,48 @@ class MusicPlayer {
 
         try {
             val player = getPlayer()
-            player.stop()
-            player.reset()
 
+            try {
+                player.stop()
+            } catch (_: Exception) {
+            }
+
+            player.reset()
             currentUrl = url
             player.setDataSource(url)
             player.prepareAsync()
 
         } catch (e: Exception) {
-            Log.e("MusicPlayer", "Error al cambiar de canción: ${e.message}")
+            Log.e("MusicPlayer", "Error al reproducir preview", e)
             currentUrl = null
+
+            try {
+                mediaPlayer?.reset()
+            } catch (_: Exception) {
+            }
         }
     }
 
     fun stop() {
         try {
             mediaPlayer?.stop()
+        } catch (_: Exception) {
+        }
+
+        try {
             mediaPlayer?.reset()
-        } catch (e: Exception) { }
+        } catch (_: Exception) {
+        }
+
         currentUrl = null
     }
 
     fun release() {
-        mediaPlayer?.release()
+        try {
+            mediaPlayer?.release()
+        } catch (_: Exception) {
+        }
+
         mediaPlayer = null
         currentUrl = null
     }

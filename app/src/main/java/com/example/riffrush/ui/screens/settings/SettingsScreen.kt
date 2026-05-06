@@ -12,14 +12,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.riffrush.ui.theme.isAppInDarkMode
+import com.example.riffrush.viewmodels.SettingsViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Preview(showBackground = true)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
+    val darkMode by settingsViewModel.darkMode.collectAsState()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -52,8 +55,8 @@ fun SettingsScreen(
             ToggleSetting(
                 title = "Modo Oscuro",
                 subtitle = "Cambiar la apariencia de la app",
-                checked = isAppInDarkMode,
-                onCheckedChange = { isAppInDarkMode = it }
+                checked = darkMode,
+                onCheckedChange = { settingsViewModel.setDarkMode(it) }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
