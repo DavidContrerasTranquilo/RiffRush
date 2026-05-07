@@ -15,7 +15,7 @@ import com.example.riffrush.ui.screens.challenge.DailyChallengeGameView
 import com.example.riffrush.ui.screens.challenge.DailyChallengeResultView
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
-
+import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoritesGameScreen(
@@ -32,10 +32,12 @@ fun FavoritesGameScreen(
     val hasAnswered by favoritesViewModel.hasAnsweredCurrent.collectAsState()
     val answerCorrect by favoritesViewModel.currentAnswerCorrect.collectAsState()
 
-    // Inicializamos la partida con los favoritos cargados
-    LaunchedEffect(Unit) {
-        if (favorites.size >= 4) {
+    var gameInitialized by remember { mutableStateOf(false) }
+
+    LaunchedEffect(favorites) {
+        if (!gameInitialized && favorites.size >= 4) {
             favoritesViewModel.initGame(favorites)
+            gameInitialized = true
         }
     }
 
@@ -80,6 +82,19 @@ fun FavoritesGameScreen(
                     }
                 }
 
+                playingSongs.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator()
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("Preparando partida con tus favoritos...")
+                        }
+                    }
+                }
+
                 gameState == FavoritesGameViewModel.FavoritesState.FINISHED -> {
                     DailyChallengeResultView(
                         score = score,
@@ -91,6 +106,7 @@ fun FavoritesGameScreen(
 
                 else -> {
                     val currentSong = playingSongs.getOrNull(currentIndex)
+
                     if (currentSong != null) {
                         DailyChallengeGameView(
                             song = currentSong,
