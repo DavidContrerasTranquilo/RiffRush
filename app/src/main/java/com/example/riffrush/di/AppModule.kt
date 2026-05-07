@@ -2,9 +2,22 @@ package com.example.riffrush.di
 
 import com.example.riffrush.data.local.GuestIdManager
 import com.example.riffrush.data.local.PlayerIdentityManager
+import com.example.riffrush.data.local.SettingsDataStore
 import com.example.riffrush.data.player.MusicPlayer
-import com.example.riffrush.data.repository.*
-import com.example.riffrush.viewmodels.*
+import com.example.riffrush.data.repository.AuthRepository
+import com.example.riffrush.data.repository.DeezerApi
+import com.example.riffrush.data.repository.DeezerRepository
+import com.example.riffrush.data.repository.FirebaseRepository
+import com.example.riffrush.data.repository.MatchRepository
+import com.example.riffrush.viewmodels.AdminViewModel
+import com.example.riffrush.viewmodels.AuthViewModel
+import com.example.riffrush.viewmodels.DailyChallengeViewModel
+import com.example.riffrush.viewmodels.FavoritesGameViewModel
+import com.example.riffrush.viewmodels.MatchHistoryViewModel
+import com.example.riffrush.viewmodels.MatchViewModel
+import com.example.riffrush.viewmodels.MusicViewModel
+import com.example.riffrush.viewmodels.PlaylistViewModel
+import com.example.riffrush.viewmodels.SettingsViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FirebaseFirestore
@@ -15,7 +28,7 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import com.example.riffrush.data.local.SettingsDataStore
+
 val appModule = module {
     single { FirebaseAuth.getInstance() }
     single { FirebaseFirestore.getInstance() }

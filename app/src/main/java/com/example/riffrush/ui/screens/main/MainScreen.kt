@@ -1,8 +1,14 @@
 package com.example.riffrush.ui.screens.main
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -18,21 +24,22 @@ import com.example.riffrush.navigation.items
 import com.example.riffrush.ui.screens.auth.LoginScreen
 import com.example.riffrush.ui.screens.auth.SignUpScreen
 import com.example.riffrush.ui.screens.auth.WelcomeScreen
-import com.google.firebase.auth.FirebaseAuth
 import com.example.riffrush.ui.screens.home.HomeScreen
 import com.example.riffrush.ui.screens.match.FavoritesGameScreen
 import com.example.riffrush.ui.screens.match.MatchScreen
+import com.example.riffrush.ui.screens.match.MatchmakingScreen
+import com.example.riffrush.ui.screens.match.PlaylistGameScreen
 import com.example.riffrush.ui.screens.music.MusicScreen
+import com.example.riffrush.ui.screens.music.PlaylistDetailScreen
 import com.example.riffrush.ui.screens.profile.EditProfileScreen
+import com.example.riffrush.ui.screens.profile.MatchHistoryScreen
 import com.example.riffrush.ui.screens.profile.ProfileScreen
+import com.example.riffrush.ui.screens.profile.UserStatsScreen
 import com.example.riffrush.ui.screens.settings.SettingsScreen
 import com.example.riffrush.ui.screens.social.SocialListScreen
 import com.example.riffrush.ui.screens.social.SocialScreen
-import com.example.riffrush.ui.screens.match.MatchmakingScreen
-import com.example.riffrush.ui.screens.profile.UserStatsScreen
-import com.example.riffrush.ui.screens.profile.MatchHistoryScreen
-import com.example.riffrush.ui.screens.music.PlaylistDetailScreen
-import com.example.riffrush.ui.screens.match.PlaylistGameScreen
+import com.google.firebase.auth.FirebaseAuth
+
 @Composable
 fun MainScreen(
 ) {
@@ -74,10 +81,10 @@ fun MainScreen(
             }
         }
     ) { innerPadding ->
-        val initialRoute = remember { 
-            if (FirebaseAuth.getInstance().currentUser == null) "welcome" else Screen.Home.route 
+        val initialRoute = remember {
+            if (FirebaseAuth.getInstance().currentUser == null) "welcome" else Screen.Home.route
         }
-        
+
         NavHost(
             navController = navController,
             startDestination = initialRoute,
@@ -131,7 +138,7 @@ fun MainScreen(
                     onNavigateToAdminPanel = { navController.navigate("admin_panel") },
                     onNavigateToLogin = { navController.navigate("login") },
                     onNavigateToEditProfile = { navController.navigate("edit_profile") },
-                    onNavigateToSocialList = { type -> navController.navigate("social_list/$type") } ,
+                    onNavigateToSocialList = { type -> navController.navigate("social_list/$type") },
                     onNavigateToUserStats = { uid ->
                         navController.navigate("user_stats/$uid")
                     },
@@ -195,7 +202,7 @@ fun MainScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
-        //El reto diario !
+            //El reto diario !
             composable("daily_challenge") {
                 com.example.riffrush.ui.screens.challenge.DailyChallengeScreen(
                     onExit = { navController.popBackStack() }

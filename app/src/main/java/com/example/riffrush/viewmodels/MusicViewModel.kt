@@ -8,10 +8,11 @@ import com.example.riffrush.data.player.MusicPlayer
 import com.example.riffrush.data.repository.AuthRepository
 import com.example.riffrush.data.repository.DeezerRepository
 import com.example.riffrush.data.repository.FirebaseRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Job
+
 class MusicViewModel(
     private val firebaseRepository: FirebaseRepository,
     private val authRepository: AuthRepository,
@@ -35,6 +36,7 @@ class MusicViewModel(
     private val _playingSongId = MutableStateFlow<Long?>(null)
     val playingSongId: StateFlow<Long?> = _playingSongId
     private var favoritesJob: Job? = null
+
     init {
         loadMyMusic()
     }
@@ -42,11 +44,13 @@ class MusicViewModel(
     private fun getOwnerId(): String {
         return authRepository.getCurrentUser()?.uid ?: guestIdManager.getGuestId()
     }
+
     //David, Añado para ver si esta logueado
     fun isLoggedIn(): Boolean {
         val user = authRepository.getCurrentUser()
         return user != null && !user.isAnonymous
     }
+
     //Si no esta logueado no cargamos la musica
     fun loadMyMusic() {
         _isSearching.value = false
@@ -89,8 +93,8 @@ class MusicViewModel(
     /**
      * Agrega o quita de favoritos
      */
-     //Tambien añado aqui que si no esta logueado la musica se guarde en ram
-     //Se podria hacer en Room!
+    //Tambien añado aqui que si no esta logueado la musica se guarde en ram
+    //Se podria hacer en Room!
     fun toggleFavorite(song: Song) {
         val isFavorite = _favoriteSongs.value.any { it.id == song.id }
 
@@ -104,7 +108,7 @@ class MusicViewModel(
                 }
             }
         } else {
-            
+
             val currentFavs = _favoriteSongs.value.toMutableList()
             if (isFavorite) {
                 currentFavs.removeAll { it.id == song.id }

@@ -4,11 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.riffrush.data.model.FriendModel
 import com.example.riffrush.data.repository.AuthRepository
+import com.example.riffrush.data.repository.FirebaseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-import com.example.riffrush.data.repository.FirebaseRepository
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 
 class AuthViewModel(

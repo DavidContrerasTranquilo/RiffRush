@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.util.Calendar
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 
 data class DailyChallengeUiState(
@@ -35,7 +35,8 @@ class DailyChallengeViewModel(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
-    private val prefs: SharedPreferences = context.getSharedPreferences("DailyChallengePrefs", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences =
+        context.getSharedPreferences("DailyChallengePrefs", Context.MODE_PRIVATE)
 
     private val _uiState = MutableStateFlow(DailyChallengeUiState())
     val uiState: StateFlow<DailyChallengeUiState> = _uiState.asStateFlow()
@@ -83,7 +84,10 @@ class DailyChallengeViewModel(
             configuredChallenge.isActive &&
             configuredChallenge.songIds.size >= 6
         ) {
-            android.util.Log.d("DAILY_DEBUG", "Song IDs configuradas: ${configuredChallenge.songIds}")
+            android.util.Log.d(
+                "DAILY_DEBUG",
+                "Song IDs configuradas: ${configuredChallenge.songIds}"
+            )
 
             val loadedSongs = configuredChallenge.songIds.mapNotNull { id ->
                 val parsed = id.toLongOrNull()
@@ -92,7 +96,10 @@ class DailyChallengeViewModel(
                 parsed?.let { deezerRepository.getSong(it) }
             }
 
-            android.util.Log.d("DAILY_DEBUG", "Canciones cargadas desde config: ${loadedSongs.size}")
+            android.util.Log.d(
+                "DAILY_DEBUG",
+                "Canciones cargadas desde config: ${loadedSongs.size}"
+            )
 
             if (loadedSongs.size >= 6) {
                 _uiState.value = _uiState.value.copy(

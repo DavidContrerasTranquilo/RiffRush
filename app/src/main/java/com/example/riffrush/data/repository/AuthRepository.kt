@@ -1,21 +1,21 @@
 package com.example.riffrush.data.repository
 
+import android.net.Uri
+import android.webkit.MimeTypeMap
 import com.example.riffrush.data.model.FriendModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
-import java.util.Calendar
-import android.net.Uri
-import android.webkit.MimeTypeMap
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.json.JSONObject
 import java.io.File
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import java.util.Calendar
 
 class AuthRepository(
     private val firebaseAuth: FirebaseAuth,
@@ -51,6 +51,7 @@ class AuthRepository(
 
     suspend fun signIn(email: String, pass: String) =
         firebaseAuth.signInWithEmailAndPassword(email, pass).await()
+
     //Añado esto para lo de inicar sesion como invitado
     suspend fun signInAnonymously() = firebaseAuth.signInAnonymously().await()
 
@@ -190,7 +191,8 @@ class AuthRepository(
                         role = doc.getString("role") ?: "user",
                         isBlocked = false
                     )
-                }}
+                }
+            }
         } catch (e: Exception) {
             emptyList()
         }
@@ -241,7 +243,10 @@ class AuthRepository(
 
             android.util.Log.d("CLOUDINARY_DEBUG", "Subiendo imagen...")
             android.util.Log.d("CLOUDINARY_DEBUG", "Cloud name: ${CloudinaryConfig.CLOUD_NAME}")
-            android.util.Log.d("CLOUDINARY_DEBUG", "Upload preset: ${CloudinaryConfig.UPLOAD_PRESET}")
+            android.util.Log.d(
+                "CLOUDINARY_DEBUG",
+                "Upload preset: ${CloudinaryConfig.UPLOAD_PRESET}"
+            )
 
             val response = okHttpClient.newCall(request).execute()
             val responseBody = response.body?.string().orEmpty()
@@ -347,6 +352,7 @@ class AuthRepository(
             null
         }
     }
+
     suspend fun removeMyProfilePicture() {
         val uid = firebaseAuth.currentUser?.uid ?: return
 

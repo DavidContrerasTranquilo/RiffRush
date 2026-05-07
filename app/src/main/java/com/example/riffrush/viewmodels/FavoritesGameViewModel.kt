@@ -50,12 +50,12 @@ class FavoritesGameViewModel(
         if (_hasAnsweredCurrent.value) return
         _hasAnsweredCurrent.value = true
         _currentAnswerCorrect.value = isCorrect
-        
+
         if (isCorrect) {
             _score.value++
         }
     }
-    
+
     fun nextRound() {
         if (_currentIndex.value < _playingSongs.value.size - 1) {
             _currentIndex.value++

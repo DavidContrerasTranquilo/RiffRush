@@ -1,26 +1,26 @@
 package com.example.riffrush.viewmodels
 
-import com.example.riffrush.data.player.MusicPlayer
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.riffrush.data.model.MatchHistoryModel
 import com.example.riffrush.data.model.MatchModel
 import com.example.riffrush.data.model.MatchStatus
+import com.example.riffrush.data.model.MatchmakingResult
+import com.example.riffrush.data.model.MatchmakingUiState
+import com.example.riffrush.data.model.RoundResultModel
 import com.example.riffrush.data.model.Song
+import com.example.riffrush.data.player.MusicPlayer
 import com.example.riffrush.data.repository.DeezerApi
+import com.example.riffrush.data.repository.FirebaseRepository
 import com.example.riffrush.data.repository.MatchRepository
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import com.example.riffrush.data.model.MatchmakingUiState
-import com.example.riffrush.data.model.MatchmakingResult
-import com.example.riffrush.data.repository.FirebaseRepository
-import com.example.riffrush.data.model.MatchHistoryModel
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
-import com.example.riffrush.data.model.RoundResultModel
 
 class MatchViewModel(
     private val repository: MatchRepository,
@@ -81,7 +81,8 @@ class MatchViewModel(
                 val opponentPfp = opponentDoc.getString("pfpUrl") ?: ""
 
                 // Obtener información del jugador actual
-                val currentPlayerDoc = firestore.collection("users").document(currentUserId).get().await()
+                val currentPlayerDoc =
+                    firestore.collection("users").document(currentUserId).get().await()
                 val currentPlayerName = currentPlayerDoc.getString("name")
                     ?: currentPlayerDoc.getString("username")
                     ?: currentPlayerDoc.getString("displayName")
@@ -165,7 +166,8 @@ class MatchViewModel(
                         )
 
                         if (currentUserId.isNotBlank()) {
-                            val isAnonymous = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.isAnonymous == true
+                            val isAnonymous =
+                                com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.isAnonymous == true
                             if (!isAnonymous) {
                                 firebaseRepository.incrementGamesPlayed(currentUserId)
                                 saveHistoryForCurrentUser(match)
@@ -220,7 +222,10 @@ class MatchViewModel(
                                     )
 
                                     if (!hasAnswered) {
-                                        Log.d("MATCH_DEBUG", "listenToMatch LOAD_SONGS startTimer 15000")
+                                        Log.d(
+                                            "MATCH_DEBUG",
+                                            "listenToMatch LOAD_SONGS startTimer 15000"
+                                        )
                                         startTimer()
                                     }
                                 }
@@ -390,7 +395,8 @@ class MatchViewModel(
                 _showAnswerResult.value = false
 
                 try {
-                    val isAnonymous = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.isAnonymous == true
+                    val isAnonymous =
+                        com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.isAnonymous == true
                     if (!isAnonymous) {
                         firebaseRepository.incrementSongsPlayed(currentUserId)
                     }
@@ -423,7 +429,7 @@ class MatchViewModel(
             // Marcamos que hemos respondido localmente en el modelo para que la UI se bloquee
             val matchWithAnswer = match.copy(answeredP1 = true)
             _currentMatch.value = matchWithAnswer
-            
+
             delay(1500) // Pausa para ver el resultado de la ronda
 
             var updatedMatch = matchWithAnswer
@@ -476,7 +482,8 @@ class MatchViewModel(
                 if (currentUserId.isNotBlank() && gamesPlayedRegisteredForMatchId != finishedMatch.matchId) {
                     gamesPlayedRegisteredForMatchId = finishedMatch.matchId
 
-                    val isAnonymous = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.isAnonymous == true
+                    val isAnonymous =
+                        com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.isAnonymous == true
                     if (!isAnonymous) {
                         firebaseRepository.incrementGamesPlayed(currentUserId)
                         saveHistoryForCurrentUser(finishedMatch)
@@ -547,6 +554,7 @@ class MatchViewModel(
                         _matchmakingState.value = MatchmakingUiState.Matched(result.matchId)
                         listenToMatch(result.matchId)
                     }
+
                     is MatchmakingResult.Waiting -> {
                         currentQueueId = result.queueId
                         _matchmakingState.value = MatchmakingUiState.Waiting(playlist)
@@ -554,7 +562,8 @@ class MatchViewModel(
                     }
                 }
             } catch (e: Exception) {
-                _matchmakingState.value = MatchmakingUiState.Error("Error en matchmaking: ${e.message}")
+                _matchmakingState.value =
+                    MatchmakingUiState.Error("Error en matchmaking: ${e.message}")
             }
         }
     }

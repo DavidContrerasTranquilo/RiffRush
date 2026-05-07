@@ -20,11 +20,13 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -44,14 +46,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.riffrush.data.model.MatchStatus
+import com.example.riffrush.data.model.RoundResultModel
 import com.example.riffrush.data.model.Song
 import com.example.riffrush.data.player.MusicPlayer
 import com.example.riffrush.viewmodels.MatchViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
-import androidx.compose.material3.LinearProgressIndicator
-import com.example.riffrush.data.model.RoundResultModel
-import androidx.compose.material3.Card
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MatchScreen(
@@ -206,8 +207,9 @@ fun MatchScreen(
 
                             val iAbandoned = currentMatch.endReason == "ABANDONED" &&
                                     currentMatch.abandonedBy == currentPlayerId
-                            val opponentLostConnection = currentMatch.endReason == "CONNECTION_LOST" &&
-                                    currentMatch.abandonedBy != currentPlayerId
+                            val opponentLostConnection =
+                                currentMatch.endReason == "CONNECTION_LOST" &&
+                                        currentMatch.abandonedBy != currentPlayerId
                             val iLostConnection = currentMatch.endReason == "CONNECTION_LOST" &&
                                     currentMatch.abandonedBy == currentPlayerId
                             val iWinByEndReason = currentMatch.winnerId == currentPlayerId

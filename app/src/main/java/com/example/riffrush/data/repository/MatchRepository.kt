@@ -1,25 +1,25 @@
 package com.example.riffrush.data.repository
 
+import com.example.riffrush.data.local.PlayerIdentityManager
 import com.example.riffrush.data.model.MatchModel
 import com.example.riffrush.data.model.MatchStatus
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.DatabaseReference
+import com.example.riffrush.data.model.MatchmakingQueueEntry
+import com.example.riffrush.data.model.MatchmakingResult
+import com.example.riffrush.data.model.RoundResultModel
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ValueEventListener
-import com.google.firebase.database.Transaction
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.MutableData
+import com.google.firebase.database.Transaction
+import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import com.example.riffrush.data.local.PlayerIdentityManager
-import com.example.riffrush.data.model.MatchmakingResult
-import com.example.riffrush.data.model.MatchmakingQueueEntry
-import com.example.riffrush.data.model.RoundResultModel
 
 class MatchRepository(
     private val database: FirebaseDatabase,
@@ -66,6 +66,7 @@ class MatchRepository(
                 val match = snapshot.getValue(MatchModel::class.java)
                 trySend(match)
             }
+
             override fun onCancelled(error: DatabaseError) {
                 close(error.toException())
             }
@@ -143,12 +144,13 @@ class MatchRepository(
 
         val rivalDoc = snapshot.children.firstOrNull {
             it.child("playlist").getValue(String::class.java) == playlist &&
-            it.child("playerId").getValue(String::class.java) != playerId
+                    it.child("playerId").getValue(String::class.java) != playerId
         }
 
         return if (rivalDoc != null) {
             val rivalPlayerId = rivalDoc.child("playerId").getValue(String::class.java) ?: ""
-            val rivalPlayerName = rivalDoc.child("playerName").getValue(String::class.java) ?: "Invitado"
+            val rivalPlayerName =
+                rivalDoc.child("playerName").getValue(String::class.java) ?: "Invitado"
             val matchId = matchesRef.push().key ?: "unknown_match"
 
             val match = buildMatch(
@@ -191,6 +193,7 @@ class MatchRepository(
                 val entry = snapshot.getValue(MatchmakingQueueEntry::class.java)
                 trySend(entry)
             }
+
             override fun onCancelled(error: DatabaseError) {
                 close(error.toException())
             }
@@ -204,93 +207,98 @@ class MatchRepository(
         queueRef.child(queueId).removeValue().await()
     }
 
-    suspend fun submitAnswer(matchId: String, isCorrect: Boolean) = suspendCancellableCoroutine<Unit> { continuation ->
-        val currentUserId = getCurrentUserId()
-        val matchRef = matchesRef.child(matchId)
+    suspend fun submitAnswer(matchId: String, isCorrect: Boolean) =
+        suspendCancellableCoroutine<Unit> { continuation ->
+            val currentUserId = getCurrentUserId()
+            val matchRef = matchesRef.child(matchId)
 
-        android.util.Log.d("MATCH_DEBUG", "submitAnswer START matchId=$matchId")
+            android.util.Log.d("MATCH_DEBUG", "submitAnswer START matchId=$matchId")
 
-        matchRef.runTransaction(object : Transaction.Handler {
-            override fun doTransaction(currentData: MutableData): Transaction.Result {
-                val match = currentData.getValue(MatchModel::class.java)
-                    ?: return Transaction.abort()
+            matchRef.runTransaction(object : Transaction.Handler {
+                override fun doTransaction(currentData: MutableData): Transaction.Result {
+                    val match = currentData.getValue(MatchModel::class.java)
+                        ?: return Transaction.abort()
 
-                val amIPlayer1 = currentUserId == match.player1Id
-                val amIPlayer2 = currentUserId == match.player2Id
+                    val amIPlayer1 = currentUserId == match.player1Id
+                    val amIPlayer2 = currentUserId == match.player2Id
 
-                if (!amIPlayer1 && !amIPlayer2) return Transaction.abort()
-                if (match.status != MatchStatus.PLAYING) return Transaction.success(currentData)
+                    if (!amIPlayer1 && !amIPlayer2) return Transaction.abort()
+                    if (match.status != MatchStatus.PLAYING) return Transaction.success(currentData)
 
-                val alreadyAnswered = if (amIPlayer1) match.answeredP1 else match.answeredP2
-                if (alreadyAnswered) return Transaction.success(currentData)
+                    val alreadyAnswered = if (amIPlayer1) match.answeredP1 else match.answeredP2
+                    if (alreadyAnswered) return Transaction.success(currentData)
 
-                var newScoreP1 = match.scoreP1
-                var newScoreP2 = match.scoreP2
+                    var newScoreP1 = match.scoreP1
+                    var newScoreP2 = match.scoreP2
 
-                if (isCorrect) {
-                    if (amIPlayer1) newScoreP1 += 1 else newScoreP2 += 1
-                }
+                    if (isCorrect) {
+                        if (amIPlayer1) newScoreP1 += 1 else newScoreP2 += 1
+                    }
 
-                val newAnsweredP1 = if (amIPlayer1) true else match.answeredP1
-                val newAnsweredP2 = if (amIPlayer2) true else match.answeredP2
+                    val newAnsweredP1 = if (amIPlayer1) true else match.answeredP1
+                    val newAnsweredP2 = if (amIPlayer2) true else match.answeredP2
 
-                val bothAnswered = newAnsweredP1 && newAnsweredP2
-                val isLastRound = match.currentRound >= match.staticSongList.size - 1
+                    val bothAnswered = newAnsweredP1 && newAnsweredP2
+                    val isLastRound = match.currentRound >= match.staticSongList.size - 1
 
-                if (bothAnswered) {
-                    val currentSongId = match.staticSongList.getOrNull(match.currentRound)
-                    val newRoundResults = match.roundResults.toMutableList()
-                    newRoundResults.add(
-                        RoundResultModel(
-                            round = match.currentRound + 1,
-                            songTitle = currentSongId?.toString() ?: "Canción desconocida",
-                            songArtist = "",
-                            player1Correct = newScoreP1 > match.scoreP1,
-                            player2Correct = newScoreP2 > match.scoreP2
+                    if (bothAnswered) {
+                        val currentSongId = match.staticSongList.getOrNull(match.currentRound)
+                        val newRoundResults = match.roundResults.toMutableList()
+                        newRoundResults.add(
+                            RoundResultModel(
+                                round = match.currentRound + 1,
+                                songTitle = currentSongId?.toString() ?: "Canción desconocida",
+                                songArtist = "",
+                                player1Correct = newScoreP1 > match.scoreP1,
+                                player2Correct = newScoreP2 > match.scoreP2
+                            )
                         )
-                    )
 
-                    if (isLastRound) {
-                        currentData.value = match.copy(
-                            scoreP1 = newScoreP1,
-                            scoreP2 = newScoreP2,
-                            answeredP1 = true,
-                            answeredP2 = true,
-                            status = MatchStatus.FINISHED,
-                            roundResults = newRoundResults
-                        )
+                        if (isLastRound) {
+                            currentData.value = match.copy(
+                                scoreP1 = newScoreP1,
+                                scoreP2 = newScoreP2,
+                                answeredP1 = true,
+                                answeredP2 = true,
+                                status = MatchStatus.FINISHED,
+                                roundResults = newRoundResults
+                            )
+                        } else {
+                            currentData.value = match.copy(
+                                scoreP1 = newScoreP1,
+                                scoreP2 = newScoreP2,
+                                answeredP1 = false,
+                                answeredP2 = false,
+                                currentRound = match.currentRound + 1,
+                                roundResults = newRoundResults
+                            )
+                        }
                     } else {
                         currentData.value = match.copy(
                             scoreP1 = newScoreP1,
                             scoreP2 = newScoreP2,
-                            answeredP1 = false,
-                            answeredP2 = false,
-                            currentRound = match.currentRound + 1,
-                            roundResults = newRoundResults
+                            answeredP1 = newAnsweredP1,
+                            answeredP2 = newAnsweredP2
                         )
                     }
-                } else {
-                    currentData.value = match.copy(
-                        scoreP1 = newScoreP1,
-                        scoreP2 = newScoreP2,
-                        answeredP1 = newAnsweredP1,
-                        answeredP2 = newAnsweredP2
-                    )
+
+                    return Transaction.success(currentData)
                 }
 
-                return Transaction.success(currentData)
-            }
-
-            override fun onComplete(error: DatabaseError?, committed: Boolean, snapshot: DataSnapshot?) {
-                if (error != null) {
-                    android.util.Log.e("MATCH_DEBUG", "submitAnswer error: ${error.message}")
-                    continuation.resumeWithException(error.toException())
-                } else {
-                    continuation.resume(Unit)
+                override fun onComplete(
+                    error: DatabaseError?,
+                    committed: Boolean,
+                    snapshot: DataSnapshot?
+                ) {
+                    if (error != null) {
+                        android.util.Log.e("MATCH_DEBUG", "submitAnswer error: ${error.message}")
+                        continuation.resumeWithException(error.toException())
+                    } else {
+                        continuation.resume(Unit)
+                    }
                 }
-            }
-        })
-    }
+            })
+        }
 
     suspend fun abandonMatch(matchId: String) = suspendCancellableCoroutine<Unit> { continuation ->
         val currentUserId = getCurrentUserId()
@@ -319,7 +327,11 @@ class MatchRepository(
                 return Transaction.success(currentData)
             }
 
-            override fun onComplete(error: DatabaseError?, committed: Boolean, snapshot: DataSnapshot?) {
+            override fun onComplete(
+                error: DatabaseError?,
+                committed: Boolean,
+                snapshot: DataSnapshot?
+            ) {
                 if (error != null) {
                     continuation.resumeWithException(error.toException())
                 } else {
@@ -344,18 +356,25 @@ class MatchRepository(
 
         matchRef.runTransaction(object : Transaction.Handler {
             override fun doTransaction(currentData: MutableData): Transaction.Result {
-                val match = currentData.getValue(MatchModel::class.java) ?: return Transaction.abort()
-                
+                val match =
+                    currentData.getValue(MatchModel::class.java) ?: return Transaction.abort()
+
                 val amIPlayer1 = currentUserId == match.player1Id
                 if (amIPlayer1) {
                     currentData.value = match.copy(player1LastSeen = System.currentTimeMillis())
                 } else {
                     currentData.value = match.copy(player2LastSeen = System.currentTimeMillis())
                 }
-                
+
                 return Transaction.success(currentData)
             }
-            override fun onComplete(error: DatabaseError?, committed: Boolean, snapshot: DataSnapshot?) {}
+
+            override fun onComplete(
+                error: DatabaseError?,
+                committed: Boolean,
+                snapshot: DataSnapshot?
+            ) {
+            }
         })
     }
 
@@ -383,7 +402,11 @@ class MatchRepository(
                 return Transaction.success(currentData)
             }
 
-            override fun onComplete(error: DatabaseError?, committed: Boolean, snapshot: DataSnapshot?) {
+            override fun onComplete(
+                error: DatabaseError?,
+                committed: Boolean,
+                snapshot: DataSnapshot?
+            ) {
                 if (error != null) {
                     continuation.resumeWithException(error.toException())
                 } else {
