@@ -50,6 +50,7 @@ import androidx.compose.runtime.mutableIntStateOf
 fun SocialScreen(
     authViewModel: AuthViewModel = koinViewModel(),
     matchViewModel: MatchViewModel = koinViewModel(),
+    onNavigateToMatch: (String) -> Unit,
     onNavigateToUserStats: (String) -> Unit
 ) {
     val users by authViewModel.allUsers.collectAsState()
