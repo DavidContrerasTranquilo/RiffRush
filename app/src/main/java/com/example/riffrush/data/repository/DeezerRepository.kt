@@ -1,5 +1,6 @@
 package com.example.riffrush.data.repository
 
+import android.util.Log
 import com.example.riffrush.data.model.Song
 
 class DeezerRepository(private val api: DeezerApi) {
@@ -8,16 +9,10 @@ class DeezerRepository(private val api: DeezerApi) {
         return try {
             val response = api.search(query)
             response.data.map { item ->
-                Song(
-                    id = item.id,
-                    title = item.title ?: "Unknown Title",
-                    artist = item.artist?.name ?: "Unknown Artist",
-                    album = item.album?.title ?: "Unknown Album",
-                    preview = item.preview ?: "",
-                    cover = item.album?.cover_medium ?: ""
-                )
+                item.toSong()
             }
         } catch (e: Exception) {
+            Log.e("DeezerRepository", "Error searching songs with query: $query", e)
             emptyList()
         }
     }
@@ -26,34 +21,32 @@ class DeezerRepository(private val api: DeezerApi) {
         return try {
             val response = api.getChart()
             response.tracks.data.map { item ->
-                Song(
-                    id = item.id,
-                    title = item.title ?: "Unknown Title",
-                    artist = item.artist?.name ?: "Unknown Artist",
-                    album = item.album?.title ?: "Unknown Album",
-                    preview = item.preview ?: "",
-                    cover = item.album?.cover_medium ?: ""
-                )
+                item.toSong()
             }
         } catch (e: Exception) {
+            Log.e("DeezerRepository", "Error loading chart", e)
             emptyList()
         }
     }
 
-    //He modificado esto para que me devuelva la cancion con su preview!!
     suspend fun getSong(trackId: Long): Song? {
         return try {
             val item = api.getTrack(trackId)
-            Song(
-                id = item.id,
-                title = item.title ?: "Unknown Title",
-                artist = item.artist?.name ?: "Unknown Artist",
-                album = item.album?.title ?: "Unknown Album",
-                preview = item.preview ?: "",
-                cover = item.album?.cover_medium ?: ""
-            )
+            item.toSong()
         } catch (e: Exception) {
+            Log.e("DeezerRepository", "Error loading song with id: $trackId", e)
             null
         }
+    }
+
+    private fun DeezerTrack.toSong(): Song {
+        return Song(
+            id = id,
+            title = title ?: "Unknown Title",
+            artist = artist?.name ?: "Unknown Artist",
+            album = album?.title ?: "Unknown Album",
+            preview = preview ?: "",
+            cover = album?.covermedium ?: ""
+        )
     }
 }

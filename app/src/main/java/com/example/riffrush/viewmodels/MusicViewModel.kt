@@ -12,6 +12,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import android.util.Log
 
 class MusicViewModel(
     private val firebaseRepository: FirebaseRepository,
@@ -85,6 +86,7 @@ class MusicViewModel(
                 val results = deezerRepository.searchSongs(query)
                 _songs.value = results
             } catch (e: Exception) {
+                Log.e("MusicViewModel", "Error buscando canciones: $query", e)
                 _songs.value = emptyList()
             }
         }
@@ -158,7 +160,7 @@ class MusicViewModel(
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("MusicViewModel", "Error actualizando preview de canción: ${song.id}", e)
             }
 
             if (url.isNotBlank()) {

@@ -35,12 +35,12 @@ import com.example.riffrush.data.model.FriendModel
 
 @Composable
 fun UserItem(
+    modifier: Modifier = Modifier,
     user: FriendModel,
     isFollowing: Boolean = false,
     onFollowClick: () -> Unit,
     onMatchClick: (() -> Unit)? = null,
-    onUserClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    onUserClick: (String) -> Unit
 ) {
     Card(
         modifier = modifier

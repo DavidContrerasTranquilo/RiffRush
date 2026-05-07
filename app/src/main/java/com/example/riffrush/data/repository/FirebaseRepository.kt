@@ -11,6 +11,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import android.util.Log
 
 class FirebaseRepository(private val firestore: FirebaseFirestore) {
 
@@ -58,7 +59,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
                 .set(songData)
                 .await()
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("FirebaseRepository", "Error añadiendo favorito", e)
         }
     }
 
@@ -71,7 +72,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
                 .delete()
                 .await()
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("FirebaseRepository", "Error eliminando favorito", e)
         }
     }
 
@@ -90,7 +91,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
             // Usamos set con merge por si el documento no existe
             statsRef.set(updates, SetOptions.merge()).await()
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("FirebaseRepository", "Error guardando resultado del reto diario", e)
         }
     }
 
@@ -107,7 +108,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
                 null
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("FirebaseRepository", "Error obteniendo configuración del reto diario", e)
             null
         }
     }
@@ -119,7 +120,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
                 .set(config)
                 .await()
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("FirebaseRepository", "Error guardando configuración del reto diario", e)
         }
     }
 
@@ -130,7 +131,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
                 .delete()
                 .await()
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("FirebaseRepository", "Error eliminando configuración del reto diario", e)
         }
     }
 
@@ -199,6 +200,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
                 it.toObject(MatchHistoryModel::class.java)
             }
         } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error obteniendo historial de partidas", e)
             emptyList()
         }
     }

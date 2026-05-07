@@ -24,7 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.PlaylistPlay
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -41,7 +41,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -52,6 +52,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -85,7 +86,7 @@ fun MusicScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
 
     var query by remember { mutableStateOf("") }
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(0) }
     var showCreatePlaylistDialog by remember { mutableStateOf(false) }
     var newPlaylistName by remember { mutableStateOf("") }
     var songToAddToPlaylist by remember { mutableStateOf<Song?>(null) }
@@ -153,7 +154,6 @@ fun MusicScreen(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = {
                         if (query.isNotBlank()) {
-                            selectedTab = 0
                             viewModel.searchSongs(query)
                         }
                     })
@@ -161,7 +161,7 @@ fun MusicScreen(
             }
 
             if (!isSearching) {
-                TabRow(selectedTabIndex = selectedTab) {
+                PrimaryTabRow(selectedTabIndex = selectedTab) {
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
@@ -318,7 +318,7 @@ fun MusicScreen(
                                 },
                                 leadingContent = {
                                     Icon(
-                                        Icons.Default.PlaylistPlay,
+                                        Icons.AutoMirrored.Filled.PlaylistPlay,
                                         contentDescription = null
                                     )
                                 },
@@ -497,7 +497,7 @@ fun PlaylistsList(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                Icons.Default.PlaylistPlay,
+                                Icons.AutoMirrored.Filled.PlaylistPlay,
                                 contentDescription = null,
                                 modifier = Modifier.size(36.dp)
                             )

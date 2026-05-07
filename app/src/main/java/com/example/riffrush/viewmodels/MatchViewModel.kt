@@ -55,7 +55,7 @@ class MatchViewModel(
     private var gamesPlayedRegisteredForMatchId: String? = null
     private val _currentTimerDuration = MutableStateFlow(15000L)
     val currentTimerDuration: StateFlow<Long> = _currentTimerDuration
-    private val _showAnswerResult = MutableStateFlow<Boolean>(false)
+    private val _showAnswerResult = MutableStateFlow(false)
     val showAnswerResult: StateFlow<Boolean> = _showAnswerResult
 
     private val _lastAnswerCorrect = MutableStateFlow<Boolean?>(null)
@@ -341,7 +341,7 @@ class MatchViewModel(
                         artist = track.artist?.name ?: "Artista desconocido",
                         album = track.album?.title ?: "Álbum desconocido",
                         preview = track.preview ?: "",
-                        cover = track.album?.cover_medium ?: ""
+                        cover = track.album?.covermedium ?: ""
                     )
                 }
                 _songs.value = loadedSongs
@@ -442,16 +442,14 @@ class MatchViewModel(
                 updatedMatch = updatedMatch.copy(scoreP2 = updatedMatch.scoreP2 + 1)
             }
 
-            val playerCorrect = isCorrect
-            val botCorrect = botHits
             val currentSong = _songs.value.getOrNull(updatedMatch.currentRound)
 
             val newRoundResult = RoundResultModel(
                 round = updatedMatch.currentRound + 1,
                 songTitle = currentSong?.title ?: "Canción desconocida",
                 songArtist = currentSong?.artist ?: "",
-                player1Correct = playerCorrect,
-                player2Correct = botCorrect
+                player1Correct = isCorrect,
+                player2Correct = botHits
             )
 
             updatedMatch = updatedMatch.copy(
@@ -696,12 +694,10 @@ class MatchViewModel(
                 }
 
                 if (opponentLastSeen > 0L && now - opponentLastSeen > 12000L) {
-                    val winnerId = currentUserId
-
                     repository.endMatchByConnectionLoss(
                         matchId = current.matchId,
                         disconnectedPlayerId = opponentId,
-                        winnerId = winnerId
+                        winnerId = currentUserId
                     )
 
                     break

@@ -16,7 +16,8 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import org.json.JSONObject
 import java.io.File
 import java.util.Calendar
-
+import android.util.Log
+import com.google.firebase.auth.AuthResult
 class AuthRepository(
     private val firebaseAuth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
@@ -49,11 +50,13 @@ class AuthRepository(
         }
     }
 
-    suspend fun signIn(email: String, pass: String) =
-        firebaseAuth.signInWithEmailAndPassword(email, pass).await()
+    suspend fun signIn(email: String, pass: String): AuthResult {
+        return firebaseAuth.signInWithEmailAndPassword(email, pass).await()
+    }
 
-    //Añado esto para lo de inicar sesion como invitado
-    suspend fun signInAnonymously() = firebaseAuth.signInAnonymously().await()
+    suspend fun signInAnonymously(): AuthResult {
+        return firebaseAuth.signInAnonymously().await()
+    }
 
     //Funcion para mandar el mail de reseteo de contraseña, firebase se encarga!
     suspend fun sendPasswordResetEmail(email: String) {
@@ -76,10 +79,6 @@ class AuthRepository(
         firestore.collection("users").document(uid).update("name", newUsername).await()
     }
 
-    suspend fun updatePassword(newPass: String) {
-        firebaseAuth.currentUser?.updatePassword(newPass)?.await()
-    }
-
     suspend fun updateBio(newBio: String) {
         val uid = firebaseAuth.currentUser?.uid ?: return
         firestore.collection("users").document(uid)
@@ -92,6 +91,7 @@ class AuthRepository(
             val doc = firestore.collection("users").document(uid).get().await()
             doc.getString("bio") ?: "Explorando nuevos ritmos"
         } catch (e: Exception) {
+            Log.e("AuthRepository", "Error obteniendo bio del usuario", e)
             "Explorando nuevos ritmos"
         }
     }
@@ -106,10 +106,10 @@ class AuthRepository(
                 .await()
 
             val count = snapshot.size()
-            android.util.Log.d("RiffRush", "Canciones encontradas en subcolección: $count")
+            Log.d("RiffRush", "Canciones encontradas en subcolección: $count")
             count
         } catch (e: Exception) {
-            android.util.Log.e("RiffRush", "Error al counting subcolección songs: ${e.message}")
+            Log.e("RiffRush", "Error al counting subcolección songs: ${e.message}")
             0
         }
     }
@@ -141,15 +141,16 @@ class AuthRepository(
                 }
             }
         } catch (e: Exception) {
+            Log.e("AuthRepository", "Error obteniendo usuarios", e)
             emptyList()
         }
     }
 
     suspend fun followUser(targetUser: FriendModel) {
         val currentUid = firebaseAuth.currentUser?.uid ?: return
-        val currentUserName = firebaseAuth.currentUser?.displayName ?: "Usuario"
+        val currentUserName: String = firebaseAuth.currentUser?.displayName ?: "Usuario"
         val currentUserDoc = firestore.collection("users").document(currentUid).get().await()
-        val currentUserPfp = currentUserDoc.getString("pfpUrl") ?: ""
+        val currentUserPfp: String = currentUserDoc.getString("pfpUrl") ?: ""
         val batch = firestore.batch()
 
         // 1. Añadir a mi lista de "siguiendo"
@@ -194,6 +195,7 @@ class AuthRepository(
                 }
             }
         } catch (e: Exception) {
+            Log.e("AuthRepository", "Error obteniendo lista social", e)
             emptyList()
         }
     }
@@ -241,25 +243,25 @@ class AuthRepository(
                 .post(requestBody)
                 .build()
 
-            android.util.Log.d("CLOUDINARY_DEBUG", "Subiendo imagen...")
-            android.util.Log.d("CLOUDINARY_DEBUG", "Cloud name: ${CloudinaryConfig.CLOUD_NAME}")
-            android.util.Log.d(
+            Log.d("CLOUDINARY_DEBUG", "Subiendo imagen...")
+            Log.d("CLOUDINARY_DEBUG", "Cloud name: ${CloudinaryConfig.CLOUD_NAME}")
+            Log.d(
                 "CLOUDINARY_DEBUG",
                 "Upload preset: ${CloudinaryConfig.UPLOAD_PRESET}"
             )
 
-            val response = okHttpClient.newCall(request).execute()
-            val responseBody = response.body?.string().orEmpty()
+            val response: okhttp3.Response = okHttpClient.newCall(request).execute()
+            val responseBody: String = response.body?.string().orEmpty()
 
-            android.util.Log.d("CLOUDINARY_DEBUG", "Response code: ${response.code}")
-            android.util.Log.d("CLOUDINARY_DEBUG", "Response body: $responseBody")
+            Log.d("CLOUDINARY_DEBUG", "Response code: ${response.code}")
+            Log.d("CLOUDINARY_DEBUG", "Response body: $responseBody")
 
             if (!response.isSuccessful) {
                 throw Exception("Error Cloudinary ${response.code}: $responseBody")
             }
 
             val json = JSONObject(responseBody)
-            val imageUrl = json.getString("secure_url")
+            val imageUrl: String = json.getString("secure_url")
 
             firestore.collection("users")
                 .document(uid)
@@ -278,6 +280,7 @@ class AuthRepository(
             val doc = firestore.collection("users").document(uid).get().await()
             doc.getString("pfpUrl") ?: ""
         } catch (e: Exception) {
+            Log.e("AuthRepository", "Error obteniendo foto de perfil", e)
             ""
         }
     }
@@ -290,6 +293,7 @@ class AuthRepository(
             val isBlocked = doc.getBoolean("isBlocked") ?: false
             role to isBlocked
         } catch (e: Exception) {
+            Log.e("AuthRepository", "Error obteniendo datos de moderación", e)
             "user" to false
         }
     }
@@ -309,6 +313,7 @@ class AuthRepository(
                 )
             }
         } catch (e: Exception) {
+            Log.e("AuthRepository", "Error obteniendo usuarios para admin", e)
             emptyList()
         }
     }
@@ -349,6 +354,7 @@ class AuthRepository(
                 maxDailyStreak = (doc.getLong("maxDailyStreak") ?: 0L).toInt()
             )
         } catch (e: Exception) {
+            Log.e("AuthRepository", "Error obteniendo usuario por id: $uid", e)
             null
         }
     }

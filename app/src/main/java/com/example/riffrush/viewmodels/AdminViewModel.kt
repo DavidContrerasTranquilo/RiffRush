@@ -9,6 +9,7 @@ import com.example.riffrush.data.repository.FirebaseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import android.util.Log
 
 class AdminViewModel(
     private val authRepository: AuthRepository,
@@ -38,6 +39,7 @@ class AdminViewModel(
                 _uiMessage.value = "Usuario bloqueado"
                 loadUsers()
             } catch (e: Exception) {
+                Log.e("AdminViewModel", "Error bloqueando usuario: $uid", e)
                 _uiMessage.value = "Error al bloquear usuario"
             }
         }
@@ -50,6 +52,7 @@ class AdminViewModel(
                 _uiMessage.value = "Usuario desbloqueado"
                 loadUsers()
             } catch (e: Exception) {
+                Log.e("AdminViewModel", "Error desbloqueando usuario: $uid", e)
                 _uiMessage.value = "Error al desbloquear usuario"
             }
         }
@@ -62,6 +65,7 @@ class AdminViewModel(
                 _uiMessage.value = "Foto eliminada"
                 loadUsers()
             } catch (e: Exception) {
+                Log.e("AdminViewModel", "Error eliminando foto de perfil: $uid", e)
                 _uiMessage.value = "Error al eliminar foto"
             }
         }
@@ -84,6 +88,11 @@ class AdminViewModel(
                     return@launch
                 }
 
+                if (songIds.any { it.toLongOrNull() == null }) {
+                    _uiMessage.value = "Todos los IDs deben ser numéricos"
+                    return@launch
+                }
+
                 val config = DailyChallengeConfig(
                     date = date,
                     songIds = songIds,
@@ -93,6 +102,7 @@ class AdminViewModel(
                 firebaseRepository.saveDailyChallengeConfig(config)
                 _uiMessage.value = "Reto diario guardado correctamente"
             } catch (e: Exception) {
+                Log.e("AdminViewModel", "Error guardando reto diario para fecha: $date", e)
                 _uiMessage.value = "Error al guardar el reto diario"
             }
         }
@@ -109,6 +119,7 @@ class AdminViewModel(
                 firebaseRepository.deleteDailyChallengeConfig(date)
                 _uiMessage.value = "Reto diario eliminado"
             } catch (e: Exception) {
+                Log.e("AdminViewModel", "Error eliminando reto diario para fecha: $date", e)
                 _uiMessage.value = "Error al eliminar el reto diario"
             }
         }

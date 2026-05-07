@@ -23,7 +23,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Login
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -210,7 +210,7 @@ fun ProfileScreen(
                     )
                 } else {
                     ProfileMenuItem(
-                        icon = Icons.Default.Login,
+                        icon = Icons.AutoMirrored.Filled.Login,
                         title = "Iniciar Sesión",
                         subtitle = "Accede a tu cuenta",
                         onClick = onNavigateToLogin

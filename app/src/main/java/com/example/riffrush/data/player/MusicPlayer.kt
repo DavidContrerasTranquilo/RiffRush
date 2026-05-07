@@ -76,14 +76,4 @@ class MusicPlayer {
 
         currentUrl = null
     }
-
-    fun release() {
-        try {
-            mediaPlayer?.release()
-        } catch (_: Exception) {
-        }
-
-        mediaPlayer = null
-        currentUrl = null
-    }
 }

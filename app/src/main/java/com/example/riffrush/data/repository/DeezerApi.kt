@@ -42,5 +42,5 @@ data class DeezerArtist(
 
 data class DeezerAlbum(
     val title: String?,
-    val cover_medium: String?
+    val covermedium: String?
 )

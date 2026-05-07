@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import androidx.core.content.edit
 
 data class DailyChallengeUiState(
     val isLoading: Boolean = true,
@@ -29,7 +30,7 @@ data class DailyChallengeUiState(
 )
 
 class DailyChallengeViewModel(
-    private val context: Context,
+    context: Context,
     private val deezerRepository: DeezerRepository,
     private val firebaseRepository: FirebaseRepository,
     private val authRepository: AuthRepository
@@ -170,10 +171,10 @@ class DailyChallengeViewModel(
             streak = 1
         }
 
-        prefs.edit()
-            .putString("last_played_date_$uid", todayStr)
-            .putInt("current_streak_$uid", streak)
-            .apply()
+        prefs.edit {
+            putString("last_played_date_$uid", todayStr)
+            putInt("current_streak_$uid", streak)
+        }
 
         _uiState.value = _uiState.value.copy(
             isGameOver = true,
@@ -188,12 +189,6 @@ class DailyChallengeViewModel(
                 firebaseRepository.updateMaxStreak(currentUser.uid, streak)
             }
         }
-    }
-
-    //Para conseguir la rachaa
-    fun getStreak(): Int {
-        val uid = authRepository.getCurrentUser()?.uid ?: "guest"
-        return prefs.getInt("current_streak_$uid", 0)
     }
 
     private fun getCurrentDateString(): String {

@@ -2,7 +2,7 @@ package com.example.riffrush.data.local
 
 import android.content.Context
 import java.util.UUID
-
+import androidx.core.content.edit
 class GuestIdManager(private val context: Context) {
 
     private val prefsName = "RiffRushPrefs"
@@ -15,7 +15,9 @@ class GuestIdManager(private val context: Context) {
 
     private fun createGuestId(prefs: android.content.SharedPreferences): String {
         val newId = "guest_${UUID.randomUUID()}"
-        prefs.edit().putString(keyGuestId, newId).apply()
+        prefs.edit {
+            putString(keyGuestId, newId)
+        }
         return newId
     }
 }

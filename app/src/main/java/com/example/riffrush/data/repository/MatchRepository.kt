@@ -22,7 +22,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 class MatchRepository(
-    private val database: FirebaseDatabase,
+    database: FirebaseDatabase,
     private val playerIdentityManager: PlayerIdentityManager
 ) {
     private val matchesRef: DatabaseReference = database.getReference("matches")
@@ -208,7 +208,7 @@ class MatchRepository(
     }
 
     suspend fun submitAnswer(matchId: String, isCorrect: Boolean) =
-        suspendCancellableCoroutine<Unit> { continuation ->
+        suspendCancellableCoroutine { continuation ->
             val currentUserId = getCurrentUserId()
             val matchRef = matchesRef.child(matchId)
 
@@ -300,7 +300,7 @@ class MatchRepository(
             })
         }
 
-    suspend fun abandonMatch(matchId: String) = suspendCancellableCoroutine<Unit> { continuation ->
+    suspend fun abandonMatch(matchId: String) = suspendCancellableCoroutine{ continuation ->
         val currentUserId = getCurrentUserId()
         val matchRef = matchesRef.child(matchId)
 
@@ -350,39 +350,11 @@ class MatchRepository(
         }
     }
 
-    suspend fun sendHeartbeat(matchId: String) {
-        val currentUserId = getCurrentUserId()
-        val matchRef = matchesRef.child(matchId)
-
-        matchRef.runTransaction(object : Transaction.Handler {
-            override fun doTransaction(currentData: MutableData): Transaction.Result {
-                val match =
-                    currentData.getValue(MatchModel::class.java) ?: return Transaction.abort()
-
-                val amIPlayer1 = currentUserId == match.player1Id
-                if (amIPlayer1) {
-                    currentData.value = match.copy(player1LastSeen = System.currentTimeMillis())
-                } else {
-                    currentData.value = match.copy(player2LastSeen = System.currentTimeMillis())
-                }
-
-                return Transaction.success(currentData)
-            }
-
-            override fun onComplete(
-                error: DatabaseError?,
-                committed: Boolean,
-                snapshot: DataSnapshot?
-            ) {
-            }
-        })
-    }
-
     suspend fun endMatchByConnectionLoss(
         matchId: String,
         disconnectedPlayerId: String,
         winnerId: String
-    ) = suspendCancellableCoroutine<Unit> { continuation ->
+    ) = suspendCancellableCoroutine { continuation ->
         val matchRef = matchesRef.child(matchId)
 
         matchRef.runTransaction(object : Transaction.Handler {

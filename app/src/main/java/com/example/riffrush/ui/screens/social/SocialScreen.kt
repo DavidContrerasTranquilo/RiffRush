@@ -23,7 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -44,13 +44,12 @@ import com.example.riffrush.ui.components.UserItem
 import com.example.riffrush.viewmodels.AuthViewModel
 import com.example.riffrush.viewmodels.MatchViewModel
 import org.koin.androidx.compose.koinViewModel
-
+import androidx.compose.runtime.mutableIntStateOf
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SocialScreen(
     authViewModel: AuthViewModel = koinViewModel(),
     matchViewModel: MatchViewModel = koinViewModel(),
-    onNavigateToMatch: (String) -> Unit,
     onNavigateToUserStats: (String) -> Unit
 ) {
     val users by authViewModel.allUsers.collectAsState()
@@ -62,7 +61,7 @@ fun SocialScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var query by remember { mutableStateOf("") }
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(0) }
 
     val isSearching = query.isNotBlank()
 
@@ -144,7 +143,7 @@ fun SocialScreen(
             }
 
             if (!isSearching) {
-                TabRow(selectedTabIndex = selectedTab) {
+                PrimaryTabRow(selectedTabIndex = selectedTab) {
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },

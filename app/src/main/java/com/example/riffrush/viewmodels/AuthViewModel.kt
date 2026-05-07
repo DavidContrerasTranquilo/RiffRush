@@ -9,14 +9,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-
+import android.util.Log
 
 class AuthViewModel(
     private val repository: AuthRepository,
     private val firebaseRepository: FirebaseRepository
 ) : ViewModel() {
     private val _authState =
-        MutableStateFlow<Boolean>(repository.getCurrentUser()?.isAnonymous == false)
+        MutableStateFlow(repository.getCurrentUser()?.isAnonymous == false)
     val authState: StateFlow<Boolean> = _authState
 
     private val _uiMessage = MutableStateFlow<String?>(null)
@@ -51,8 +51,6 @@ class AuthViewModel(
 
     private val _isBlocked = MutableStateFlow(false)
     val isBlocked: StateFlow<Boolean> = _isBlocked
-    private val _compatibility = MutableStateFlow<Int?>(null)
-    val compatibility: StateFlow<Int?> = _compatibility
     private val _selectedUser = MutableStateFlow<FriendModel?>(null)
     val selectedUser: StateFlow<FriendModel?> = _selectedUser
 
@@ -94,6 +92,7 @@ class AuthViewModel(
                 _followers.value = followersList.map { it.uid }
                 _following.value = followingList.map { it.uid }
             } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error cargando estadísticas del usuario", e)
                 _songsCount.value = 0
             }
         }
@@ -224,6 +223,7 @@ class AuthViewModel(
                 _selectedUser.value = null
                 _compatibilityPercent.value = null
             } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error cerrando sesión", e)
                 _uiMessage.value = "Error al cerrar sesión"
             }
         }
@@ -236,6 +236,7 @@ class AuthViewModel(
                 _uiMessage.value = "¡Ahora sigues a ${friend.name}!"
                 loadUserStats()
             } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error siguiendo al usuario: ${friend.uid}", e)
                 _uiMessage.value = "Error al seguir al usuario"
             }
         }
@@ -256,7 +257,7 @@ class AuthViewModel(
                 loadAllUsers()
                 loadUserStats()
             } catch (e: Exception) {
-                android.util.Log.e("PFP_DEBUG", "Error al subir imagen", e)
+                Log.e("PFP_DEBUG", "Error al subir imagen", e)
                 _uiMessage.value = "Error al subir la imagen: ${e.message ?: "sin detalles"}"
             }
         }
@@ -312,6 +313,7 @@ class AuthViewModel(
                 _compatibilityPercent.value = percent
 
             } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error calculando compatibilidad con usuario: $otherUserId", e)
                 _compatibilityPercent.value = 0
             }
         }

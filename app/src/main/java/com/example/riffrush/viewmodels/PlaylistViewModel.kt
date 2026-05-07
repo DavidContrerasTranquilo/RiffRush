@@ -11,6 +11,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import android.util.Log
 
 class PlaylistViewModel(
     private val firebaseRepository: FirebaseRepository,
@@ -68,6 +69,7 @@ class PlaylistViewModel(
                 firebaseRepository.createPlaylist(ownerId, name.trim())
                 _uiMessage.value = "Playlist creada"
             } catch (e: Exception) {
+                Log.e("PlaylistViewModel", "Error creando playlist con nombre: $name", e)
                 _uiMessage.value = "Error al crear playlist"
             }
         }
@@ -81,6 +83,7 @@ class PlaylistViewModel(
                 firebaseRepository.deletePlaylist(ownerId, playlistId)
                 _uiMessage.value = "Playlist eliminada"
             } catch (e: Exception) {
+                Log.e("PlaylistViewModel", "Error eliminando playlist: $playlistId", e)
                 _uiMessage.value = "Error al eliminar playlist"
             }
         }
@@ -105,6 +108,11 @@ class PlaylistViewModel(
                 firebaseRepository.addSongToPlaylist(ownerId, playlistId, song)
                 _uiMessage.value = "Canción añadida a playlist"
             } catch (e: Exception) {
+                Log.e(
+                    "PlaylistViewModel",
+                    "Error añadiendo canción ${song.id} a playlist $playlistId",
+                    e
+                )
                 _uiMessage.value = "Error al añadir canción"
             }
         }
@@ -118,6 +126,11 @@ class PlaylistViewModel(
                 firebaseRepository.removeSongFromPlaylist(ownerId, playlistId, songId)
                 _uiMessage.value = "Canción eliminada"
             } catch (e: Exception) {
+                Log.e(
+                    "PlaylistViewModel",
+                    "Error eliminando canción $songId de playlist $playlistId",
+                    e
+                )
                 _uiMessage.value = "Error al eliminar canción"
             }
         }
