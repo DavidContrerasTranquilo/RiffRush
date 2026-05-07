@@ -123,37 +123,33 @@ class MusicViewModel(
      */
     fun playPause(song: Song) {
         viewModelScope.launch {
+            if (_playingSongId.value == song.id) {
+                musicPlayer.stop()
+                _playingSongId.value = null
+                return@launch
+            }
+
             var url = song.preview
 
-            // Siempre obtenemos la canción fresca para evitar que el token del preview expire
             try {
-                val fSong = deezerRepository.getSong(song.id)
-                if (fSong != null && fSong.preview.isNotBlank()) {
-                    url = fSong.preview
+                val freshSong = deezerRepository.getSong(song.id)
+
+                if (freshSong != null && freshSong.preview.isNotBlank()) {
+                    url = freshSong.preview
+
                     if (isLoggedIn()) {
-                        // Actualizar en Firebase para no tener que buscar de nuevo
-                        firebaseRepository.addFavorite(getOwnerId(), fSong)
+                        firebaseRepository.addFavorite(getOwnerId(), freshSong)
+                    }
 
-                        // También actualizar localmente para que el preview funcione inmediatamente
-                        val currentFavs = _favoriteSongs.value.toMutableList()
-                        val index = currentFavs.indexOfFirst { it.id == fSong.id }
-                        if (index != -1) {
-                            currentFavs[index] = fSong
-                            _favoriteSongs.value = currentFavs
-                            if (!_isSearching.value) {
-                                _songs.value = currentFavs
-                            }
-                        }
+                    val currentFavs = _favoriteSongs.value.toMutableList()
+                    val index = currentFavs.indexOfFirst { it.id == freshSong.id }
 
-                    } else {
-                        val currentFavs = _favoriteSongs.value.toMutableList()
-                        val index = currentFavs.indexOfFirst { it.id == fSong.id }
-                        if (index != -1) {
-                            currentFavs[index] = fSong
-                            _favoriteSongs.value = currentFavs
-                            if (!_isSearching.value) {
-                                _songs.value = currentFavs
-                            }
+                    if (index != -1) {
+                        currentFavs[index] = freshSong
+                        _favoriteSongs.value = currentFavs
+
+                        if (!_isSearching.value) {
+                            _songs.value = currentFavs
                         }
                     }
                 }
@@ -162,13 +158,9 @@ class MusicViewModel(
             }
 
             if (url.isNotBlank()) {
-                if (musicPlayer.isPlaying(url)) {
-                    musicPlayer.stop()
-                    _playingSongId.value = null
-                } else {
-                    musicPlayer.playPreview(url)
-                    _playingSongId.value = song.id
-                }
+                musicPlayer.stop()
+                musicPlayer.playPreview(url)
+                _playingSongId.value = song.id
             }
         }
     }
@@ -176,6 +168,10 @@ class MusicViewModel(
     override fun onCleared() {
         super.onCleared()
         favoritesJob?.cancel()
+        stopPlayback()
+    }
+
+    fun stopPlayback() {
         musicPlayer.stop()
         _playingSongId.value = null
     }

@@ -51,6 +51,12 @@ fun MusicScreen(
     var newPlaylistName by remember { mutableStateOf("") }
     var songToAddToPlaylist by remember { mutableStateOf<Song?>(null) }
 
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.stopPlayback()
+        }
+    }
+
     LaunchedEffect(Unit) {
         viewModel.loadMyMusic()
         playlistViewModel.loadPlaylists()
