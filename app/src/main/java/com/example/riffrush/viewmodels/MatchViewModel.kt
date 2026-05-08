@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.CancellationException
 
 class MatchViewModel(
     private val repository: MatchRepository,
@@ -62,6 +63,8 @@ class MatchViewModel(
     val lastAnswerCorrect: StateFlow<Boolean?> = _lastAnswerCorrect
     private var presenceJob: Job? = null
     private var disconnectWatcherJob: Job? = null
+    private var presenceMatchId: String? = null
+    private var watcherMatchId: String? = null
     fun startMatchmaking(opponentId: String) {
         _isLoading.value = true
         _error.value = null
@@ -114,6 +117,15 @@ class MatchViewModel(
 
     fun listenToMatch(matchId: String) {
         matchJob?.cancel()
+        presenceJob?.cancel()
+        disconnectWatcherJob?.cancel()
+        timerJob?.cancel()
+
+        presenceJob = null
+        disconnectWatcherJob = null
+        timerJob = null
+        opponentAnsweredTimerStartedForRound = null
+
         _currentMatch.value = null
         _songs.value = emptyList()
         _currentRound.value = 0
@@ -151,6 +163,11 @@ class MatchViewModel(
                         match?.status == MatchStatus.FINISHED &&
                         gamesPlayedRegisteredForMatchId != match.matchId
                     ) {
+                        presenceJob?.cancel()
+                        disconnectWatcherJob?.cancel()
+                        presenceJob = null
+                        disconnectWatcherJob = null
+
                         Log.d(
                             "MATCH_DEBUG",
                             "listenToMatch FINISHED detected. Registering stats/history for match=${match.matchId}"
@@ -322,6 +339,8 @@ class MatchViewModel(
                         }
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.e("MATCH_DEBUG", "listenToMatch ERROR", e)
                 Log.e("MatchViewModel", "Error listening to match", e)
@@ -656,12 +675,17 @@ class MatchViewModel(
     }
 
     private fun startPresence(matchId: String, isPlayer1: Boolean) {
-        if (presenceJob?.isActive == true) return
+        if (presenceJob?.isActive == true && presenceMatchId == matchId) return
+
+        presenceJob?.cancel()
+        presenceMatchId = matchId
 
         presenceJob = viewModelScope.launch {
             while (true) {
                 try {
                     repository.updatePresence(matchId, isPlayer1)
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     Log.e("MATCH_DEBUG", "Error updating presence", e)
                 }
@@ -672,13 +696,20 @@ class MatchViewModel(
     }
 
     private fun watchOpponentConnection(match: MatchModel) {
-        if (disconnectWatcherJob?.isActive == true) return
+        if (disconnectWatcherJob?.isActive == true && watcherMatchId == match.matchId) return
+
+        disconnectWatcherJob?.cancel()
+        watcherMatchId = match.matchId
 
         disconnectWatcherJob = viewModelScope.launch {
-            while (match.status == MatchStatus.PLAYING) {
+            while (true) {
                 delay(5000)
 
                 val current = _currentMatch.value ?: continue
+
+                if (current.matchId != match.matchId) break
+                if (current.status != MatchStatus.PLAYING) break
+
                 val currentUserId = repository.getCurrentUserId()
                 val now = System.currentTimeMillis()
 
@@ -693,7 +724,13 @@ class MatchViewModel(
                     opponentLastSeen = current.player1LastSeen
                 }
 
-                if (opponentLastSeen > 0L && now - opponentLastSeen > 12000L) {
+                Log.d(
+                    "MATCH_DEBUG",
+                    "watchOpponentConnection match=${current.matchId} opponent=$opponentId " +
+                            "lastSeen=$opponentLastSeen diff=${now - opponentLastSeen}"
+                )
+
+                if (opponentLastSeen > 0L && now - opponentLastSeen > 20000L) {
                     repository.endMatchByConnectionLoss(
                         matchId = current.matchId,
                         disconnectedPlayerId = opponentId,
