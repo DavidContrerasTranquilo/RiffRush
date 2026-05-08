@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,14 +67,14 @@ fun WelcomeScreen(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.logo_riffrush),
-                contentDescription = "RiffRush Logo",
+                contentDescription = stringResource(R.string.content_desc_logo),
                 modifier = Modifier.size(150.dp)
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "¡Bienvenido a RiffRush!",
+                text = stringResource(R.string.welcome_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 28.sp,
                 color = MaterialTheme.colorScheme.onBackground
@@ -82,7 +83,7 @@ fun WelcomeScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Demuestra lo que sabes de música y compite con tus amigos.",
+                text = stringResource(R.string.welcome_subtitle),
                 fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -97,7 +98,7 @@ fun WelcomeScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Iniciar Sesión", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.btn_login), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -112,7 +113,7 @@ fun WelcomeScreen(
                     containerColor = MaterialTheme.colorScheme.secondary
                 )
             ) {
-                Text("Registrarse", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.btn_register), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -126,7 +127,7 @@ fun WelcomeScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Continuar como invitado", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.btn_continue_guest), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
         }
     }

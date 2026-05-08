@@ -1,0 +1,60 @@
+<resources>
+    <string name="app_name">RiffRush</string>
+    <string name="default_guest_name">Guest</string>
+    <string name="default_player_name">You</string>
+    <string name="default_song_title">Unknown Title</string>
+    <string name="default_artist_name">Unknown Artist</string>
+    <string name="default_album_name">Unknown Album</string>
+    <string name="default_unknown_song">Unknown Song</string>
+    <string name="error_create_match">Error creating match: %s</string>
+    <string name="error_connection">Connection error: %s</string>
+    <string name="error_submit_answer">Error submitting answer: %s</string>
+    <string name="error_offline_mode">Error starting offline mode: %s</string>
+    <string name="error_matchmaking">Matchmaking error: %s</string>
+    
+    <string name="error_account_blocked">Your account is blocked and cannot play</string>
+    <string name="home_playlist_of_day_label">PLAYLIST OF THE DAY</string>
+    <string name="home_playlist_of_day_title">Retro Trivia</string>
+    <string name="home_playlist_of_day_desc">Test your ears with your favorite songs.</string>
+    <string name="error_login_required_favorites">You must log in to play with your favorites</string>
+    <string name="btn_play_favorites">Play with favorites</string>
+    <string name="home_match_by_playlist_label">Match by Playlist</string>
+    <string name="category_reggaeton">Reggaeton</string>
+    <string name="category_rap_frances">Rap Français</string>
+    <string name="category_rock_espanol">Spanish Rock</string>
+    <string name="category_top_50_espana">Top 50 Spain</string>
+    <string name="home_daily_challenge_label">DAILY CHALLENGE</string>
+    <string name="home_daily_challenge_win_streak">KEEP THE STREAK!</string>
+    <string name="home_daily_challenge_streak">Streak: %1$d 🔥</string>
+    <string name="home_daily_challenge_title">Guess 6 songs</string>
+    <string name="home_daily_challenge_completed_desc">You have already completed today\'s challenge. Come back tomorrow to continue your streak!</string>
+    <string name="home_daily_challenge_desc">6 songs, 1 guess per song. Can you guess them all and keep your streak?</string>
+    <string name="btn_completed">COMPLETED</string>
+    <string name="btn_play_now">PLAY NOW</string>
+    <string name="dialog_choose_game_mode_title">Choose game mode</string>
+    <string name="dialog_choose_game_mode_desc">You selected \"%1$s\". Do you want to play online or offline?</string>
+    <string name="btn_online">Online</string>
+    <string name="btn_offline">Offline</string>
+    <string name="btn_cancel">Cancel</string>
+
+    <!-- Auth Strings -->
+    <string name="welcome_title">Welcome to RiffRush!</string>
+    <string name="welcome_subtitle">Show what you know about music and compete with friends.</string>
+    <string name="btn_login">Log In</string>
+    <string name="btn_register">Sign Up</string>
+    <string name="btn_continue_guest">Continue as guest</string>
+    <string name="content_desc_logo">RiffRush Logo</string>
+
+    <string name="btn_back">Back</string>
+    <string name="login_title">Welcome back</string>
+    <string name="label_email">Email</string>
+    <string name="label_password">Password</string>
+    <string name="btn_forgot_password">Forgot your password?</string>
+    <string name="btn_no_account_register">Don\'t have an account? Sign up here</string>
+
+    <string name="msg_account_created">Account created successfully!</string>
+    <string name="register_title">Create Account</string>
+    <string name="register_subtitle">Join the music community</string>
+    <string name="label_username">Username</string>
+    <string name="label_password_min_6">Password (minimum 6 characters)</string>
+</resources>

@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -70,7 +71,7 @@ fun SignUpScreen(
                 title = { },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.btn_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
@@ -88,14 +89,14 @@ fun SignUpScreen(
 
             Image(
                 painter = painterResource(id = R.drawable.logo_riffrush),
-                contentDescription = "RiffRush Logo",
+                contentDescription = stringResource(R.string.content_desc_logo),
                 modifier = Modifier.size(80.dp)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Crear Cuenta",
+                text = stringResource(R.string.register_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 28.sp,
                 color = MaterialTheme.colorScheme.onBackground
@@ -103,7 +104,7 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Únete a la comunidad musical",
+                text = stringResource(R.string.register_subtitle),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 14.sp
             )
@@ -113,7 +114,7 @@ fun SignUpScreen(
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Nombre de usuario") },
+                label = { Text(stringResource(R.string.label_username)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp)
@@ -124,7 +125,7 @@ fun SignUpScreen(
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
+                label = { Text(stringResource(R.string.label_email)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp)
@@ -135,7 +136,7 @@ fun SignUpScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Contraseña (mínimo 6 caracteres)") },
+                label = { Text(stringResource(R.string.label_password_min_6)) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -152,7 +153,7 @@ fun SignUpScreen(
                 enabled = username.isNotBlank() && email.isNotBlank() && password.length >= 6,
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Registrarse", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.btn_register), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
         }
     }

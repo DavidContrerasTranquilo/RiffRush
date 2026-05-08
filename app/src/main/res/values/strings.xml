@@ -1,3 +1,60 @@
 <resources>
     <string name="app_name">RiffRush</string>
+    <string name="default_guest_name">Invitado</string>
+    <string name="default_player_name">Tú</string>
+    <string name="default_song_title">Sin título</string>
+    <string name="default_artist_name">Artista desconocido</string>
+    <string name="default_album_name">Álbum desconocido</string>
+    <string name="default_unknown_song">Canción desconocida</string>
+    <string name="error_create_match">Error al crear la partida: %s</string>
+    <string name="error_connection">Error de conexión: %s</string>
+    <string name="error_submit_answer">Error al enviar la respuesta: %s</string>
+    <string name="error_offline_mode">Error al iniciar la partida offline: %s</string>
+    <string name="error_matchmaking">Error en matchmaking: %s</string>
+    
+    <string name="error_account_blocked">Tu cuenta está bloqueada y no puedes jugar</string>
+    <string name="home_playlist_of_day_label">PLAYLIST DEL DÍA</string>
+    <string name="home_playlist_of_day_title">Trivia del Retro</string>
+    <string name="home_playlist_of_day_desc">Pon a prueba tus oídos con tus canciones preferidas.</string>
+    <string name="error_login_required_favorites">Debes iniciar sesión para jugar con tus favoritos</string>
+    <string name="btn_play_favorites">Jugar con favoritos</string>
+    <string name="home_match_by_playlist_label">Partida por Playlist</string>
+    <string name="category_reggaeton">Reggaetón</string>
+    <string name="category_rap_frances">Rap Français</string>
+    <string name="category_rock_espanol">Rock Español</string>
+    <string name="category_top_50_espana">Top 50 España</string>
+    <string name="home_daily_challenge_label">RETO DIARIO</string>
+    <string name="home_daily_challenge_win_streak">¡GANA LA RACHA!</string>
+    <string name="home_daily_challenge_streak">Racha: %1$d 🔥</string>
+    <string name="home_daily_challenge_title">Adivina 6 canciones</string>
+    <string name="home_daily_challenge_completed_desc">Ya has completado el reto de hoy. ¡Vuelve mañana para continuar tu racha!</string>
+    <string name="home_daily_challenge_desc">6 canciones, 1 intento por canción. ¿Podrás adivinarlas todas y mantener tu racha?</string>
+    <string name="btn_completed">COMPLETADO</string>
+    <string name="btn_play_now">JUGAR AHORA</string>
+    <string name="dialog_choose_game_mode_title">Elegir modo de juego</string>
+    <string name="dialog_choose_game_mode_desc">Has seleccionado \"%1$s\". ¿Quieres jugar online o offline?</string>
+    <string name="btn_online">Online</string>
+    <string name="btn_offline">Offline</string>
+    <string name="btn_cancel">Cancelar</string>
+
+    <!-- Auth Strings -->
+    <string name="welcome_title">¡Bienvenido a RiffRush!</string>
+    <string name="welcome_subtitle">Demuestra lo que sabes de música y compite con tus amigos.</string>
+    <string name="btn_login">Iniciar Sesión</string>
+    <string name="btn_register">Registrarse</string>
+    <string name="btn_continue_guest">Continuar como invitado</string>
+    <string name="content_desc_logo">RiffRush Logo</string>
+
+    <string name="btn_back">Volver</string>
+    <string name="login_title">Bienvenido de nuevo</string>
+    <string name="label_email">Email</string>
+    <string name="label_password">Contraseña</string>
+    <string name="btn_forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="btn_no_account_register">¿No tienes cuenta? Regístrate aquí</string>
+
+    <string name="msg_account_created">¡Cuenta creada correctamente!</string>
+    <string name="register_title">Crear Cuenta</string>
+    <string name="register_subtitle">Únete a la comunidad musical</string>
+    <string name="label_username">Nombre de usuario</string>
+    <string name="label_password_min_6">Contraseña (mínimo 6 caracteres)</string>
 </resources>

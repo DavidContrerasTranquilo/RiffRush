@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -80,7 +81,7 @@ fun LoginScreen(
                 title = { },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.btn_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
@@ -100,14 +101,14 @@ fun LoginScreen(
             //Ahora mismo no funciona, creo que hay que añadirlo modo png
             Image(
                 painter = painterResource(id = R.drawable.logo_riffrush),
-                contentDescription = "RiffRush Logo",
+                contentDescription = stringResource(R.string.content_desc_logo),
                 modifier = Modifier.size(100.dp)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Bienvenido de nuevo",
+                text = stringResource(R.string.login_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 28.sp,
                 color = MaterialTheme.colorScheme.onBackground
@@ -118,7 +119,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
+                label = { Text(stringResource(R.string.label_email)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp)
@@ -129,7 +130,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Contraseña") },
+                label = { Text(stringResource(R.string.label_password)) },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
@@ -144,7 +145,7 @@ fun LoginScreen(
                     onClick = { authViewModel.resetPassword(email) },
                     contentPadding = PaddingValues(0.dp)
                 ) {
-                    Text("¿Olvidaste tu contraseña?", color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.btn_forgot_password), color = MaterialTheme.colorScheme.primary)
                 }
             }
 
@@ -158,14 +159,14 @@ fun LoginScreen(
                 enabled = email.isNotEmpty() && password.isNotEmpty(),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Iniciar Sesión", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.btn_login), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             TextButton(onClick = onNavigateToSignUp) {
                 Text(
-                    "¿No tienes cuenta? Regístrate aquí",
+                    stringResource(R.string.btn_no_account_register),
                     color = MaterialTheme.colorScheme.secondary
                 )
             }

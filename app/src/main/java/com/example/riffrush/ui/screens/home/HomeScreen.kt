@@ -41,6 +41,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.compose.ui.res.stringResource
+import com.example.riffrush.R
 import com.example.riffrush.viewmodels.AuthViewModel
 import com.example.riffrush.viewmodels.DailyChallengeViewModel
 import com.example.riffrush.viewmodels.MatchViewModel
@@ -71,25 +73,25 @@ fun HomeScreen(
     var selectedPlaylist by remember { mutableStateOf<PlaylistOption?>(null) }
 
     val reggaeton = PlaylistOption(
-        displayName = "Reggaetón",
+        displayName = stringResource(R.string.category_reggaeton),
         onlineValue = "REGGAETON",
         offlineRouteSuffix = "reggaeton"
     )
 
     val rapFrances = PlaylistOption(
-        displayName = "Rap Français",
+        displayName = stringResource(R.string.category_rap_frances),
         onlineValue = "RAP FRANCÉS",
         offlineRouteSuffix = "rap_frances"
     )
 
     val rockEspanol = PlaylistOption(
-        displayName = "Rock Español",
+        displayName = stringResource(R.string.category_rock_espanol),
         onlineValue = "ROCK ESPAÑOL",
         offlineRouteSuffix = "rock_espanol"
     )
 
     val top50Espana = PlaylistOption(
-        displayName = "Top 50 España",
+        displayName = stringResource(R.string.category_top_50_espana),
         onlineValue = "TOP 50 ESPAÑA",
         offlineRouteSuffix = "top_50_espana"
     )
@@ -113,7 +115,7 @@ fun HomeScreen(
                 if (isBlocked) {
                     Toast.makeText(
                         context,
-                        "Tu cuenta está bloqueada y no puede jugar",
+                        context.getString(R.string.error_account_blocked),
                         Toast.LENGTH_SHORT
                     ).show()
                 } else {
@@ -125,7 +127,7 @@ fun HomeScreen(
                 if (isBlocked) {
                     Toast.makeText(
                         context,
-                        "Tu cuenta está bloqueada y no puede jugar",
+                        context.getString(R.string.error_account_blocked),
                         Toast.LENGTH_SHORT
                     ).show()
                 } else {
@@ -152,7 +154,7 @@ fun HomeScreen(
             contentAlignment = Alignment.CenterStart
         ) {
             Text(
-                text = "RiffRush",
+                text = stringResource(R.string.app_name),
                 color = Color.White,
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold
@@ -173,7 +175,7 @@ fun HomeScreen(
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            text = "PLAYLIST DEL DÍA",
+                            text = stringResource(R.string.home_playlist_of_day_label),
                             style = MaterialTheme.typography.labelLarge,
                             color = Color(0xFF7B1FA2)
                         )
@@ -181,12 +183,12 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "Trivia del Retro",
+                            text = stringResource(R.string.home_playlist_of_day_title),
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold
                         )
 
-                        Text("Pon a prueba tus oídos con tus canciones preferidas.")
+                        Text(stringResource(R.string.home_playlist_of_day_desc))
 
                         Spacer(modifier = Modifier.height(16.dp))
 
@@ -204,7 +206,7 @@ fun HomeScreen(
                                     if (currentUser == null || currentUser.isAnonymous) {
                                         Toast.makeText(
                                             context,
-                                            "Debes iniciar sesión para jugar con tus favoritos",
+                                            context.getString(R.string.error_login_required_favorites),
                                             Toast.LENGTH_SHORT
                                         ).show()
                                     } else {
@@ -216,7 +218,7 @@ fun HomeScreen(
                                 containerColor = Color(0xFF7B1FA2)
                             )
                         ) {
-                            Text("Jugar con favoritos")
+                            Text(stringResource(R.string.btn_play_favorites))
                         }
                     }
                 }
@@ -225,7 +227,7 @@ fun HomeScreen(
             item {
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
-                    text = "Partida por Playlist",
+                    text = stringResource(R.string.home_match_by_playlist_label),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -237,11 +239,11 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    QuickButton("Reggaetón", Color(0xFFF8BBD0)) {
+                    QuickButton(reggaeton.displayName, Color(0xFFF8BBD0)) {
                         if (isBlocked) {
                             Toast.makeText(
                                 context,
-                                "Tu cuenta está bloqueada y no puede jugar",
+                                context.getString(R.string.error_account_blocked),
                                 Toast.LENGTH_SHORT
                             ).show()
                         } else {
@@ -249,11 +251,11 @@ fun HomeScreen(
                         }
                     }
 
-                    QuickButton("Rap Français", Color(0xFFBBDEFB)) {
+                    QuickButton(rapFrances.displayName, Color(0xFFBBDEFB)) {
                         if (isBlocked) {
                             Toast.makeText(
                                 context,
-                                "Tu cuenta está bloqueada y no puede jugar",
+                                context.getString(R.string.error_account_blocked),
                                 Toast.LENGTH_SHORT
                             ).show()
                         } else {
@@ -268,11 +270,11 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    QuickButton("Rock Español", Color(0xFFFFE0B2)) {
+                    QuickButton(rockEspanol.displayName, Color(0xFFFFE0B2)) {
                         if (isBlocked) {
                             Toast.makeText(
                                 context,
-                                "Tu cuenta está bloqueada y no puede jugar",
+                                context.getString(R.string.error_account_blocked),
                                 Toast.LENGTH_SHORT
                             ).show()
                         } else {
@@ -280,11 +282,11 @@ fun HomeScreen(
                         }
                     }
 
-                    QuickButton("Top 50 España", Color(0xFFC8E6C9)) {
+                    QuickButton(top50Espana.displayName, Color(0xFFC8E6C9)) {
                         if (isBlocked) {
                             Toast.makeText(
                                 context,
-                                "Tu cuenta está bloqueada y no puede jugar",
+                                context.getString(R.string.error_account_blocked),
                                 Toast.LENGTH_SHORT
                             ).show()
                         } else {
@@ -297,7 +299,7 @@ fun HomeScreen(
             item {
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
-                    text = "RETO DIARIO",
+                    text = stringResource(R.string.home_daily_challenge_label),
                     style = MaterialTheme.typography.labelLarge,
                     color = Color.Gray
                 )
@@ -317,12 +319,12 @@ fun HomeScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "¡GANA LA RACHA!",
+                                text = stringResource(R.string.home_daily_challenge_win_streak),
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Racha: ${dailyChallengeState.streak} 🔥",
+                                text = stringResource(R.string.home_daily_challenge_streak, dailyChallengeState.streak),
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFFF9800)
                             )
@@ -331,7 +333,7 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "Adivina 6 canciones",
+                            text = stringResource(R.string.home_daily_challenge_title),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -340,9 +342,9 @@ fun HomeScreen(
 
                         Text(
                             text = if (dailyChallengeState.isCompletedToday) {
-                                "Ya has completado el reto de hoy. ¡Vuelve mañana para continuar tu racha!"
+                                stringResource(R.string.home_daily_challenge_completed_desc)
                             } else {
-                                "6 canciones, 1 intento por canción. ¿Podrás adivinarlas todas y mantener tu racha?"
+                                stringResource(R.string.home_daily_challenge_desc)
                             }
                         )
 
@@ -368,9 +370,9 @@ fun HomeScreen(
                         ) {
                             Text(
                                 if (dailyChallengeState.isCompletedToday) {
-                                    "COMPLETADO"
+                                    stringResource(R.string.btn_completed)
                                 } else {
-                                    "JUGAR AHORA"
+                                    stringResource(R.string.btn_play_now)
                                 }
                             )
                         }
@@ -395,24 +397,24 @@ fun PlaylistModeDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text("Elegir modo de juego")
+            Text(stringResource(R.string.dialog_choose_game_mode_title))
         },
         text = {
-            Text("Has seleccionado \"$playlistName\". ¿Quieres jugar online o offline?")
+            Text(stringResource(R.string.dialog_choose_game_mode_desc, playlistName))
         },
         confirmButton = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = onOnlineClick) {
-                    Text("Online")
+                    Text(stringResource(R.string.btn_online))
                 }
                 Button(onClick = onOfflineClick) {
-                    Text("Offline")
+                    Text(stringResource(R.string.btn_offline))
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Text(stringResource(R.string.btn_cancel))
             }
         }
     )

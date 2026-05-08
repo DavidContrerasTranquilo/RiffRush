@@ -1,5 +1,6 @@
 package com.example.riffrush.viewmodels
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,9 +22,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.CancellationException
+import com.example.riffrush.R
 
 class MatchViewModel(
+    private val context: Context,
     private val repository: MatchRepository,
     private val firebaseRepository: FirebaseRepository,
     private val deezerApi: DeezerApi,
@@ -80,7 +84,7 @@ class MatchViewModel(
                 val opponentName = opponentDoc.getString("name")
                     ?: opponentDoc.getString("username")
                     ?: opponentDoc.getString("displayName")
-                    ?: "Invitado"
+                    ?: context.getString(R.string.default_guest_name)
                 val opponentPfp = opponentDoc.getString("pfpUrl") ?: ""
 
                 // Obtener información del jugador actual
@@ -89,7 +93,7 @@ class MatchViewModel(
                 val currentPlayerName = currentPlayerDoc.getString("name")
                     ?: currentPlayerDoc.getString("username")
                     ?: currentPlayerDoc.getString("displayName")
-                    ?: "Tú"
+                    ?: context.getString(R.string.default_player_name)
                 val currentPlayerPfp = currentPlayerDoc.getString("pfpUrl") ?: ""
                 val newMatch = MatchModel(
                     matchId = matchId,
@@ -109,7 +113,7 @@ class MatchViewModel(
 
             } catch (e: Exception) {
                 Log.e("MatchViewModel", "Error creating match", e)
-                _error.value = "Error al crear la partida: ${e.message}"
+                _error.value = context.getString(R.string.error_create_match, e.message)
                 _isLoading.value = false
             }
         }
@@ -344,7 +348,7 @@ class MatchViewModel(
             } catch (e: Exception) {
                 Log.e("MATCH_DEBUG", "listenToMatch ERROR", e)
                 Log.e("MatchViewModel", "Error listening to match", e)
-                _error.value = "Error de conexión: ${e.message}"
+                _error.value = context.getString(R.string.error_connection, e.message)
             }
         }
     }
@@ -356,9 +360,9 @@ class MatchViewModel(
                     val track = deezerApi.getTrack(id)
                     Song(
                         id = track.id,
-                        title = track.title ?: "Sin título",
-                        artist = track.artist?.name ?: "Artista desconocido",
-                        album = track.album?.title ?: "Álbum desconocido",
+                        title = track.title ?: context.getString(R.string.default_song_title),
+                        artist = track.artist?.name ?: context.getString(R.string.default_artist_name),
+                        album = track.album?.title ?: context.getString(R.string.default_album_name),
                         preview = track.preview ?: "",
                         cover = track.album?.covermedium ?: ""
                     )
@@ -436,7 +440,7 @@ class MatchViewModel(
             } catch (e: Exception) {
                 _showAnswerResult.value = false
                 Log.e("MATCH_DEBUG", "Error submitting answer", e)
-                _error.value = "Error al enviar la respuesta: ${e.message}"
+                _error.value = context.getString(R.string.error_submit_answer, e.message)
             }
         }
     }
@@ -465,7 +469,7 @@ class MatchViewModel(
 
             val newRoundResult = RoundResultModel(
                 round = updatedMatch.currentRound + 1,
-                songTitle = currentSong?.title ?: "Canción desconocida",
+                songTitle = currentSong?.title ?: context.getString(R.string.default_unknown_song),
                 songArtist = currentSong?.artist ?: "",
                 player1Correct = isCorrect,
                 player2Correct = botHits
@@ -542,7 +546,7 @@ class MatchViewModel(
 
             } catch (e: Exception) {
                 Log.e("MatchViewModel", "Error starting offline mode", e)
-                _error.value = "Error al iniciar la partida offline: ${e.message}"
+                _error.value = context.getString(R.string.error_offline_mode, e.message)
                 _isLoading.value = false
             }
         }
@@ -580,7 +584,7 @@ class MatchViewModel(
                 }
             } catch (e: Exception) {
                 _matchmakingState.value =
-                    MatchmakingUiState.Error("Error en matchmaking: ${e.message}")
+                    MatchmakingUiState.Error(context.getString(R.string.error_matchmaking, e.message))
             }
         }
     }
@@ -631,9 +635,9 @@ class MatchViewModel(
 
         val opponentId = if (amIPlayer1) match.player2Id else match.player1Id
         val opponentName = if (amIPlayer1) {
-            match.player2Name.ifBlank { "Invitado" }
+            match.player2Name.ifBlank { context.getString(R.string.default_guest_name) }
         } else {
-            match.player1Name.ifBlank { "Invitado" }
+            match.player1Name.ifBlank { context.getString(R.string.default_guest_name) }
         }
 
         val result = when {
