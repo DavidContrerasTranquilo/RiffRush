@@ -233,6 +233,7 @@ fun MatchScreen(
                                 onExit = onExit,
                                 viewModel = viewModel,
                                 roundResults = currentMatch.roundResults,
+                                songs = songs,
                                 endReason = currentMatch.endReason,
                                 opponentAbandoned = opponentAbandoned,
                                 iAbandoned = iAbandoned,
@@ -490,6 +491,7 @@ fun ResultView(
     onExit: () -> Unit,
     viewModel: MatchViewModel = koinViewModel(),
     roundResults: List<RoundResultModel>,
+    songs: List<Song> = emptyList(),
     endReason: String = "",
     opponentAbandoned: Boolean = false,
     iAbandoned: Boolean = false,
@@ -609,8 +611,11 @@ fun ResultView(
                             fontWeight = FontWeight.Bold
                         )
 
+                        val songTitle = songs.getOrNull(result.round - 1)?.let { "${it.title} - ${it.artist}" }
+                            ?: result.songTitle.ifBlank { stringResource(R.string.msg_unknown_song_id) }
+
                         Text(
-                            text = result.songTitle.ifBlank { stringResource(R.string.msg_unknown_song_id) },
+                            text = songTitle,
                             style = MaterialTheme.typography.bodyMedium
                         )
 

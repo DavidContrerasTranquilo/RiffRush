@@ -197,7 +197,7 @@ fun HomeScreen(
                                 if (isBlocked) {
                                     Toast.makeText(
                                         context,
-                                        "Tu cuenta está bloqueada y no puede jugar",
+                                        context.getString(R.string.error_account_blocked),
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 } else {
@@ -355,7 +355,7 @@ fun HomeScreen(
                                 if (isBlocked) {
                                     Toast.makeText(
                                         context,
-                                        "Tu cuenta está bloqueada y no puede jugar",
+                                        context.getString(R.string.error_account_blocked),
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 } else {

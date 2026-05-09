@@ -298,13 +298,13 @@ fun StatsSection(
         StatItem(
             label = stringResource(R.string.stat_followers),
             value = followersCount,
-            onClick = { onStatClick("Seguidores") }
+            onClick = { onStatClick("followers") }
         )
 
         StatItem(
             label = stringResource(R.string.stat_following),
             value = followingCount,
-            onClick = { onStatClick("Siguiendo") }
+            onClick = { onStatClick("following") }
         )
     }
 }

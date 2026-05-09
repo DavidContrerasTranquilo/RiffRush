@@ -174,7 +174,7 @@ class AuthRepository(
     }
 
     suspend fun getSocialList(uid: String, type: String): List<FriendModel> {
-        val collectionName = if (type == "Seguidores") "followers" else "following"
+        val collectionName = if (type == "followers") "followers" else "following"
         return try {
             val snapshot = firestore.collection("users").document(uid)
                 .collection(collectionName).get().await()

@@ -86,8 +86,8 @@ class AuthViewModel(
         viewModelScope.launch {
             try {
                 _songsCount.value = repository.getUserSongsCount()
-                val followersList = repository.getSocialList(uid, "Seguidores")
-                val followingList = repository.getSocialList(uid, "Siguiendo")
+                val followersList = repository.getSocialList(uid, "followers")
+                val followingList = repository.getSocialList(uid, "following")
 
                 _followers.value = followersList.map { it.uid }
                 _following.value = followingList.map { it.uid }

@@ -55,7 +55,7 @@ fun SocialListScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(type) },
+                title = { Text(if (type == "followers") stringResource(R.string.stat_followers) else stringResource(R.string.stat_following)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.btn_back))
@@ -107,7 +107,7 @@ fun SocialListScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                val emptyMessage = if (type == "Seguidores") {
+                val emptyMessage = if (type == "followers") {
                     stringResource(R.string.msg_no_followers)
                 } else {
                     stringResource(R.string.msg_no_following)
