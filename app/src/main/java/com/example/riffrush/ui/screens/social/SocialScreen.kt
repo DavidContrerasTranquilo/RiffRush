@@ -312,7 +312,7 @@ fun SocialScreen(
                     Text("${challenge.fromName} te ha retado a jugar en ${challenge.playlist}")
                 },
                 confirmButton = {
-                    TextButton(onClick = { matchViewModel.acceptChallenge(challenge.challengeId) }) {
+                    TextButton(onClick = { matchViewModel.acceptChallenge(challenge) }) {
                         Text("Aceptar")
                     }
                 },

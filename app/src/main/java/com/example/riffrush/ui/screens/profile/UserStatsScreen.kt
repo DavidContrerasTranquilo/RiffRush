@@ -49,6 +49,10 @@ import com.example.riffrush.R
 import com.example.riffrush.data.model.FriendModel
 import com.example.riffrush.viewmodels.AuthViewModel
 import org.koin.androidx.compose.koinViewModel
+import com.example.riffrush.ui.theme.getAppThemeColors
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.TopAppBarDefaults
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,21 +76,36 @@ fun UserStatsScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.title_stats)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.btn_back)
-                        )
+    val colors = getAppThemeColors()
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.background)
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    windowInsets = WindowInsets(0.dp),
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = colors.topBarText,
+                        navigationIconContentColor = colors.topBarText
+                    ),
+                    title = { Text(stringResource(R.string.title_stats), color = colors.topBarText) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.btn_back),
+                                tint = colors.topBarText
+                            )
+                        }
                     }
-                }
-            )
-        }
-    ) { padding ->
+                )
+            }
+        ) { padding ->
         selectedUser?.let { user ->
             Column(
                 modifier = Modifier
@@ -149,6 +168,7 @@ fun UserStatsScreen(
             }
         }
     }
+}
 }
 
 @Composable

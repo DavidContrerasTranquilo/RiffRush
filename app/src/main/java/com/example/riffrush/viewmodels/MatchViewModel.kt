@@ -13,7 +13,7 @@ import com.example.riffrush.data.model.MatchmakingUiState
 import com.example.riffrush.data.model.RoundResultModel
 import com.example.riffrush.data.model.Song
 import com.example.riffrush.data.player.MusicPlayer
-import com.example.riffrush.data.repository.DeezerApi
+import com.example.riffrush.data.repository.DeezerRepository
 import com.example.riffrush.data.repository.FirebaseRepository
 import com.example.riffrush.data.repository.MatchRepository
 import com.google.firebase.firestore.FirebaseFirestore
@@ -30,7 +30,7 @@ class MatchViewModel(
     private val context: Context,
     private val repository: MatchRepository,
     private val firebaseRepository: FirebaseRepository,
-    private val deezerApi: DeezerApi,
+    private val deezerRepository: DeezerRepository,
     private val musicPlayer: MusicPlayer
 ) : ViewModel() {
 
@@ -366,16 +366,8 @@ class MatchViewModel(
     private fun loadSongs(ids: List<Long>, onComplete: () -> Unit = {}) {
         viewModelScope.launch {
             try {
-                val loadedSongs = ids.map { id ->
-                    val track = deezerApi.getTrack(id)
-                    Song(
-                        id = track.id,
-                        title = track.title ?: context.getString(R.string.default_song_title),
-                        artist = track.artist?.name ?: context.getString(R.string.default_artist_name),
-                        album = track.album?.title ?: context.getString(R.string.default_album_name),
-                        preview = track.preview ?: "",
-                        cover = track.album?.covermedium ?: ""
-                    )
+                val loadedSongs = ids.mapNotNull { id ->
+                    deezerRepository.getSong(id)
                 }
                 _songs.value = loadedSongs
                 _isLoading.value = false
@@ -534,6 +526,23 @@ class MatchViewModel(
         musicPlayer.release()
     }
 
+    private suspend fun getDeezerPlaylistIds(category: String): List<Long> {
+        val playlistId = when (category.uppercase()) {
+            "REGGAETON" -> 789123393L
+            "RAP FRANCÉS" -> 1071669561L
+            "ROCK ESPAÑOL" -> 1123572933L
+            "TOP 50 ESPAÑA" -> 1116190041L
+            else -> 789123393L // Fallback to Reggaeton
+        }
+        val tracks = deezerRepository.getPlaylistTracks(playlistId)
+        val validTracks = tracks.filter { it.preview.isNotBlank() }
+        if (validTracks.size >= 5) {
+            return validTracks.shuffled().take(5).map { it.id }
+        }
+        // Fallback hardcoded list just in case Deezer API fails
+        return listOf(1109152L, 2109522L, 3109522L, 4109522L, 5109522L)
+    }
+
     fun startOfflineMode(category: String) {
         _isLoading.value = true
         _error.value = null
@@ -546,7 +555,8 @@ class MatchViewModel(
 
         viewModelScope.launch {
             try {
-                val offlineMatch = repository.getOfflineMatch(category).copy(
+                val songIds = getDeezerPlaylistIds(category)
+                val offlineMatch = repository.getOfflineMatch(category, songIds).copy(
                     currentRound = 0
                 )
 
@@ -581,7 +591,8 @@ class MatchViewModel(
 
         viewModelScope.launch {
             try {
-                when (val result = repository.joinMatchmaking(playlist)) {
+                val songIds = getDeezerPlaylistIds(playlist)
+                when (val result = repository.joinMatchmaking(playlist, songIds)) {
                     is MatchmakingResult.Matched -> {
                         _matchmakingState.value = MatchmakingUiState.Matched(result.matchId)
                         listenToMatch(result.matchId)
@@ -821,10 +832,11 @@ class MatchViewModel(
         }
     }
 
-    fun acceptChallenge(challengeId: String) {
+    fun acceptChallenge(challenge: ChallengeModel) {
         viewModelScope.launch {
             try {
-                val matchId = repository.acceptChallenge(challengeId)
+                val songIds = getDeezerPlaylistIds(challenge.playlist)
+                val matchId = repository.acceptChallenge(challenge.challengeId, songIds)
                 listenToMatch(matchId)
             } catch (e: Exception) {
                 _error.value = context.getString(R.string.error_create_match, e.message)

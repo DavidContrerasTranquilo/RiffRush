@@ -14,6 +14,9 @@ interface DeezerApi {
 
     @GET("track/{id}")
     suspend fun getTrack(@Path("id") trackId: Long): DeezerTrack
+
+    @GET("playlist/{id}")
+    suspend fun getPlaylistTracks(@Path("id") playlistId: Long): DeezerPlaylistResponse
 }
 
 // Clases de respuesta para el parseo de JSON
@@ -22,6 +25,10 @@ data class DeezerSearchResponse(
 )
 
 data class DeezerChartResponse(
+    val tracks: DeezerTrackData
+)
+
+data class DeezerPlaylistResponse(
     val tracks: DeezerTrackData
 )
 

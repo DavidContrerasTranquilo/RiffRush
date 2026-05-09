@@ -39,6 +39,18 @@ class DeezerRepository(private val api: DeezerApi) {
         }
     }
 
+    suspend fun getPlaylistTracks(playlistId: Long): List<Song> {
+        return try {
+            val response = api.getPlaylistTracks(playlistId)
+            response.tracks.data.map { item ->
+                item.toSong()
+            }
+        } catch (e: Exception) {
+            Log.e("DeezerRepository", "Error loading playlist tracks for id: $playlistId", e)
+            emptyList()
+        }
+    }
+
     private fun DeezerTrack.toSong(): Song {
         return Song(
             id = id,

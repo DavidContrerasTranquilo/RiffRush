@@ -71,39 +71,7 @@ import com.example.riffrush.viewmodels.MatchViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
-data class MatchThemeColors(
-    val background: Brush,
-    val topBarText: Color,
-    val cardBg: Color,
-    val cardBorder: Color,
-    val textMain: Color,
-    val textMuted: Color,
-    val accentPrimary: Color,
-    val accentSecondary: Color,
-    val buttonBg: Color,
-    val buttonText: Color,
-    val vinylBg: Brush
-)
-
-@Composable
-fun getMatchThemeColors(): MatchThemeColors {
-    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
-    return MatchThemeColors(
-        background = if (isDark) Brush.verticalGradient(listOf(Color(0xFF0F0C29), Color(0xFF302B63), Color(0xFF24243E))) 
-                     else Brush.verticalGradient(listOf(Color(0xFFF8FAFC), Color(0xFFE2E8F0), Color(0xFFCBD5E1))),
-        topBarText = if (isDark) Color.White else Color(0xFF1E293B),
-        cardBg = if (isDark) Color.White.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.6f),
-        cardBorder = if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.05f),
-        textMain = if (isDark) Color.White else Color(0xFF0F172A),
-        textMuted = if (isDark) Color.White.copy(alpha = 0.7f) else Color(0xFF475569),
-        accentPrimary = if (isDark) Color(0xFF00FFCC) else Color(0xFF0EA5E9),
-        accentSecondary = if (isDark) Color(0xFFFF007A) else Color(0xFFE11D48),
-        buttonBg = if (isDark) Color.White.copy(alpha = 0.08f) else Color.White,
-        buttonText = if (isDark) Color.White else Color(0xFF1E293B),
-        vinylBg = if (isDark) Brush.radialGradient(listOf(Color(0xFF2C2C3E), Color(0xFF12121B)))
-                  else Brush.radialGradient(listOf(Color(0xFF334155), Color(0xFF0F172A)))
-    )
-}
+import com.example.riffrush.ui.theme.getAppThemeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,7 +90,7 @@ fun MatchScreen(
     val showResult by viewModel.showAnswerResult.collectAsState()
     val isCorrect by viewModel.lastAnswerCorrect.collectAsState()
 
-    val colors = getMatchThemeColors()
+    val colors = getAppThemeColors()
 
     LaunchedEffect(matchId) {
         if (matchId.startsWith("offline_")) {
@@ -313,7 +281,7 @@ fun MatchScreen(
 }
 
 @Composable
-fun LoadingView(colors: MatchThemeColors) {
+fun LoadingView(colors: com.example.riffrush.ui.theme.AppThemeColors) {
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -334,7 +302,7 @@ fun LoadingView(colors: MatchThemeColors) {
 }
 
 @Composable
-fun WaitingOpponentView(colors: MatchThemeColors) {
+fun WaitingOpponentView(colors: com.example.riffrush.ui.theme.AppThemeColors) {
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -377,7 +345,7 @@ fun GameView(
     onPlayer2Click: () -> Unit,
     musicPlayer: MusicPlayer,
     timerDuration: Long,
-    colors: MatchThemeColors
+    colors: com.example.riffrush.ui.theme.AppThemeColors
 ) {
     val options = remember(song) {
         val wrongOptions = allSongs
@@ -546,7 +514,7 @@ fun ScoreBoard(
     scoreP2: Int,
     onPlayer1Click: () -> Unit,
     onPlayer2Click: () -> Unit,
-    colors: MatchThemeColors
+    colors: com.example.riffrush.ui.theme.AppThemeColors
 ) {
     Row(
         modifier = Modifier
@@ -615,7 +583,7 @@ fun ResultView(
     opponentLostConnection: Boolean = false,
     iLostConnection: Boolean = false,
     iWinByEndReason: Boolean = false,
-    colors: MatchThemeColors
+    colors: com.example.riffrush.ui.theme.AppThemeColors
 ) {
     val currentPlayerId = viewModel.getCurrentPlayerId()
     val currentMatch = viewModel.currentMatch.collectAsState().value

@@ -30,32 +30,6 @@ class MatchRepository(
     private val queueRef: DatabaseReference = database.getReference("matchmaking_queue")
     private val challengesRef: DatabaseReference = database.getReference("challenges")
 
-    private val playlists = mapOf(
-        "REGGAETON" to listOf(
-            2223276187L, 143781198L, 3776310102L, 2758436071L, 3498392331L,
-            3104740891L, 857827232L, 731498882L, 3179773841L, 1759650657L,
-            3298075621L, 3276167871L, 2473410281L, 3422751531L, 1704442217L,
-            2322228845L, 2074439067L
-        ),
-        "RAP FRANCÉS" to listOf(
-            600107922L, 122927610L, 132950108L, 783256992L, 3055454281L,
-            429975052L, 823093212L, 3242688291L, 450100912L, 132123630L,
-            1555328112L, 3023399701L, 2892578472L, 106095086L, 2781673612L,
-            1426733732L, 519797812L, 519797762L
-        ),
-        "ROCK ESPAÑOL" to listOf(
-            707777L, 778608L, 9943121L, 3234733081L, 2935686241L,
-            988453L, 11746766L, 778615L, 3241426491L, 3912803111L,
-            3234733041L, 7701507L, 14645355L, 3539198461L, 3092625L,
-            7701520L, 3539198321L, 3234306461L, 2471353181L, 4738765L
-        ),
-        "TOP 50 ESPAÑA" to listOf(
-            3947383241L, 3852034981L, 37027991L, 3843020331L, 3733293352L,
-            3677908682L, 3911872941L, 3852034871L, 3380325281L, 3776310102L,
-            3852034971L, 3613707422L, 3241972661L, 3640310582L, 3856864621L,
-            3407512021L, 3640140952L, 3171002981L
-        )
-    )
 
     suspend fun createMatch(match: MatchModel) {
         if (match.matchId == "offline_test_id") return
@@ -82,10 +56,7 @@ class MatchRepository(
         matchesRef.child(matchId).child("status").setValue(status.name).await()
     }
 
-    fun getOfflineMatch(category: String): MatchModel {
-        val fullList = playlists[category] ?: playlists["REGGAETON"]!!
-        val randomSelection = fullList.shuffled().take(5)
-
+    fun getOfflineMatch(category: String, songIds: List<Long>): MatchModel {
         return MatchModel(
             matchId = "offline_${category.lowercase()}",
             player1Id = getCurrentUserId(),
@@ -93,7 +64,7 @@ class MatchRepository(
             player1Name = "Tú",
             player2Name = "Bot",
             status = MatchStatus.PLAYING,
-            staticSongList = randomSelection,
+            staticSongList = songIds,
             currentRound = 0,
             scoreP1 = 0,
             scoreP2 = 0,
@@ -112,11 +83,9 @@ class MatchRepository(
         player1Name: String,
         player2Id: String,
         player2Name: String,
-        playlist: String
+        playlist: String,
+        songIds: List<Long>
     ): MatchModel {
-        val songIds = (playlists[playlist] ?: playlists["REGGAETON"].orEmpty())
-            .shuffled()
-            .take(5)
 
         return MatchModel(
             matchId = matchId,
@@ -137,7 +106,7 @@ class MatchRepository(
         )
     }
 
-    suspend fun joinMatchmaking(playlist: String): MatchmakingResult {
+    suspend fun joinMatchmaking(playlist: String, songIds: List<Long>): MatchmakingResult {
         val playerId = playerIdentityManager.getPlayerId()
         val playerName = playerIdentityManager.getPlayerName()
         val isGuest = playerIdentityManager.isGuest()
@@ -161,7 +130,8 @@ class MatchRepository(
                 player1Name = rivalPlayerName,
                 player2Id = playerId,
                 player2Name = playerName,
-                playlist = playlist
+                playlist = playlist,
+                songIds = songIds
             )
 
             matchesRef.child(matchId).setValue(match).await()
@@ -415,7 +385,7 @@ class MatchRepository(
         awaitClose { challengesRef.removeEventListener(listener) }
     }
 
-    suspend fun acceptChallenge(challengeId: String): String {
+    suspend fun acceptChallenge(challengeId: String, songIds: List<Long>): String {
         val snapshot = challengesRef.child(challengeId).get().await()
         val challenge = snapshot.getValue(ChallengeModel::class.java)
             ?: throw Exception("Challenge not found")
@@ -428,7 +398,8 @@ class MatchRepository(
             player1Name = challenge.fromName,
             player2Id = challenge.toUid,
             player2Name = challenge.toName,
-            playlist = challenge.playlist
+            playlist = challenge.playlist,
+            songIds = songIds
         )
 
         matchesRef.child(matchId).setValue(match).await()
