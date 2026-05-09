@@ -1,6 +1,7 @@
 package com.example.riffrush.data.repository
 
 import com.example.riffrush.data.local.PlayerIdentityManager
+import com.example.riffrush.data.model.ChallengeModel
 import com.example.riffrush.data.model.MatchModel
 import com.example.riffrush.data.model.MatchStatus
 import com.example.riffrush.data.model.MatchmakingQueueEntry
@@ -27,6 +28,7 @@ class MatchRepository(
 ) {
     private val matchesRef: DatabaseReference = database.getReference("matches")
     private val queueRef: DatabaseReference = database.getReference("matchmaking_queue")
+    private val challengesRef: DatabaseReference = database.getReference("challenges")
 
     private val playlists = mapOf(
         "REGGAETON" to listOf(
@@ -386,5 +388,78 @@ class MatchRepository(
                 }
             }
         })
+    }
+
+    // ── Challenge System ──
+
+    suspend fun createChallenge(challenge: ChallengeModel) {
+        challengesRef.child(challenge.challengeId).setValue(challenge).await()
+    }
+
+    fun listenToIncomingChallenges(myUid: String): Flow<List<ChallengeModel>> = callbackFlow {
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val challenges = snapshot.children.mapNotNull {
+                    it.getValue(ChallengeModel::class.java)
+                }.filter {
+                    it.toUid == myUid && it.status == "PENDING"
+                }
+                trySend(challenges)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                close(error.toException())
+            }
+        }
+        challengesRef.orderByChild("toUid").equalTo(myUid).addValueEventListener(listener)
+        awaitClose { challengesRef.removeEventListener(listener) }
+    }
+
+    suspend fun acceptChallenge(challengeId: String): String {
+        val snapshot = challengesRef.child(challengeId).get().await()
+        val challenge = snapshot.getValue(ChallengeModel::class.java)
+            ?: throw Exception("Challenge not found")
+
+        val matchId = matchesRef.push().key ?: throw Exception("Could not create match ID")
+
+        val match = buildMatch(
+            matchId = matchId,
+            player1Id = challenge.fromUid,
+            player1Name = challenge.fromName,
+            player2Id = challenge.toUid,
+            player2Name = challenge.toName,
+            playlist = challenge.playlist
+        )
+
+        matchesRef.child(matchId).setValue(match).await()
+
+        challengesRef.child(challengeId).updateChildren(
+            mapOf("status" to "ACCEPTED", "matchId" to matchId)
+        ).await()
+
+        return matchId
+    }
+
+    suspend fun declineChallenge(challengeId: String) {
+        challengesRef.child(challengeId).child("status").setValue("DECLINED").await()
+    }
+
+    fun listenToChallenge(challengeId: String): Flow<ChallengeModel?> = callbackFlow {
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                trySend(snapshot.getValue(ChallengeModel::class.java))
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                close(error.toException())
+            }
+        }
+        val ref = challengesRef.child(challengeId)
+        ref.addValueEventListener(listener)
+        awaitClose { ref.removeEventListener(listener) }
+    }
+
+    suspend fun cleanupChallenge(challengeId: String) {
+        challengesRef.child(challengeId).removeValue().await()
     }
 }

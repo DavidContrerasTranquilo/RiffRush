@@ -47,6 +47,13 @@ import com.example.riffrush.viewmodels.AuthViewModel
 import com.example.riffrush.viewmodels.MatchViewModel
 import org.koin.androidx.compose.koinViewModel
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxWidth
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SocialScreen(
@@ -65,6 +72,11 @@ fun SocialScreen(
 
     var query by remember { mutableStateOf("") }
     var selectedTab by remember { mutableIntStateOf(0) }
+
+    val incomingChallenges by matchViewModel.incomingChallenges.collectAsState()
+    val sentChallenge by matchViewModel.sentChallengeState.collectAsState()
+    
+    var selectedUserForChallenge by remember { mutableStateOf<FriendModel?>(null) }
 
     val isSearching = query.isNotBlank()
 
@@ -90,12 +102,27 @@ fun SocialScreen(
     LaunchedEffect(Unit) {
         authViewModel.loadAllUsers()
         authViewModel.loadUserStats()
+        matchViewModel.startListeningChallenges()
     }
 
     LaunchedEffect(uiMessage) {
         uiMessage?.let {
             snackbarHostState.showSnackbar(it)
             authViewModel.clearMessage()
+        }
+    }
+
+    val currentMatch by matchViewModel.currentMatch.collectAsState()
+    var hasNavigatedToMatch by remember { mutableStateOf<String?>(null) }
+    
+    LaunchedEffect(currentMatch) {
+        currentMatch?.let {
+            if ((it.status == com.example.riffrush.data.model.MatchStatus.WAITING || 
+                 it.status == com.example.riffrush.data.model.MatchStatus.PLAYING) && 
+                 hasNavigatedToMatch != it.matchId) {
+                hasNavigatedToMatch = it.matchId
+                onNavigateToMatch(it.matchId)
+            }
         }
     }
 
@@ -183,7 +210,7 @@ fun SocialScreen(
                             onUserClick = onNavigateToUserStats,
                             onFollowClick = { user -> authViewModel.addFriend(user) },
                             onMatchClick = { user ->
-                                matchViewModel.startMatchmaking(user.uid)
+                                selectedUserForChallenge = user
                             }
                         )
                     }
@@ -196,7 +223,7 @@ fun SocialScreen(
                             onUserClick = onNavigateToUserStats,
                             onFollowClick = { user -> authViewModel.addFriend(user) },
                             onMatchClick = { user ->
-                                matchViewModel.startMatchmaking(user.uid)
+                                selectedUserForChallenge = user
                             }
                         )
                     }
@@ -209,12 +236,92 @@ fun SocialScreen(
                             onUserClick = onNavigateToUserStats,
                             onFollowClick = { user -> authViewModel.addFriend(user) },
                             onMatchClick = { user ->
-                                matchViewModel.startMatchmaking(user.uid)
+                                selectedUserForChallenge = user
                             }
                         )
                     }
                 }
             }
+        }
+        
+        // --- DIALOGS ---
+
+        // 1. Selector de Playlist
+        if (selectedUserForChallenge != null) {
+            AlertDialog(
+                onDismissRequest = { selectedUserForChallenge = null },
+                title = { Text("Elegir Playlist") },
+                text = {
+                    Column {
+                        Text("Retando a ${selectedUserForChallenge?.name}")
+                        Spacer(modifier = Modifier.height(16.dp))
+                        val playlists = listOf("REGGAETON", "RAP FRANCÉS", "ROCK ESPAÑOL", "TOP 50 ESPAÑA")
+                        playlists.forEach { playlist ->
+                            Text(
+                                text = playlist,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        matchViewModel.sendChallenge(
+                                            toUid = selectedUserForChallenge!!.uid,
+                                            toName = selectedUserForChallenge!!.name,
+                                            playlist = playlist
+                                        )
+                                        selectedUserForChallenge = null
+                                    }
+                                    .padding(12.dp)
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { selectedUserForChallenge = null }) {
+                        Text(stringResource(R.string.btn_cancel))
+                    }
+                }
+            )
+        }
+
+        // 2. Esperando respuesta
+        if (sentChallenge != null) {
+            AlertDialog(
+                onDismissRequest = { },
+                title = { Text("Esperando respuesta...") },
+                text = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                        Text("Esperando a que ${sentChallenge?.toName} acepte...")
+                        Spacer(modifier = Modifier.height(16.dp))
+                        CircularProgressIndicator()
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { matchViewModel.cancelSentChallenge() }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
+        }
+
+        // 3. Retos entrantes
+        if (incomingChallenges.isNotEmpty()) {
+            val challenge = incomingChallenges.first()
+            AlertDialog(
+                onDismissRequest = { matchViewModel.declineChallenge(challenge.challengeId) },
+                title = { Text("¡Nuevo Reto!") },
+                text = {
+                    Text("${challenge.fromName} te ha retado a jugar en ${challenge.playlist}")
+                },
+                confirmButton = {
+                    TextButton(onClick = { matchViewModel.acceptChallenge(challenge.challengeId) }) {
+                        Text("Aceptar")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { matchViewModel.declineChallenge(challenge.challengeId) }) {
+                        Text("Rechazar")
+                    }
+                }
+            )
         }
     }
 }

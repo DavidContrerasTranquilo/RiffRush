@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.riffrush.data.model.MatchHistoryModel
 import com.example.riffrush.data.model.MatchModel
 import com.example.riffrush.data.model.MatchStatus
+import com.example.riffrush.data.model.ChallengeModel
 import com.example.riffrush.data.model.MatchmakingResult
 import com.example.riffrush.data.model.MatchmakingUiState
 import com.example.riffrush.data.model.RoundResultModel
@@ -68,6 +69,16 @@ class MatchViewModel(
     private var disconnectWatcherJob: Job? = null
     private var presenceMatchId: String? = null
     private var watcherMatchId: String? = null
+
+    // ── Challenge System ──
+    private val _incomingChallenges = MutableStateFlow<List<ChallengeModel>>(emptyList())
+    val incomingChallenges: StateFlow<List<ChallengeModel>> = _incomingChallenges
+
+    private val _sentChallengeState = MutableStateFlow<ChallengeModel?>(null)
+    val sentChallengeState: StateFlow<ChallengeModel?> = _sentChallengeState
+
+    private var challengeListenerJob: Job? = null
+    private var sentChallengeJob: Job? = null
     fun startMatchmaking(opponentId: String) {
         _isLoading.value = true
         _error.value = null
@@ -744,6 +755,101 @@ class MatchViewModel(
                     break
                 }
             }
+        }
+    }
+
+    // ── Challenge Methods ──
+
+    fun startListeningChallenges() {
+        val myUid = repository.getCurrentUserId()
+        if (myUid.isBlank()) return
+        challengeListenerJob?.cancel()
+        challengeListenerJob = viewModelScope.launch {
+            repository.listenToIncomingChallenges(myUid).collect { challenges ->
+                _incomingChallenges.value = challenges
+            }
+        }
+    }
+
+    fun sendChallenge(
+        toUid: String,
+        toName: String,
+        playlist: String
+    ) {
+        viewModelScope.launch {
+            try {
+                val myUid = repository.getCurrentUserId()
+                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                val myDoc = firestore.collection("users").document(myUid).get().await()
+                val myName = myDoc.getString("name")
+                    ?: myDoc.getString("username")
+                    ?: context.getString(R.string.default_player_name)
+                val myPfp = myDoc.getString("pfpUrl") ?: ""
+
+                val challengeId = java.util.UUID.randomUUID().toString()
+                val challenge = ChallengeModel(
+                    challengeId = challengeId,
+                    fromUid = myUid,
+                    fromName = myName,
+                    fromPfpUrl = myPfp,
+                    toUid = toUid,
+                    toName = toName,
+                    playlist = playlist
+                )
+
+                repository.createChallenge(challenge)
+
+                // Listen for acceptance
+                sentChallengeJob?.cancel()
+                sentChallengeJob = viewModelScope.launch {
+                    repository.listenToChallenge(challengeId).collect { updated ->
+                        _sentChallengeState.value = updated
+                        if (updated?.status == "ACCEPTED" && updated.matchId != null) {
+                            listenToMatch(updated.matchId!!)
+                            _sentChallengeState.value = null
+                            sentChallengeJob?.cancel()
+                        } else if (updated?.status == "DECLINED") {
+                            repository.cleanupChallenge(challengeId)
+                            _sentChallengeState.value = null
+                            sentChallengeJob?.cancel()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                _error.value = context.getString(R.string.error_create_match, e.message)
+            }
+        }
+    }
+
+    fun acceptChallenge(challengeId: String) {
+        viewModelScope.launch {
+            try {
+                val matchId = repository.acceptChallenge(challengeId)
+                listenToMatch(matchId)
+            } catch (e: Exception) {
+                _error.value = context.getString(R.string.error_create_match, e.message)
+            }
+        }
+    }
+
+    fun declineChallenge(challengeId: String) {
+        viewModelScope.launch {
+            try {
+                repository.declineChallenge(challengeId)
+            } catch (_: Exception) {}
+        }
+    }
+
+    fun cancelSentChallenge() {
+        viewModelScope.launch {
+            val challenge = _sentChallengeState.value
+            if (challenge != null) {
+                try {
+                    repository.cleanupChallenge(challenge.challengeId)
+                } catch (_: Exception) {}
+            }
+            sentChallengeJob?.cancel()
+            _sentChallengeState.value = null
         }
     }
 }
