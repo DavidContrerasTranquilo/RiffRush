@@ -143,10 +143,7 @@ class MusicViewModel(
                 if (freshSong != null && freshSong.preview.isNotBlank()) {
                     url = freshSong.preview
 
-                    if (isLoggedIn()) {
-                        firebaseRepository.addFavorite(getOwnerId(), freshSong)
-                    }
-
+                    // We only want to update the local cached song info, NOT automatically add it to favorites!
                     val currentFavs = _favoriteSongs.value.toMutableList()
                     val index = currentFavs.indexOfFirst { it.id == freshSong.id }
 

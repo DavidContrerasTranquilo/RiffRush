@@ -3,6 +3,7 @@ package com.example.riffrush.data.repository
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
+import com.google.gson.annotations.SerializedName
 
 interface DeezerApi {
     @GET("search")
@@ -42,5 +43,5 @@ data class DeezerArtist(
 
 data class DeezerAlbum(
     val title: String?,
-    val covermedium: String?
+    @SerializedName("cover_medium") val covermedium: String?
 )
