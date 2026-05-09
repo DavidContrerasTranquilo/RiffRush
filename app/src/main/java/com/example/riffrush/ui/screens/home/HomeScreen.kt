@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -95,6 +96,18 @@ fun HomeScreen(
         onlineValue = "TOP 50 ESPAÑA",
         offlineRouteSuffix = "top_50_espana"
     )
+
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+
+    // Colores adaptados a dark mode
+    val cardPlaylistBg = if (isDark) Color(0xFF2D1B4E) else Color(0xFFF3E5F5)
+    val cardPlaylistLabel = if (isDark) Color(0xFFCE93D8) else Color(0xFF7B1FA2)
+    val btnPlaylistBg = if (isDark) Color(0xFF7B1FA2) else Color(0xFF7B1FA2)
+
+    val colorReggaeton = if (isDark) Color(0xFF5D2A3B) else Color(0xFFF8BBD0)
+    val colorRapFrances = if (isDark) Color(0xFF1E3A5F) else Color(0xFFBBDEFB)
+    val colorRockEspanol = if (isDark) Color(0xFF5C3D1E) else Color(0xFFFFE0B2)
+    val colorTop50 = if (isDark) Color(0xFF1E4D2B) else Color(0xFFC8E6C9)
 
     LaunchedEffect(Unit) {
         authViewModel.loadModerationState()
@@ -171,13 +184,13 @@ fun HomeScreen(
                 Card(
                     shape = RoundedCornerShape(20.dp),
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF3E5F5))
+                    colors = CardDefaults.cardColors(containerColor = cardPlaylistBg)
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
                             text = stringResource(R.string.home_playlist_of_day_label),
                             style = MaterialTheme.typography.labelLarge,
-                            color = Color(0xFF7B1FA2)
+                            color = cardPlaylistLabel
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -215,7 +228,7 @@ fun HomeScreen(
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF7B1FA2)
+                                containerColor = btnPlaylistBg
                             )
                         ) {
                             Text(stringResource(R.string.btn_play_favorites))
@@ -239,7 +252,7 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    QuickButton(reggaeton.displayName, Color(0xFFF8BBD0)) {
+                    QuickButton(reggaeton.displayName, colorReggaeton) {
                         if (isBlocked) {
                             Toast.makeText(
                                 context,
@@ -251,7 +264,7 @@ fun HomeScreen(
                         }
                     }
 
-                    QuickButton(rapFrances.displayName, Color(0xFFBBDEFB)) {
+                    QuickButton(rapFrances.displayName, colorRapFrances) {
                         if (isBlocked) {
                             Toast.makeText(
                                 context,
@@ -270,7 +283,7 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    QuickButton(rockEspanol.displayName, Color(0xFFFFE0B2)) {
+                    QuickButton(rockEspanol.displayName, colorRockEspanol) {
                         if (isBlocked) {
                             Toast.makeText(
                                 context,
@@ -282,7 +295,7 @@ fun HomeScreen(
                         }
                     }
 
-                    QuickButton(top50Espana.displayName, Color(0xFFC8E6C9)) {
+                    QuickButton(top50Espana.displayName, colorTop50) {
                         if (isBlocked) {
                             Toast.makeText(
                                 context,
@@ -431,6 +444,7 @@ fun RowScope.QuickButton(
             .weight(1f)
             .height(90.dp),
         color = color,
+        contentColor = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) Color.White else Color.Black,
         shape = RoundedCornerShape(16.dp),
         onClick = onClick
     ) {
