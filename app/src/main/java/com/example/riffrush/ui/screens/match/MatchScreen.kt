@@ -41,10 +41,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.riffrush.R
 import com.example.riffrush.data.model.MatchStatus
 import com.example.riffrush.data.model.RoundResultModel
 import com.example.riffrush.data.model.Song
@@ -93,7 +95,7 @@ fun MatchScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("DUELO 1VS1", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.title_match_1vs1), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(
                         onClick = {
@@ -101,7 +103,7 @@ fun MatchScreen(
                             onExit()
                         }
                     ) {
-                        Icon(Icons.Default.Close, contentDescription = "Salir")
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.content_desc_exit))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -136,18 +138,18 @@ fun MatchScreen(
                                 val isOffline = currentMatch.matchId.startsWith("offline")
 
                                 val rawPlayer1Name = currentMatch.player1Name.ifBlank {
-                                    if (isOffline) "Tú" else "Invitado"
+                                    if (isOffline) stringResource(R.string.label_you) else stringResource(R.string.default_username_guest)
                                 }
 
                                 val rawPlayer2Name = currentMatch.player2Name.ifBlank {
-                                    if (isOffline) "Bot" else "Invitado"
+                                    if (isOffline) stringResource(R.string.label_bot) else stringResource(R.string.default_username_guest)
                                 }
 
                                 val player1DisplayName =
-                                    if (amIPlayer1 && !isOffline) "$rawPlayer1Name (Tú)" else rawPlayer1Name
+                                    if (amIPlayer1 && !isOffline) stringResource(R.string.label_player_you, rawPlayer1Name) else rawPlayer1Name
 
                                 val player2DisplayName =
-                                    if (!amIPlayer1 && !isOffline) "$rawPlayer2Name (Tú)" else rawPlayer2Name
+                                    if (!amIPlayer1 && !isOffline) stringResource(R.string.label_player_you, rawPlayer2Name) else rawPlayer2Name
 
                                 val hasAnswered = if (isOffline) {
                                     false
@@ -190,17 +192,17 @@ fun MatchScreen(
                             val isOffline = currentMatch.matchId.startsWith("offline")
 
                             val rawPlayer1Name = currentMatch.player1Name.ifBlank {
-                                if (isOffline) "Tú" else "Invitado"
+                                if (isOffline) stringResource(R.string.label_you) else stringResource(R.string.default_username_guest)
                             }
 
                             val rawPlayer2Name = currentMatch.player2Name.ifBlank {
-                                if (isOffline) "Bot" else "Invitado"
+                                if (isOffline) stringResource(R.string.label_bot) else stringResource(R.string.default_username_guest)
                             }
 
                             val player1DisplayName =
-                                if (amIPlayer1 && !isOffline) "$rawPlayer1Name (Tú)" else rawPlayer1Name
+                                if (amIPlayer1 && !isOffline) stringResource(R.string.label_player_you, rawPlayer1Name) else rawPlayer1Name
                             val player2DisplayName =
-                                if (!amIPlayer1 && !isOffline) "$rawPlayer2Name (Tú)" else rawPlayer2Name
+                                if (!amIPlayer1 && !isOffline) stringResource(R.string.label_player_you, rawPlayer2Name) else rawPlayer2Name
 
                             val opponentAbandoned = currentMatch.endReason == "ABANDONED" &&
                                     currentMatch.abandonedBy != currentPlayerId
@@ -259,7 +261,7 @@ fun LoadingView() {
         CircularProgressIndicator(modifier = Modifier.size(64.dp))
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Sintonizando la partida...",
+            text = stringResource(R.string.msg_tuning_match),
             style = MaterialTheme.typography.bodyLarge
         )
     }
@@ -280,11 +282,11 @@ fun WaitingOpponentView() {
         )
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "Esperando al oponente...",
+            text = stringResource(R.string.msg_waiting_opponent),
             style = MaterialTheme.typography.headlineSmall
         )
         Text(
-            text = "La música empezará pronto",
+            text = stringResource(R.string.msg_music_start_soon),
             color = Color.Gray
         )
     }
@@ -341,7 +343,7 @@ fun GameView(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "RONDA $round / 5",
+            text = stringResource(R.string.label_round_progress_5, round),
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )
@@ -380,7 +382,7 @@ fun GameView(
         if (hasAnswered) {
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "Esperando la respuesta del rival...",
+                text = stringResource(R.string.msg_waiting_opponent_answer),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -526,11 +528,11 @@ fun ResultView(
         if (endReason == "ABANDONED") {
             Text(
                 text = if (opponentAbandoned) {
-                    "El rival ha abandonado la partida"
+                    stringResource(R.string.msg_opponent_abandoned)
                 } else if (iAbandoned) {
-                    "Has abandonado la partida"
+                    stringResource(R.string.msg_you_abandoned)
                 } else {
-                    "La partida terminó por abandono"
+                    stringResource(R.string.msg_match_abandoned)
                 },
                 color = MaterialTheme.colorScheme.error,
                 fontWeight = FontWeight.Bold,
@@ -543,11 +545,11 @@ fun ResultView(
         if (endReason == "CONNECTION_LOST") {
             Text(
                 text = if (opponentLostConnection) {
-                    "El rival ha perdido la conexión"
+                    stringResource(R.string.msg_opponent_disconnected)
                 } else if (iLostConnection) {
-                    "Has perdido la conexión"
+                    stringResource(R.string.msg_you_disconnected)
                 } else {
-                    "La conexión se ha perdido"
+                    stringResource(R.string.msg_connection_lost)
                 },
                 color = MaterialTheme.colorScheme.error,
                 fontWeight = FontWeight.Bold,
@@ -559,9 +561,9 @@ fun ResultView(
 
         Text(
             text = when {
-                win -> "¡VICTORIA!"
-                draw -> "¡EMPATE!"
-                else -> "DERROTA..."
+                win -> stringResource(R.string.msg_victory)
+                draw -> stringResource(R.string.msg_draw)
+                else -> stringResource(R.string.msg_defeat)
             },
             fontSize = 48.sp,
             fontWeight = FontWeight.Black,
@@ -585,7 +587,7 @@ fun ResultView(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Resumen de rondas",
+            text = stringResource(R.string.title_rounds_summary),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
@@ -603,12 +605,12 @@ fun ResultView(
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text(
-                            text = "Ronda ${result.round}",
+                            text = stringResource(R.string.label_round_n, result.round),
                             fontWeight = FontWeight.Bold
                         )
 
                         Text(
-                            text = result.songTitle.ifBlank { "Canción ID: desconocida" },
+                            text = result.songTitle.ifBlank { stringResource(R.string.msg_unknown_song_id) },
                             style = MaterialTheme.typography.bodyMedium
                         )
 
@@ -634,7 +636,7 @@ fun ResultView(
                 .fillMaxWidth()
                 .height(56.dp)
         ) {
-            Text("VOLVER AL INICIO")
+            Text(stringResource(R.string.btn_back_to_home))
         }
     }
 }

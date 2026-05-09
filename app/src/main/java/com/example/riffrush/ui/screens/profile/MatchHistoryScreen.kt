@@ -30,8 +30,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.riffrush.R
 import com.example.riffrush.data.model.MatchHistoryModel
 import com.example.riffrush.viewmodels.MatchHistoryViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -56,10 +58,10 @@ fun MatchHistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Historial de partidas") },
+                title = { Text(stringResource(R.string.title_match_history)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.btn_back))
                     }
                 }
             )
@@ -91,7 +93,7 @@ fun MatchHistoryScreen(
                             modifier = Modifier.size(64.dp)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text("No hay partidas registradas todavía")
+                        Text(stringResource(R.string.msg_no_match_history))
                     }
                 }
             }
@@ -116,9 +118,9 @@ fun MatchHistoryScreen(
 @Composable
 fun MatchHistoryItem(item: MatchHistoryModel) {
     val resultText = when (item.result) {
-        "WIN" -> "Victoria"
-        "LOSE" -> "Derrota"
-        "DRAW" -> "Empate"
+        "WIN" -> stringResource(R.string.result_win)
+        "LOSE" -> stringResource(R.string.result_lose)
+        "DRAW" -> stringResource(R.string.result_draw)
         else -> item.result
     }
 
@@ -137,9 +139,9 @@ fun MatchHistoryItem(item: MatchHistoryModel) {
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            Text("Modo: ${item.mode}")
-            Text("Rival: ${item.opponentName.ifBlank { "Desconocido" }}")
-            Text("Resultado: ${item.myScore} - ${item.opponentScore}")
+            Text(stringResource(R.string.label_mode, item.mode))
+            Text(stringResource(R.string.label_opponent, item.opponentName.ifBlank { stringResource(R.string.opponent_unknown) }))
+            Text(stringResource(R.string.label_result_score, item.myScore, item.opponentScore))
             Text(
                 text = dateText,
                 style = MaterialTheme.typography.bodySmall,

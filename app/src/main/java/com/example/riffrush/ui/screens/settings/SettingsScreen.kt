@@ -29,8 +29,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.riffrush.R
 import com.example.riffrush.viewmodels.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -45,12 +47,12 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Configuración") },
+                title = { Text(stringResource(R.string.menu_settings)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Atrás"
+                            contentDescription = stringResource(R.string.btn_back)
                         )
                     }
                 }
@@ -64,44 +66,44 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            SettingsCategory(title = "General")
+            SettingsCategory(title = stringResource(R.string.settings_category_general))
 
             var notificationsEnabled by remember { mutableStateOf(true) }
             ToggleSetting(
-                title = "Notificaciones",
-                subtitle = "Recibir avisos de nuevos lanzamientos",
+                title = stringResource(R.string.setting_notifications),
+                subtitle = stringResource(R.string.setting_notifications_desc),
                 checked = notificationsEnabled,
                 onCheckedChange = { notificationsEnabled = it }
             )
 
             ToggleSetting(
-                title = "Modo Oscuro",
-                subtitle = "Cambiar la apariencia de la app",
+                title = stringResource(R.string.setting_dark_mode),
+                subtitle = stringResource(R.string.setting_dark_mode_desc),
                 checked = darkMode,
                 onCheckedChange = { settingsViewModel.setDarkMode(it) }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-            SettingsCategory(title = "Audio y Calidad")
+            SettingsCategory(title = stringResource(R.string.settings_category_audio))
 
             SettingItem(
-                title = "Calidad de Streaming",
-                subtitle = "Alta (320 kbps)",
+                title = stringResource(R.string.setting_streaming_quality),
+                subtitle = stringResource(R.string.setting_streaming_quality_desc),
                 onClick = { /* Abrir diálogo de selección */ }
             )
 
             SettingItem(
-                title = "Descargas",
-                subtitle = "Solo vía Wi-Fi",
+                title = stringResource(R.string.setting_downloads),
+                subtitle = stringResource(R.string.setting_downloads_desc),
                 onClick = { /* Abrir diálogo */ }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-            SettingsCategory(title = "Privacidad")
+            SettingsCategory(title = stringResource(R.string.title_privacy))
 
             SettingItem(
-                title = "Historial de búsqueda",
-                subtitle = "Borrar historial",
+                title = stringResource(R.string.setting_search_history),
+                subtitle = stringResource(R.string.setting_search_history_desc),
                 onClick = { /* Borrar */ }
             )
 

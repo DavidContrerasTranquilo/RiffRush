@@ -59,8 +59,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.example.riffrush.R
 import com.example.riffrush.data.model.Song
 import com.example.riffrush.ui.components.SongItem
 import com.example.riffrush.viewmodels.MusicViewModel
@@ -133,7 +135,7 @@ fun MusicScreen(
                     ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
+                            contentDescription = stringResource(R.string.btn_back)
                         )
                     }
                 }
@@ -142,7 +144,7 @@ fun MusicScreen(
                     value = query,
                     onValueChange = { query = it },
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text("Buscar canciones...") },
+                    placeholder = { Text(stringResource(R.string.hint_search_songs)) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     singleLine = true,
                     shape = CircleShape,
@@ -165,12 +167,12 @@ fun MusicScreen(
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
-                        text = { Text("Favoritos") }
+                        text = { Text(stringResource(R.string.tab_favorites)) }
                     )
                     Tab(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 },
-                        text = { Text("Playlists") }
+                        text = { Text(stringResource(R.string.tab_playlists)) }
                     )
                 }
             }
@@ -189,7 +191,7 @@ fun MusicScreen(
                             if (currentUser == null || currentUser.isAnonymous) {
                                 android.widget.Toast.makeText(
                                     context,
-                                    "Debes iniciar sesión para guardar canciones en favoritos",
+                                    context.getString(R.string.error_login_required_favorite_song),
                                     android.widget.Toast.LENGTH_SHORT
                                 ).show()
                             } else {
@@ -202,7 +204,7 @@ fun MusicScreen(
                             if (currentUser == null || currentUser.isAnonymous) {
                                 android.widget.Toast.makeText(
                                     context,
-                                    "Debes iniciar sesión para crear playlists",
+                                    context.getString(R.string.error_login_required_create_playlist),
                                     android.widget.Toast.LENGTH_SHORT
                                 ).show()
                             } else {
@@ -223,7 +225,7 @@ fun MusicScreen(
                             if (currentUser == null || currentUser.isAnonymous) {
                                 android.widget.Toast.makeText(
                                     context,
-                                    "Debes iniciar sesión para guardar canciones en favoritos",
+                                    context.getString(R.string.error_login_required_favorite_song),
                                     android.widget.Toast.LENGTH_SHORT
                                 ).show()
                             } else {
@@ -242,7 +244,7 @@ fun MusicScreen(
                             if (currentUser == null || currentUser.isAnonymous) {
                                 android.widget.Toast.makeText(
                                     context,
-                                    "Debes iniciar sesión para crear playlists",
+                                    context.getString(R.string.error_login_required_create_playlist),
                                     android.widget.Toast.LENGTH_SHORT
                                 ).show()
                             } else {
@@ -267,12 +269,12 @@ fun MusicScreen(
                 showCreatePlaylistDialog = false
                 newPlaylistName = ""
             },
-            title = { Text("Crear playlist") },
+            title = { Text(stringResource(R.string.btn_create_playlist)) },
             text = {
                 OutlinedTextField(
                     value = newPlaylistName,
                     onValueChange = { newPlaylistName = it },
-                    label = { Text("Nombre de la playlist") },
+                    label = { Text(stringResource(R.string.label_playlist_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -285,7 +287,7 @@ fun MusicScreen(
                         showCreatePlaylistDialog = false
                     }
                 ) {
-                    Text("Crear")
+                    Text(stringResource(R.string.btn_create))
                 }
             },
             dismissButton = {
@@ -295,7 +297,7 @@ fun MusicScreen(
                         newPlaylistName = ""
                     }
                 ) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         )
@@ -304,17 +306,17 @@ fun MusicScreen(
     songToAddToPlaylist?.let { song ->
         AlertDialog(
             onDismissRequest = { songToAddToPlaylist = null },
-            title = { Text("Añadir a playlist") },
+            title = { Text(stringResource(R.string.dialog_title_add_to_playlist)) },
             text = {
                 if (playlists.isEmpty()) {
-                    Text("No tienes playlists creadas todavía.")
+                    Text(stringResource(R.string.msg_no_playlists_yet))
                 } else {
                     LazyColumn {
                         items(playlists) { playlist ->
                             ListItem(
                                 headlineContent = { Text(playlist.name) },
                                 supportingContent = {
-                                    Text("${playlist.songsCount} canciones")
+                                    Text(stringResource(R.string.msg_songs_count, playlist.songsCount))
                                 },
                                 leadingContent = {
                                     Icon(
@@ -332,7 +334,7 @@ fun MusicScreen(
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("Añadir a ${playlist.name}")
+                                Text(stringResource(R.string.btn_add_to_playlist_name, playlist.name))
                             }
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -343,7 +345,7 @@ fun MusicScreen(
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { songToAddToPlaylist = null }) {
-                    Text("Cerrar")
+                    Text(stringResource(R.string.btn_close))
                 }
             }
         )
@@ -394,7 +396,7 @@ fun FavoritesList(
                     ) {
                         Icon(
                             Icons.Default.Delete,
-                            contentDescription = "Eliminar",
+                            contentDescription = stringResource(R.string.btn_delete),
                             tint = Color.White
                         )
                     }
@@ -445,7 +447,7 @@ fun SearchResultsList(
                 IconButton(onClick = { onAddToPlaylist(song) }) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Añadir a playlist"
+                        contentDescription = stringResource(R.string.dialog_title_add_to_playlist)
                     )
                 }
             }
@@ -469,7 +471,7 @@ fun PlaylistsList(
         ) {
             Icon(Icons.Default.Add, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Crear playlist")
+            Text(stringResource(R.string.btn_create_playlist))
         }
 
         if (playlists.isEmpty()) {
@@ -477,7 +479,7 @@ fun PlaylistsList(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Todavía no tienes playlists")
+                Text(stringResource(R.string.msg_no_playlists))
             }
         } else {
             LazyColumn(
@@ -510,7 +512,7 @@ fun PlaylistsList(
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
-                                    text = "${playlist.songsCount} canciones",
+                                    text = stringResource(R.string.msg_songs_count, playlist.songsCount),
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
@@ -518,7 +520,7 @@ fun PlaylistsList(
                             IconButton(onClick = { onDeletePlaylist(playlist) }) {
                                 Icon(
                                     Icons.Default.Delete,
-                                    contentDescription = "Eliminar playlist"
+                                    contentDescription = stringResource(R.string.btn_delete_playlist)
                                 )
                             }
                         }

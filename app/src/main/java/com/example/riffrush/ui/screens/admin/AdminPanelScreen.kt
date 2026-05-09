@@ -36,7 +36,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.riffrush.R
 import com.example.riffrush.viewmodels.AdminViewModel
 import org.koin.androidx.compose.koinViewModel
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -80,10 +82,10 @@ fun AdminPanelScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Panel Admin") },
+                title = { Text(stringResource(R.string.title_admin_panel)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.btn_back))
                     }
                 }
             )
@@ -98,7 +100,7 @@ fun AdminPanelScreen(
         ) {
             item {
                 Text(
-                    text = "Gestión de usuarios",
+                    text = stringResource(R.string.title_user_management),
                     style = MaterialTheme.typography.titleLarge
                 )
             }
@@ -108,7 +110,7 @@ fun AdminPanelScreen(
                     value = query,
                     onValueChange = { query = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Buscar por nombre o email") },
+                    label = { Text(stringResource(R.string.hint_search_user)) },
                     singleLine = true
                 )
             }
@@ -119,7 +121,7 @@ fun AdminPanelScreen(
                         Text(user.name, style = MaterialTheme.typography.titleMedium)
                         Text(user.email, style = MaterialTheme.typography.bodySmall)
                         Text(
-                            text = if (user.isBlocked) "Estado: bloqueado" else "Estado: activo",
+                            text = if (user.isBlocked) stringResource(R.string.msg_status_blocked) else stringResource(R.string.msg_status_active),
                             style = MaterialTheme.typography.bodySmall
                         )
 
@@ -130,20 +132,20 @@ fun AdminPanelScreen(
                                 OutlinedButton(onClick = { viewModel.unblockUser(user.uid) }) {
                                     Icon(Icons.Default.LockOpen, contentDescription = null)
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Desbloquear")
+                                    Text(stringResource(R.string.btn_unblock))
                                 }
                             } else {
                                 Button(onClick = { viewModel.blockUser(user.uid) }) {
                                     Icon(Icons.Default.Block, contentDescription = null)
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Bloquear")
+                                    Text(stringResource(R.string.btn_block))
                                 }
                             }
 
                             OutlinedButton(onClick = { viewModel.clearProfilePicture(user.uid) }) {
                                 Icon(Icons.Default.ImageNotSupported, contentDescription = null)
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("Quitar foto")
+                                Text(stringResource(R.string.btn_remove_photo))
                             }
                         }
                     }
@@ -153,7 +155,7 @@ fun AdminPanelScreen(
             item {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "Configurar reto diario",
+                    text = stringResource(R.string.title_configure_challenge),
                     style = MaterialTheme.typography.titleLarge
                 )
             }
@@ -163,7 +165,7 @@ fun AdminPanelScreen(
                     value = challengeDate,
                     onValueChange = { challengeDate = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Fecha (ej: 2026-4-23)") },
+                    label = { Text(stringResource(R.string.hint_date_format)) },
                     singleLine = true
                 )
             }
@@ -173,7 +175,7 @@ fun AdminPanelScreen(
                     value = song1,
                     onValueChange = { song1 = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("ID canción 1") },
+                    label = { Text(stringResource(R.string.hint_song_id_1)) },
                     singleLine = true
                 )
             }
@@ -183,7 +185,7 @@ fun AdminPanelScreen(
                     value = song2,
                     onValueChange = { song2 = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("ID canción 2") },
+                    label = { Text(stringResource(R.string.hint_song_id_2)) },
                     singleLine = true
                 )
             }
@@ -193,7 +195,7 @@ fun AdminPanelScreen(
                     value = song3,
                     onValueChange = { song3 = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("ID canción 3") },
+                    label = { Text(stringResource(R.string.hint_song_id_3)) },
                     singleLine = true
                 )
             }
@@ -203,7 +205,7 @@ fun AdminPanelScreen(
                     value = song4,
                     onValueChange = { song4 = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("ID canción 4") },
+                    label = { Text(stringResource(R.string.hint_song_id_4)) },
                     singleLine = true
                 )
             }
@@ -213,7 +215,7 @@ fun AdminPanelScreen(
                     value = song5,
                     onValueChange = { song5 = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("ID canción 5") },
+                    label = { Text(stringResource(R.string.hint_song_id_5)) },
                     singleLine = true
                 )
             }
@@ -223,12 +225,13 @@ fun AdminPanelScreen(
                     value = song6,
                     onValueChange = { song6 = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("ID canción 6") },
+                    label = { Text(stringResource(R.string.hint_song_id_6)) },
                     singleLine = true
                 )
             }
 
             item {
+                val errorMsg = stringResource(R.string.msg_error_fill_all_ids)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -239,7 +242,7 @@ fun AdminPanelScreen(
                             val trimmedIds = rawIds.map { it.trim() }
 
                             if (trimmedIds.any { it.isBlank() }) {
-                                viewModel.showMessage("Debes rellenar los 6 IDs")
+                                viewModel.showMessage(errorMsg)
                             } else {
                                 viewModel.saveDailyChallenge(
                                     date = challengeDate.trim(),
@@ -250,7 +253,7 @@ fun AdminPanelScreen(
                         },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Guardar reto")
+                        Text(stringResource(R.string.btn_save_challenge))
                     }
 
                     OutlinedButton(
@@ -259,7 +262,7 @@ fun AdminPanelScreen(
                         },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Eliminar reto")
+                        Text(stringResource(R.string.btn_delete_challenge))
                     }
                 }
             }

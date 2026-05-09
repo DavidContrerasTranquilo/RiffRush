@@ -32,8 +32,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.riffrush.R
 import com.example.riffrush.ui.components.SongItem
 import com.example.riffrush.viewmodels.MusicViewModel
 import com.example.riffrush.viewmodels.PlaylistViewModel
@@ -75,7 +77,7 @@ fun PlaylistDetailScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
+                            contentDescription = stringResource(R.string.btn_back)
                         )
                     }
                 }
@@ -94,7 +96,7 @@ fun PlaylistDetailScreen(
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                Text("Jugar con esta playlist")
+                Text(stringResource(R.string.btn_play_with_playlist))
             }
 
             if (songs.isEmpty()) {
@@ -102,7 +104,7 @@ fun PlaylistDetailScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Esta playlist aún no tiene canciones")
+                    Text(stringResource(R.string.msg_playlist_empty))
                 }
             } else {
                 LazyColumn(
@@ -111,7 +113,7 @@ fun PlaylistDetailScreen(
                 ) {
                     item {
                         Text(
-                            text = "${songs.size} canciones",
+                            text = stringResource(R.string.msg_songs_count, songs.size),
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
@@ -155,7 +157,7 @@ fun PlaylistDetailScreen(
                                 ) {
                                     Icon(
                                         Icons.Default.Delete,
-                                        contentDescription = "Eliminar",
+                                        contentDescription = stringResource(R.string.btn_delete),
                                         tint = Color.White
                                     )
                                 }

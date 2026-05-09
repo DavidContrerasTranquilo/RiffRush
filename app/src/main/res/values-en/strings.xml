@@ -57,4 +57,183 @@
     <string name="register_subtitle">Join the music community</string>
     <string name="label_username">Username</string>
     <string name="label_password_min_6">Password (minimum 6 characters)</string>
+
+    <!-- Music Screen -->
+    <string name="hint_search_songs">Search songs...</string>
+    <string name="tab_favorites">Favorites</string>
+    <string name="tab_playlists">Playlists</string>
+    <string name="error_login_required_favorite_song">You must log in to save favorite songs</string>
+    <string name="error_login_required_create_playlist">You must log in to create playlists</string>
+    <string name="btn_create_playlist">Create playlist</string>
+    <string name="label_playlist_name">Playlist name</string>
+    <string name="btn_create">Create</string>
+    <string name="dialog_title_add_to_playlist">Add to playlist</string>
+    <string name="msg_no_playlists_yet">You don\'t have any playlists created yet.</string>
+    <string name="msg_no_playlists">You don\'t have playlists yet</string>
+    <string name="msg_songs_count">%1$d songs</string>
+    <string name="btn_add_to_playlist_name">Add to %1$s</string>
+    <string name="btn_close">Close</string>
+    <string name="btn_delete">Delete</string>
+    <string name="btn_delete_playlist">Delete playlist</string>
+    <string name="btn_play_with_playlist">Play with this playlist</string>
+    <string name="msg_playlist_empty">This playlist has no songs yet</string>
+
+    <!-- Profile & Stats -->
+    <string name="msg_login_to_see_bio">Log in to see your bio</string>
+    <string name="section_account">Account</string>
+    <string name="menu_edit_profile">Edit Profile</string>
+    <string name="menu_edit_profile_desc">Name, bio, and photo</string>
+    <string name="menu_stats">My Stats</string>
+    <string name="menu_stats_desc">Matches, streak, and compatibility</string>
+    <string name="menu_match_history">Match History</string>
+    <string name="menu_match_history_desc">Online, offline, and results</string>
+    <string name="menu_favorites">My Favorites</string>
+    <string name="menu_favorites_desc">Your songs and artists</string>
+    <string name="menu_admin">Admin Panel</string>
+    <string name="menu_admin_desc">User moderation</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_settings_desc">Privacy and app settings</string>
+    <string name="menu_logout">Log Out</string>
+    <string name="menu_login">Log In</string>
+    <string name="menu_login_desc">Access your account</string>
+    <string name="content_desc_profile_image">Profile photo</string>
+    <string name="default_username_guest">Guest</string>
+    <string name="default_username">User</string>
+    <string name="stat_songs">Songs</string>
+    <string name="stat_followers">Followers</string>
+    <string name="stat_following">Following</string>
+    <string name="title_stats">Statistics</string>
+    <string name="stat_games_played">Matches played</string>
+    <string name="stat_max_daily_streak">Max daily streak</string>
+    <string name="stat_songs_played">Songs played</string>
+    <string name="btn_view_match_history">View match history</string>
+    <string name="title_musical_compatibility">Musical compatibility</string>
+    <string name="compat_high">You have very similar tastes</string>
+    <string name="compat_medium">You have some songs in common</string>
+    <string name="compat_low">Low compatibility, but you share something</string>
+    <string name="compat_none">You don\'t have common favorites yet</string>
+
+    <!-- Match History -->
+    <string name="title_match_history">Match History</string>
+    <string name="msg_no_match_history">No matches recorded yet</string>
+    <string name="result_win">Victory</string>
+    <string name="result_lose">Defeat</string>
+    <string name="result_draw">Draw</string>
+    <string name="label_mode">Mode: %1$s</string>
+    <string name="label_opponent">Opponent: %1$s</string>
+    <string name="opponent_unknown">Unknown</string>
+    <string name="label_result_score">Result: %1$d - %2$d</string>
+
+    <!-- Edit Profile -->
+    <string name="title_edit_profile">Edit Profile</string>
+    <string name="content_desc_add_photo">Add photo</string>
+    <string name="btn_remove_profile_photo">Remove profile photo</string>
+    <string name="msg_tap_to_change_photo">Tap the image to change your profile photo</string>
+    <string name="title_profile_info">Profile Information</string>
+    <string name="label_bio">Bio</string>
+    <string name="title_privacy">Privacy</string>
+    <string name="btn_change_password_email">Change Password (Send email)</string>
+    <string name="btn_save_changes">Save Changes</string>
+
+    <!-- Social Screens -->
+    <string name="msg_login_social_list">Log in to see your social list</string>
+    <string name="msg_no_followers">You don\'t have followers yet. Share your music so others can see you!</string>
+    <string name="msg_no_following">You are not following anyone yet. Explore the community!</string>
+    <string name="btn_explore_social">Explore Social Page</string>
+    <string name="hint_search_users">Search users...</string>
+    <string name="tab_friends">Friends</string>
+    <string name="tab_explore">Explore</string>
+    <string name="msg_login_to_see_users">Log in to see other users</string>
+    <string name="msg_no_users_available">No users available</string>
+    <string name="msg_no_users_found">No users found</string>
+    <string name="msg_no_mutual_friends">You don\'t have mutual friends yet</string>
+    <string name="msg_no_users_to_explore">No users to explore</string>
+    <string name="btn_challenge_user">Challenge</string>
+    <string name="btn_following">Following</string>
+    <string name="btn_follow">Follow</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_category_general">General</string>
+    <string name="setting_notifications">Notifications</string>
+    <string name="setting_notifications_desc">Receive alerts for new releases</string>
+    <string name="setting_dark_mode">Dark Mode</string>
+    <string name="setting_dark_mode_desc">Change app appearance</string>
+    <string name="settings_category_audio">Audio &amp; Quality</string>
+    <string name="setting_streaming_quality">Streaming Quality</string>
+    <string name="setting_streaming_quality_desc">High (320 kbps)</string>
+    <string name="setting_downloads">Downloads</string>
+    <string name="setting_downloads_desc">Wi-Fi only</string>
+    <string name="setting_search_history">Search History</string>
+    <string name="setting_search_history_desc">Clear history</string>
+
+    <!-- Daily Challenge -->
+    <string name="title_daily_challenge">DAILY CHALLENGE</string>
+    <string name="content_desc_exit">Exit</string>
+    <string name="msg_loading_challenge">Loading today\'s challenge...</string>
+    <string name="msg_error_loading_challenge">Could not load the challenge. Try again later.</string>
+    <string name="label_score_value">Score: %1$d</string>
+    <string name="label_round_progress">Round %1$d / %2$d</string>
+    <string name="msg_correct">Correct!</string>
+    <string name="msg_incorrect">Incorrect!</string>
+    <string name="btn_view_results">VIEW RESULTS</string>
+    <string name="btn_next_song">NEXT SONG</string>
+    <string name="msg_challenge_completed">Challenge Completed!</string>
+    <string name="label_score_today">Today\'s score</string>
+    <string name="label_current_streak">Current streak</string>
+    <string name="msg_guest_save_streak">To save your streak in the cloud and compete with friends, create an account from your Profile!</string>
+    <string name="btn_back_to_home">BACK TO HOME</string>
+
+    <!-- Match Screens -->
+    <string name="msg_matchmaking_error">Oops! An error occurred:</string>
+    <string name="msg_searching_opponent">Searching opponent for %1$s</string>
+    <string name="msg_wait_match">Wait while we find a match</string>
+    <string name="title_favorites_mode">FAVORITES MODE</string>
+    <string name="msg_need_4_favorites">You need at least 4 favorite songs</string>
+    <string name="msg_add_more_songs">Add more songs in the music section</string>
+    <string name="msg_preparing_favorites">Preparing match with your favorites...</string>
+    <string name="title_playlist_game">PLAYLIST GAME</string>
+    <string name="msg_need_4_songs_playlist">You need at least 4 songs to play</string>
+    <string name="msg_loading_playlist_songs">Loading playlist songs...</string>
+    <string name="title_match_1vs1">1VS1 DUEL</string>
+    <string name="label_you">You</string>
+    <string name="label_bot">Bot</string>
+    <string name="label_player_you">%1$s (You)</string>
+    <string name="msg_tuning_match">Tuning into match...</string>
+    <string name="msg_waiting_opponent">Waiting for opponent...</string>
+    <string name="msg_music_start_soon">Music will start soon</string>
+    <string name="label_round_progress_5">ROUND %1$d / 5</string>
+    <string name="msg_waiting_opponent_answer">Waiting for opponent\'s answer...</string>
+    <string name="msg_opponent_abandoned">Opponent left the match</string>
+    <string name="msg_you_abandoned">You left the match</string>
+    <string name="msg_match_abandoned">Match ended by abandonment</string>
+    <string name="msg_opponent_disconnected">Opponent lost connection</string>
+    <string name="msg_you_disconnected">You lost connection</string>
+    <string name="msg_connection_lost">Connection lost</string>
+    <string name="msg_victory">VICTORY!</string>
+    <string name="msg_draw">DRAW!</string>
+    <string name="msg_defeat">DEFEAT...</string>
+    <string name="title_rounds_summary">Rounds summary</string>
+    <string name="label_round_n">Round %1$d</string>
+    <string name="msg_unknown_song_id">Song ID: unknown</string>
+
+    <!-- Admin Panel -->
+    <string name="title_admin_panel">Admin Panel</string>
+    <string name="title_user_management">User Management</string>
+    <string name="hint_search_user">Search by name or email</string>
+    <string name="msg_status_blocked">Status: blocked</string>
+    <string name="msg_status_active">Status: active</string>
+    <string name="btn_unblock">Unblock</string>
+    <string name="btn_block">Block</string>
+    <string name="btn_remove_photo">Remove photo</string>
+    <string name="title_configure_challenge">Configure daily challenge</string>
+    <string name="hint_date_format">Date (ex: 2026-4-23)</string>
+    <string name="hint_song_id_1">Song ID 1</string>
+    <string name="hint_song_id_2">Song ID 2</string>
+    <string name="hint_song_id_3">Song ID 3</string>
+    <string name="hint_song_id_4">Song ID 4</string>
+    <string name="hint_song_id_5">Song ID 5</string>
+    <string name="hint_song_id_6">Song ID 6</string>
+    <string name="msg_error_fill_all_ids">You must fill all 6 IDs</string>
+    <string name="btn_save_challenge">Save challenge</string>
+    <string name="btn_delete_challenge">Delete challenge</string>
 </resources>

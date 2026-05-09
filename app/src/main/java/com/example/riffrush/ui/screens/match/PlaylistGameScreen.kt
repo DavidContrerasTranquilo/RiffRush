@@ -20,7 +20,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.example.riffrush.R
 import com.example.riffrush.data.player.MusicPlayer
 import com.example.riffrush.ui.screens.challenge.DailyChallengeGameView
 import com.example.riffrush.ui.screens.challenge.DailyChallengeResultView
@@ -65,12 +67,12 @@ fun PlaylistGameScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("PLAYLIST GAME", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.title_playlist_game), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Atrás"
+                            contentDescription = stringResource(R.string.btn_back)
                         )
                     }
                 },
@@ -95,7 +97,7 @@ fun PlaylistGameScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Necesitas al menos 4 canciones para jugar")
+                        Text(stringResource(R.string.msg_need_4_songs_playlist))
                     }
                 }
 
@@ -142,6 +144,6 @@ fun EmptyPlaylistGameView() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text("Cargando canciones de la playlist...")
+        Text(stringResource(R.string.msg_loading_playlist_songs))
     }
 }

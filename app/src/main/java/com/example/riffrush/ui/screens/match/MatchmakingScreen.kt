@@ -17,7 +17,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.riffrush.R
 import com.example.riffrush.data.model.MatchmakingUiState
 import com.example.riffrush.viewmodels.MatchViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -54,7 +56,7 @@ fun MatchmakingScreen(
             when (val state = matchmakingState) {
                 is MatchmakingUiState.Error -> {
                     Text(
-                        text = "Oops! Ocurrió un error:",
+                        text = stringResource(R.string.msg_matchmaking_error),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.titleMedium
                     )
@@ -68,9 +70,9 @@ fun MatchmakingScreen(
                 else -> {
                     CircularProgressIndicator()
                     Spacer(modifier = Modifier.height(24.dp))
-                    Text("Buscando rival para $playlist")
+                    Text(stringResource(R.string.msg_searching_opponent, playlist))
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text("Espera mientras encontramos una partida")
+                    Text(stringResource(R.string.msg_wait_match))
                 }
             }
 
@@ -82,7 +84,7 @@ fun MatchmakingScreen(
                     onBack()
                 }
             ) {
-                Text(if (matchmakingState is MatchmakingUiState.Error) "Volver" else "Cancelar")
+                Text(if (matchmakingState is MatchmakingUiState.Error) stringResource(R.string.btn_back) else stringResource(R.string.btn_cancel))
             }
         }
     }

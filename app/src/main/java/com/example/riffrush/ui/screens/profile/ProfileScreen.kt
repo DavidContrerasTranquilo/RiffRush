@@ -43,9 +43,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.riffrush.R
 import coil.compose.AsyncImage
 import com.example.riffrush.viewmodels.AuthViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -107,7 +109,7 @@ fun ProfileScreen(
                 bio = if (isLoggedIn && userBio.isNotBlank()) {
                     userBio
                 } else {
-                    "Inicia sesión para ver tu bio"
+                    stringResource(R.string.msg_login_to_see_bio)
                 },
                 profileImageUrl = profileImageUrl
             )
@@ -131,7 +133,7 @@ fun ProfileScreen(
                     .padding(horizontal = 16.dp)
             ) {
                 Text(
-                    text = "Cuenta",
+                    text = stringResource(R.string.section_account),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(bottom = 4.dp)
@@ -139,8 +141,8 @@ fun ProfileScreen(
 
                 ProfileMenuItem(
                     icon = Icons.Default.Person,
-                    title = "Editar Perfil",
-                    subtitle = "Nombre, bio y foto",
+                    title = stringResource(R.string.menu_edit_profile),
+                    subtitle = stringResource(R.string.menu_edit_profile_desc),
                     onClick = {
                         if (isLoggedIn) onNavigateToEditProfile() else onNavigateToLogin()
                     }
@@ -148,8 +150,8 @@ fun ProfileScreen(
 
                 ProfileMenuItem(
                     icon = Icons.Default.BarChart,
-                    title = "Mis Estadísticas",
-                    subtitle = "Partidas, racha y compatibilidad",
+                    title = stringResource(R.string.menu_stats),
+                    subtitle = stringResource(R.string.menu_stats_desc),
                     onClick = {
                         if (isLoggedIn) {
                             onNavigateToUserStats(authViewModel.getCurrentUserId())
@@ -161,8 +163,8 @@ fun ProfileScreen(
 
                 ProfileMenuItem(
                     icon = Icons.Default.History,
-                    title = "Historial de partidas",
-                    subtitle = "Online, offline y resultados",
+                    title = stringResource(R.string.menu_match_history),
+                    subtitle = stringResource(R.string.menu_match_history_desc),
                     onClick = {
                         if (isLoggedIn) {
                             onNavigateToMatchHistory(authViewModel.getCurrentUserId())
@@ -174,24 +176,24 @@ fun ProfileScreen(
 
                 ProfileMenuItem(
                     icon = Icons.Default.Favorite,
-                    title = "Mis Favoritos",
-                    subtitle = "Tus canciones y artistas",
+                    title = stringResource(R.string.menu_favorites),
+                    subtitle = stringResource(R.string.menu_favorites_desc),
                     onClick = onNavigateToMusic
                 )
 
                 if (userRole == "admin") {
                     ProfileMenuItem(
                         icon = Icons.Default.AdminPanelSettings,
-                        title = "Panel de Administración",
-                        subtitle = "Moderación de usuarios",
+                        title = stringResource(R.string.menu_admin),
+                        subtitle = stringResource(R.string.menu_admin_desc),
                         onClick = onNavigateToAdminPanel
                     )
                 }
 
                 ProfileMenuItem(
                     icon = Icons.Default.Settings,
-                    title = "Configuración",
-                    subtitle = "Privacidad y ajustes de la app",
+                    title = stringResource(R.string.menu_settings),
+                    subtitle = stringResource(R.string.menu_settings_desc),
                     onClick = onNavigateToSettings
                 )
 
@@ -200,7 +202,7 @@ fun ProfileScreen(
                 if (isLoggedIn) {
                     ProfileMenuItem(
                         icon = Icons.AutoMirrored.Filled.ExitToApp,
-                        title = "Cerrar Sesión",
+                        title = stringResource(R.string.menu_logout),
                         color = MaterialTheme.colorScheme.error,
                         onClick = {
                             //Le envio al inico de sesion/registro
@@ -211,8 +213,8 @@ fun ProfileScreen(
                 } else {
                     ProfileMenuItem(
                         icon = Icons.AutoMirrored.Filled.Login,
-                        title = "Iniciar Sesión",
-                        subtitle = "Accede a tu cuenta",
+                        title = stringResource(R.string.menu_login),
+                        subtitle = stringResource(R.string.menu_login_desc),
                         onClick = onNavigateToLogin
                     )
                 }
@@ -236,7 +238,7 @@ fun ProfileHeader(
         if (profileImageUrl.isNotBlank()) {
             AsyncImage(
                 model = profileImageUrl,
-                contentDescription = "Foto de perfil",
+                contentDescription = stringResource(R.string.content_desc_profile_image),
                 modifier = Modifier
                     .size(100.dp)
                     .clip(CircleShape),
@@ -263,7 +265,7 @@ fun ProfileHeader(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = username.ifBlank { "Invitado" },
+            text = username.ifBlank { stringResource(R.string.default_username_guest) },
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
@@ -291,16 +293,16 @@ fun StatsSection(
             .padding(horizontal = 32.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        StatItem(label = "Canciones", value = songsCount)
+        StatItem(label = stringResource(R.string.stat_songs), value = songsCount)
 
         StatItem(
-            label = "Seguidores",
+            label = stringResource(R.string.stat_followers),
             value = followersCount,
             onClick = { onStatClick("Seguidores") }
         )
 
         StatItem(
-            label = "Siguiendo",
+            label = stringResource(R.string.stat_following),
             value = followingCount,
             onClick = { onStatClick("Siguiendo") }
         )
@@ -309,11 +311,12 @@ fun StatsSection(
 
 @Composable
 fun StatItem(label: String, value: String, onClick: () -> Unit = {}) {
+    val songsLabel = stringResource(R.string.stat_songs)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .clip(MaterialTheme.shapes.small)
-            .clickable(enabled = label != "Canciones") { onClick() }
+            .clickable(enabled = label != songsLabel) { onClick() }
             .padding(8.dp)
     ) {
         Text(

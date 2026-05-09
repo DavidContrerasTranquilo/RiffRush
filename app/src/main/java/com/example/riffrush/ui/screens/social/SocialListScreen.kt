@@ -27,8 +27,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.riffrush.R
 import com.example.riffrush.ui.components.UserItem
 import com.example.riffrush.viewmodels.AuthViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -56,7 +58,7 @@ fun SocialListScreen(
                 title = { Text(type) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.btn_back))
                     }
                 }
             )
@@ -80,7 +82,7 @@ fun SocialListScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Inicia sesión para ver tu lista social",
+                        text = stringResource(R.string.msg_login_social_list),
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
@@ -106,9 +108,9 @@ fun SocialListScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 val emptyMessage = if (type == "Seguidores") {
-                    "Aún no tienes seguidores. ¡Comparte tu música para que otros te vean!"
+                    stringResource(R.string.msg_no_followers)
                 } else {
-                    "No estás siguiendo a nadie todavía. ¡Explora la comunidad!"
+                    stringResource(R.string.msg_no_following)
                 }
 
                 Text(
@@ -121,7 +123,7 @@ fun SocialListScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Button(onClick = onNavigateToSocial) {
-                    Text("Explorar Página Social")
+                    Text(stringResource(R.string.btn_explore_social))
                 }
             }
         } else {

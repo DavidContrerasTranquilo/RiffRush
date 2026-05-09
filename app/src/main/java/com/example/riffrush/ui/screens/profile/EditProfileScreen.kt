@@ -43,8 +43,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.riffrush.R
 import com.example.riffrush.viewmodels.AuthViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -104,12 +106,12 @@ fun EditProfileScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Editar Perfil") },
+                title = { Text(stringResource(R.string.title_edit_profile)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Regresar"
+                            contentDescription = stringResource(R.string.btn_back)
                         )
                     }
                 }
@@ -129,7 +131,7 @@ fun EditProfileScreen(
                     selectedImageUri != null -> {
                         AsyncImage(
                             model = selectedImageUri,
-                            contentDescription = "Foto de perfil",
+                            contentDescription = stringResource(R.string.content_desc_profile_image),
                             modifier = Modifier
                                 .size(110.dp)
                                 .clip(CircleShape)
@@ -141,7 +143,7 @@ fun EditProfileScreen(
                     profileImageUrl.isNotBlank() -> {
                         AsyncImage(
                             model = profileImageUrl,
-                            contentDescription = "Foto de perfil",
+                            contentDescription = stringResource(R.string.content_desc_profile_image),
                             modifier = Modifier
                                 .size(110.dp)
                                 .clip(CircleShape)
@@ -161,7 +163,7 @@ fun EditProfileScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Person,
-                                contentDescription = "Añadir foto",
+                                contentDescription = stringResource(R.string.content_desc_add_photo),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(48.dp)
                             )
@@ -179,14 +181,14 @@ fun EditProfileScreen(
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Eliminar foto de perfil")
+                    Text(stringResource(R.string.btn_remove_profile_photo))
                 }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Toca la imagen para cambiar tu foto de perfil",
+                text = stringResource(R.string.msg_tap_to_change_photo),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
@@ -194,7 +196,7 @@ fun EditProfileScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Información de Perfil",
+                text = stringResource(R.string.title_profile_info),
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -204,7 +206,7 @@ fun EditProfileScreen(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Nombre de usuario") },
+                label = { Text(stringResource(R.string.label_username)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -214,7 +216,7 @@ fun EditProfileScreen(
             OutlinedTextField(
                 value = bio,
                 onValueChange = { bio = it },
-                label = { Text("Biografía") },
+                label = { Text(stringResource(R.string.label_bio)) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3
             )
@@ -224,7 +226,7 @@ fun EditProfileScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Privacidad",
+                text = stringResource(R.string.title_privacy),
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -235,7 +237,7 @@ fun EditProfileScreen(
                 onClick = { authViewModel.sendPasswordResetToCurrentUser() },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Cambiar Contraseña (Enviar correo)")
+                Text(stringResource(R.string.btn_change_password_email))
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -247,7 +249,7 @@ fun EditProfileScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = name.isNotBlank()
             ) {
-                Text("Guardar Cambios")
+                Text(stringResource(R.string.btn_save_changes))
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -256,7 +258,7 @@ fun EditProfileScreen(
                 onClick = onNavigateBack,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Cancelar")
+                Text(stringResource(R.string.btn_cancel))
             }
         }
     }

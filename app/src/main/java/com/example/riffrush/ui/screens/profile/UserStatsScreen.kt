@@ -40,10 +40,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.riffrush.R
 import com.example.riffrush.data.model.FriendModel
 import com.example.riffrush.viewmodels.AuthViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -73,12 +75,12 @@ fun UserStatsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Estadísticas") },
+                title = { Text(stringResource(R.string.title_stats)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
+                            contentDescription = stringResource(R.string.btn_back)
                         )
                     }
                 }
@@ -99,7 +101,7 @@ fun UserStatsScreen(
 
                 StatCard(
                     icon = Icons.Default.SportsEsports,
-                    title = "Partidas jugadas",
+                    title = stringResource(R.string.stat_games_played),
                     value = user.gamesPlayed.toString()
                 )
 
@@ -107,7 +109,7 @@ fun UserStatsScreen(
 
                 StatCard(
                     icon = Icons.Default.Whatshot,
-                    title = "Racha máxima reto diario",
+                    title = stringResource(R.string.stat_max_daily_streak),
                     value = "${user.maxDailyStreak} 🔥"
                 )
 
@@ -115,7 +117,7 @@ fun UserStatsScreen(
 
                 StatCard(
                     icon = Icons.Default.MusicNote,
-                    title = "Canciones escuchadas",
+                    title = stringResource(R.string.stat_songs_played),
                     value = user.songsPlayed.toString()
                 )
 
@@ -133,7 +135,7 @@ fun UserStatsScreen(
                     onClick = { onNavigateToMatchHistory(userId) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Ver historial de partidas")
+                    Text(stringResource(R.string.btn_view_match_history))
                 }
             }
         } ?: run {
@@ -157,7 +159,7 @@ fun UserStatsHeader(user: FriendModel) {
         if (user.pfpUrl.isNotBlank()) {
             AsyncImage(
                 model = user.pfpUrl,
-                contentDescription = "Foto de perfil",
+                contentDescription = stringResource(R.string.content_desc_profile_image),
                 modifier = Modifier
                     .size(110.dp)
                     .clip(CircleShape),
@@ -183,7 +185,7 @@ fun UserStatsHeader(user: FriendModel) {
         Spacer(modifier = Modifier.height(14.dp))
 
         Text(
-            text = user.name.ifBlank { "Usuario" },
+            text = user.name.ifBlank { stringResource(R.string.default_username) },
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
@@ -262,7 +264,7 @@ fun CompatibilitySection(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Compatibilidad musical",
+                text = stringResource(R.string.title_musical_compatibility),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -291,10 +293,10 @@ fun CompatibilitySection(
 
                 Text(
                     text = when {
-                        compatibilityPercent >= 75 -> "Tenéis gustos muy parecidos"
-                        compatibilityPercent >= 40 -> "Tenéis algunas canciones en común"
-                        compatibilityPercent > 0 -> "Compatibilidad baja, pero algo compartís"
-                        else -> "No tenéis favoritos en común todavía"
+                        compatibilityPercent >= 75 -> stringResource(R.string.compat_high)
+                        compatibilityPercent >= 40 -> stringResource(R.string.compat_medium)
+                        compatibilityPercent > 0 -> stringResource(R.string.compat_low)
+                        else -> stringResource(R.string.compat_none)
                     },
                     style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Center

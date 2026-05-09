@@ -28,8 +28,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.riffrush.R
 import com.example.riffrush.data.player.MusicPlayer
 import com.example.riffrush.ui.screens.challenge.DailyChallengeGameView
 import com.example.riffrush.ui.screens.challenge.DailyChallengeResultView
@@ -73,10 +75,10 @@ fun FavoritesGameScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("MODO FAVORITOS", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.title_favorites_mode), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.btn_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -96,11 +98,11 @@ fun FavoritesGameScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            "Necesitas al menos 4 canciones favoritas",
+                            stringResource(R.string.msg_need_4_favorites),
                             style = MaterialTheme.typography.headlineSmall
                         )
                         Text(
-                            "Añade más canciones en la sección de música",
+                            stringResource(R.string.msg_add_more_songs),
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     }
@@ -114,7 +116,7 @@ fun FavoritesGameScreen(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             CircularProgressIndicator()
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text("Preparando partida con tus favoritos...")
+                            Text(stringResource(R.string.msg_preparing_favorites))
                         }
                     }
                 }

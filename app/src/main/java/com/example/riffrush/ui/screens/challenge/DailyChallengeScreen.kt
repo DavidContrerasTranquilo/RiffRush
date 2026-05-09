@@ -37,10 +37,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.riffrush.R
 import com.example.riffrush.data.model.Song
 import com.example.riffrush.data.player.MusicPlayer
 import com.example.riffrush.viewmodels.DailyChallengeViewModel
@@ -63,10 +65,10 @@ fun DailyChallengeScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("RETO DIARIO", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.title_daily_challenge), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onExit) {
-                        Icon(Icons.Default.Close, contentDescription = "Salir")
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.content_desc_exit))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -89,7 +91,7 @@ fun DailyChallengeScreen(
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(64.dp))
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text("Cargando reto de hoy...")
+                        Text(stringResource(R.string.msg_loading_challenge))
                     }
                 }
                 //Añado esto para el tema invitados, que si no se crea un usuario en firebase
@@ -130,9 +132,9 @@ fun DailyChallengeScreen(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("No se pudo cargar el reto. Intenta más tarde.")
+                        Text(stringResource(R.string.msg_error_loading_challenge))
                         Button(onClick = onExit) {
-                            Text("Volver")
+                            Text(stringResource(R.string.btn_back))
                         }
                     }
                 }
@@ -180,12 +182,12 @@ fun DailyChallengeGameView(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Puntuación: $score",
+                text = stringResource(R.string.label_score_value, score),
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
-                text = "Ronda $round / ${allSongs.size}",
+                text = stringResource(R.string.label_round_progress, round, allSongs.size),
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.titleMedium
@@ -227,7 +229,7 @@ fun DailyChallengeGameView(
 
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = if (answerCorrect == true) "¡Correcto!" else "¡Incorrecto!",
+                text = if (answerCorrect == true) stringResource(R.string.msg_correct) else stringResource(R.string.msg_incorrect),
                 color = if (answerCorrect == true) Color(0xFF4CAF50) else Color.Red,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
@@ -239,7 +241,7 @@ fun DailyChallengeGameView(
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
-                Text(if (round == allSongs.size) "VER RESULTADOS" else "SIGUIENTE CANCIÓN")
+                Text(if (round == allSongs.size) stringResource(R.string.btn_view_results) else stringResource(R.string.btn_next_song))
             }
         }
     }
@@ -261,7 +263,7 @@ fun DailyChallengeResultView(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "¡Reto Completado!",
+            text = stringResource(R.string.msg_challenge_completed),
             fontSize = 32.sp,
             fontWeight = FontWeight.Black,
             color = MaterialTheme.colorScheme.primary
@@ -278,7 +280,7 @@ fun DailyChallengeResultView(
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Puntuación de hoy", fontSize = 18.sp)
+                Text(stringResource(R.string.label_score_today), fontSize = 18.sp)
                 Text(
                     text = "$score / $totalRounds",
                     fontSize = 48.sp,
@@ -289,7 +291,7 @@ fun DailyChallengeResultView(
                 if (streak >= 0) {
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text("Racha actual", fontSize = 18.sp)
+                    Text(stringResource(R.string.label_current_streak), fontSize = 18.sp)
                     Text(
                         text = "$streak 🔥",
                         fontSize = 36.sp,
@@ -308,7 +310,7 @@ fun DailyChallengeResultView(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Para guardar tu racha en la nube y competir con amigos, ¡créate una cuenta desde tu Perfil!",
+                    text = stringResource(R.string.msg_guest_save_streak),
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier.padding(16.dp),
                     textAlign = TextAlign.Center,
@@ -325,7 +327,7 @@ fun DailyChallengeResultView(
                 .fillMaxWidth()
                 .height(56.dp)
         ) {
-            Text("VOLVER AL INICIO")
+            Text(stringResource(R.string.btn_back_to_home))
         }
     }
 }

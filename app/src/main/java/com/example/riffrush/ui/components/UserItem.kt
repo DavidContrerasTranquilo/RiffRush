@@ -28,9 +28,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.riffrush.R
 import com.example.riffrush.data.model.FriendModel
 
 @Composable
@@ -60,7 +62,7 @@ fun UserItem(
             if (user.pfpUrl.isNotEmpty()) {
                 AsyncImage(
                     model = user.pfpUrl,
-                    contentDescription = "Profile Picture",
+                    contentDescription = stringResource(R.string.content_desc_profile_image),
                     modifier = Modifier
                         .size(50.dp)
                         .clip(CircleShape),
@@ -101,7 +103,7 @@ fun UserItem(
                 IconButton(onClick = onMatchClick) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "Retar",
+                        contentDescription = stringResource(R.string.btn_challenge_user),
                         tint = Color(0xFF4CAF50)
                     )
                 }
@@ -113,7 +115,7 @@ fun UserItem(
             ) {
                 Icon(
                     imageVector = if (isFollowing) Icons.Default.Check else Icons.Default.PersonAdd,
-                    contentDescription = if (isFollowing) "Siguiendo" else "Seguir",
+                    contentDescription = if (isFollowing) stringResource(R.string.btn_following) else stringResource(R.string.btn_follow),
                     tint = if (isFollowing) Color.Unspecified else MaterialTheme.colorScheme.primary
                 )
             }

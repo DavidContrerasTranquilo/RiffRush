@@ -37,8 +37,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.example.riffrush.R
 import com.example.riffrush.data.model.FriendModel
 import com.example.riffrush.ui.components.UserItem
 import com.example.riffrush.viewmodels.AuthViewModel
@@ -118,7 +120,7 @@ fun SocialScreen(
                     ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
+                            contentDescription = stringResource(R.string.btn_back)
                         )
                     }
                 }
@@ -127,7 +129,7 @@ fun SocialScreen(
                     value = query,
                     onValueChange = { query = it },
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text("Buscar usuarios...") },
+                    placeholder = { Text(stringResource(R.string.hint_search_users)) },
                     leadingIcon = {
                         Icon(Icons.Default.Search, contentDescription = null)
                     },
@@ -148,13 +150,13 @@ fun SocialScreen(
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
-                        text = { Text("Amigos") }
+                        text = { Text(stringResource(R.string.tab_friends)) }
                     )
 
                     Tab(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 },
-                        text = { Text("Explorar") }
+                        text = { Text(stringResource(R.string.tab_explore)) }
                     )
                 }
             }
@@ -166,18 +168,18 @@ fun SocialScreen(
             ) {
                 when {
                     !isLoggedIn -> {
-                        EmptySocialMessage("Inicia sesión para ver a otros usuarios")
+                        EmptySocialMessage(stringResource(R.string.msg_login_to_see_users))
                     }
 
                     users.isEmpty() -> {
-                        EmptySocialMessage("No hay usuarios disponibles")
+                        EmptySocialMessage(stringResource(R.string.msg_no_users_available))
                     }
 
                     isSearching -> {
                         UserList(
                             users = filteredUsers,
                             following = following,
-                            emptyMessage = "No se encontraron usuarios",
+                            emptyMessage = stringResource(R.string.msg_no_users_found),
                             onUserClick = onNavigateToUserStats,
                             onFollowClick = { user -> authViewModel.addFriend(user) },
                             onMatchClick = { user ->
@@ -190,7 +192,7 @@ fun SocialScreen(
                         UserList(
                             users = mutualFriends,
                             following = following,
-                            emptyMessage = "Aún no tienes amigos mutuos",
+                            emptyMessage = stringResource(R.string.msg_no_mutual_friends),
                             onUserClick = onNavigateToUserStats,
                             onFollowClick = { user -> authViewModel.addFriend(user) },
                             onMatchClick = { user ->
@@ -203,7 +205,7 @@ fun SocialScreen(
                         UserList(
                             users = exploreUsers,
                             following = following,
-                            emptyMessage = "No hay usuarios para explorar",
+                            emptyMessage = stringResource(R.string.msg_no_users_to_explore),
                             onUserClick = onNavigateToUserStats,
                             onFollowClick = { user -> authViewModel.addFriend(user) },
                             onMatchClick = { user ->
