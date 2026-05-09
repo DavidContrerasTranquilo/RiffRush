@@ -236,4 +236,37 @@
     <string name="msg_error_fill_all_ids">You must fill all 6 IDs</string>
     <string name="btn_save_challenge">Save challenge</string>
     <string name="btn_delete_challenge">Delete challenge</string>
+
+    <!-- AuthViewModel Messages -->
+    <string name="msg_signup_success">Account created successfully!</string>
+    <string name="msg_signup_error">Registration error: %1$s</string>
+    <string name="msg_login_success">Logged in successfully</string>
+    <string name="msg_login_error">Error: %1$s</string>
+    <string name="msg_guest_error">Error signing in as guest: %1$s</string>
+    <string name="msg_enter_email_first">Please enter your email first.</string>
+    <string name="msg_reset_email_sent">A recovery email has been sent to %1$s</string>
+    <string name="msg_no_email_found">Could not find the current user\'s email.</string>
+    <string name="msg_profile_updated">Profile updated successfully</string>
+    <string name="msg_profile_update_error">Error updating profile: %1$s</string>
+    <string name="msg_logout_success">Logged out successfully</string>
+    <string name="msg_logout_error">Error logging out</string>
+    <string name="msg_now_following">You are now following %1$s!</string>
+    <string name="msg_follow_error">Error following user</string>
+    <string name="msg_pfp_updated">Profile picture updated</string>
+    <string name="msg_pfp_upload_error">Error uploading image: %1$s</string>
+    <string name="msg_pfp_removed">Profile picture removed</string>
+    <string name="msg_pfp_remove_error">Error removing photo: %1$s</string>
+
+    <!-- AuthRepository Defaults -->
+    <string name="default_bio_template">Exploring new rhythms since %1$d</string>
+    <string name="default_status">Hi! I\'m using RiffRush</string>
+    <string name="default_bio">Exploring new rhythms</string>
+    <string name="default_no_name">Unnamed user</string>
+    <string name="msg_followed_recently">Started following you recently</string>
+
+    <!-- Navigation Bar -->
+    <string name="nav_home">Home</string>
+    <string name="nav_social">Social</string>
+    <string name="nav_music">My Music</string>
+    <string name="nav_profile">Profile</string>
 </resources>

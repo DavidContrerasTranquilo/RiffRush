@@ -17,6 +17,7 @@ import org.json.JSONObject
 import java.io.File
 import java.util.Calendar
 import android.util.Log
+import com.example.riffrush.R
 import com.google.firebase.auth.AuthResult
 class AuthRepository(
     private val firebaseAuth: FirebaseAuth,
@@ -27,7 +28,7 @@ class AuthRepository(
     suspend fun signUp(email: String, pass: String, username: String) {
         val result = firebaseAuth.createUserWithEmailAndPassword(email, pass).await()
         val year = Calendar.getInstance().get(Calendar.YEAR)
-        val defaultBio = "Explorando nuevos ritmos desde $year"
+        val defaultBio = context.getString(R.string.default_bio_template, year)
 
         val profileUpdates = userProfileChangeRequest {
             displayName = username
@@ -42,7 +43,7 @@ class AuthRepository(
                     "name" to username,
                     "bio" to defaultBio,
                     "pfpUrl" to "",
-                    "status" to "¡Hola! Estoy usando RiffRush",
+                    "status" to context.getString(R.string.default_status),
                     "role" to "user",
                     "isBlocked" to false
                 )
@@ -67,7 +68,7 @@ class AuthRepository(
 
     fun getCurrentUser() = firebaseAuth.currentUser
 
-    fun getCurrentUserName(): String = firebaseAuth.currentUser?.displayName ?: "Invitado"
+    fun getCurrentUserName(): String = firebaseAuth.currentUser?.displayName ?: context.getString(R.string.default_guest_name)
 
     suspend fun updateUsername(newUsername: String) {
         val profileUpdates = userProfileChangeRequest {
@@ -86,13 +87,13 @@ class AuthRepository(
     }
 
     suspend fun getUserBio(): String {
-        val uid = firebaseAuth.currentUser?.uid ?: return "Inicia sesión para ver tu bio"
+        val uid = firebaseAuth.currentUser?.uid ?: return context.getString(R.string.msg_login_to_see_bio)
         return try {
             val doc = firestore.collection("users").document(uid).get().await()
-            doc.getString("bio") ?: "Explorando nuevos ritmos"
+            doc.getString("bio") ?: context.getString(R.string.default_bio)
         } catch (e: Exception) {
             Log.e("AuthRepository", "Error obteniendo bio del usuario", e)
-            "Explorando nuevos ritmos"
+            context.getString(R.string.default_bio)
         }
     }
 
@@ -127,13 +128,13 @@ class AuthRepository(
                     val nameFromFirestore = doc.getString("name")
                         ?: doc.getString("username")
                         ?: doc.getString("displayName")
-                        ?: "Usuario sin nombre"
+                        ?: context.getString(R.string.default_no_name)
 
                     FriendModel(
                         uid = uid,
                         name = nameFromFirestore,
                         pfpUrl = doc.getString("pfpUrl") ?: "",
-                        status = doc.getString("status") ?: "¡Hola! Estoy usando RiffRush",
+                        status = doc.getString("status") ?: context.getString(R.string.default_status),
                         email = doc.getString("email") ?: "",
                         role = doc.getString("role") ?: "user",
                         isBlocked = false
@@ -165,7 +166,7 @@ class AuthRepository(
             targetFollowersRef, mapOf(
                 "uid" to currentUid,
                 "name" to currentUserName,
-                "status" to "Te ha seguido recientemente",
+                "status" to context.getString(R.string.msg_followed_recently),
                 "pfpUrl" to currentUserPfp
             )
         )

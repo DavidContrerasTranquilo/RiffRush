@@ -18,6 +18,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"dz0ixprcg\"")
+        buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"profile_pictures\"")
+        buildConfigField("String", "RTDB_URL", "\"https://riffrush-229d4-default-rtdb.europe-west1.firebasedatabase.app\"")
     }
 
     buildTypes {
@@ -40,6 +44,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

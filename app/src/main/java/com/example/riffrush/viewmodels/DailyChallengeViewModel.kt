@@ -53,17 +53,17 @@ class DailyChallengeViewModel(
             val lastPlayedDate = prefs.getString("last_played_date_$uid", "")
             val currentStreak = prefs.getInt("current_streak_$uid", 0)
 
-            android.util.Log.d("DAILY_DEBUG", "todayStr=$todayStr lastPlayedDate=$lastPlayedDate")
+            if (com.example.riffrush.BuildConfig.DEBUG) android.util.Log.d("DAILY_DEBUG", "todayStr=$todayStr lastPlayedDate=$lastPlayedDate")
 
             if (todayStr == lastPlayedDate) {
-                android.util.Log.d("DAILY_DEBUG", "Reto ya completado hoy, no se vuelve a cargar")
+                if (com.example.riffrush.BuildConfig.DEBUG) android.util.Log.d("DAILY_DEBUG", "Reto ya completado hoy, no se vuelve a cargar")
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     isCompletedToday = true,
                     streak = currentStreak
                 )
             } else {
-                android.util.Log.d("DAILY_DEBUG", "Cargando reto diario...")
+                if (com.example.riffrush.BuildConfig.DEBUG) android.util.Log.d("DAILY_DEBUG", "Cargando reto diario...")
                 _uiState.value = _uiState.value.copy(
                     isLoading = true,
                     isCompletedToday = false,
@@ -76,10 +76,10 @@ class DailyChallengeViewModel(
 
     private suspend fun loadDailySongs() {
         val todayStr = getCurrentDateString()
-        android.util.Log.d("DAILY_DEBUG", "Fecha de hoy: $todayStr")
+        if (com.example.riffrush.BuildConfig.DEBUG) android.util.Log.d("DAILY_DEBUG", "Fecha de hoy: $todayStr")
 
         val configuredChallenge = firebaseRepository.getDailyChallengeConfig(todayStr)
-        android.util.Log.d("DAILY_DEBUG", "Config encontrada: $configuredChallenge")
+        if (com.example.riffrush.BuildConfig.DEBUG) android.util.Log.d("DAILY_DEBUG", "Config encontrada: $configuredChallenge")
 
         if (configuredChallenge != null &&
             configuredChallenge.isActive &&
@@ -92,7 +92,7 @@ class DailyChallengeViewModel(
 
             val loadedSongs = configuredChallenge.songIds.mapNotNull { id ->
                 val parsed = id.toLongOrNull()
-                android.util.Log.d("DAILY_DEBUG", "ID original=$id parsed=$parsed")
+                if (com.example.riffrush.BuildConfig.DEBUG) android.util.Log.d("DAILY_DEBUG", "ID original=$id parsed=$parsed")
 
                 parsed?.let { deezerRepository.getSong(it) }
             }
@@ -107,12 +107,12 @@ class DailyChallengeViewModel(
                     isLoading = false,
                     songs = loadedSongs.take(6)
                 )
-                android.util.Log.d("DAILY_DEBUG", "Usando reto configurado por admin")
+                if (com.example.riffrush.BuildConfig.DEBUG) android.util.Log.d("DAILY_DEBUG", "Usando reto configurado por admin")
                 return
             }
         }
 
-        android.util.Log.d("DAILY_DEBUG", "Entrando en fallback automático")
+        if (com.example.riffrush.BuildConfig.DEBUG) android.util.Log.d("DAILY_DEBUG", "Entrando en fallback automático")
         val allSongs = deezerRepository.getChart()
 
         if (allSongs.size >= 6) {

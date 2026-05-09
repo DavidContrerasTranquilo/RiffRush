@@ -9,9 +9,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import android.content.Context
 import android.util.Log
+import com.example.riffrush.R
 
 class AuthViewModel(
+    private val context: Context,
     private val repository: AuthRepository,
     private val firebaseRepository: FirebaseRepository
 ) : ViewModel() {
@@ -114,8 +118,14 @@ class AuthViewModel(
     fun signUp(email: String, pass: String, username: String) {
         viewModelScope.launch {
             try {
-                repository.signUp(email, pass, username)
-                _uiMessage.value = "¡Cuenta creada correctamente!"
+                // Borrar usuario anónimo previo si existe
+                val currentUser = repository.getCurrentUser()
+                if (currentUser != null && currentUser.isAnonymous) {
+                    try { currentUser.delete().await() } catch (_: Exception) {}
+                }
+
+                repository.signUp(email.trim(), pass, username.trim())
+                _uiMessage.value = context.getString(R.string.msg_signup_success)
                 _authState.value = true
                 loadUserBio()
                 loadUserStats()
@@ -123,7 +133,7 @@ class AuthViewModel(
                 loadUserProfileImage()
                 loadModerationState()
             } catch (e: Exception) {
-                _uiMessage.value = "Error en el registro: ${e.localizedMessage}"
+                _uiMessage.value = context.getString(R.string.msg_signup_error, e.localizedMessage)
             }
         }
     }
@@ -131,8 +141,14 @@ class AuthViewModel(
     fun signIn(email: String, pass: String) {
         viewModelScope.launch {
             try {
-                repository.signIn(email, pass)
-                _uiMessage.value = "Sesión iniciada correctamente"
+                // Borrar usuario anónimo previo si existe
+                val currentUser = repository.getCurrentUser()
+                if (currentUser != null && currentUser.isAnonymous) {
+                    try { currentUser.delete().await() } catch (_: Exception) {}
+                }
+
+                repository.signIn(email.trim(), pass)
+                _uiMessage.value = context.getString(R.string.msg_login_success)
                 _authState.value = true
                 loadUserBio()
                 loadUserStats()
@@ -140,7 +156,7 @@ class AuthViewModel(
                 loadUserProfileImage()
                 loadModerationState()
             } catch (e: Exception) {
-                _uiMessage.value = "Error: ${e.localizedMessage}"
+                _uiMessage.value = context.getString(R.string.msg_login_error, e.localizedMessage)
             }
         }
     }
@@ -153,7 +169,7 @@ class AuthViewModel(
                 _authState.value = false // Invitado no está full logged in
                 onSuccess()
             } catch (e: Exception) {
-                _uiMessage.value = "Error al entrar como invitado: ${e.localizedMessage}"
+                _uiMessage.value = context.getString(R.string.msg_guest_error, e.localizedMessage)
             }
         }
     }
@@ -161,15 +177,15 @@ class AuthViewModel(
     //Añado funcion para recuperar la contraseña, firestore lo hace el solo
     fun resetPassword(email: String) {
         if (email.isBlank()) {
-            _uiMessage.value = "Por favor, introduce tu email primero."
+            _uiMessage.value = context.getString(R.string.msg_enter_email_first)
             return
         }
         viewModelScope.launch {
             try {
                 repository.sendPasswordResetEmail(email)
-                _uiMessage.value = "Se ha enviado un correo de recuperación a $email"
+                _uiMessage.value = context.getString(R.string.msg_reset_email_sent, email)
             } catch (e: Exception) {
-                _uiMessage.value = "Error: ${e.localizedMessage}"
+                _uiMessage.value = context.getString(R.string.msg_login_error, e.localizedMessage)
             }
         }
     }
@@ -178,15 +194,15 @@ class AuthViewModel(
     fun sendPasswordResetToCurrentUser() {
         val email = repository.getCurrentUser()?.email
         if (email.isNullOrBlank()) {
-            _uiMessage.value = "No se ha encontrado el correo del usuario actual."
+            _uiMessage.value = context.getString(R.string.msg_no_email_found)
             return
         }
         viewModelScope.launch {
             try {
                 repository.sendPasswordResetEmail(email)
-                _uiMessage.value = "Se ha enviado un correo de recuperación a $email"
+                _uiMessage.value = context.getString(R.string.msg_reset_email_sent, email)
             } catch (e: Exception) {
-                _uiMessage.value = "Error: ${e.localizedMessage}"
+                _uiMessage.value = context.getString(R.string.msg_login_error, e.localizedMessage)
             }
         }
     }
@@ -196,11 +212,11 @@ class AuthViewModel(
             try {
                 repository.updateUsername(newName)
                 repository.updateBio(newBio)
-                _uiMessage.value = "Perfil actualizado correctamente"
+                _uiMessage.value = context.getString(R.string.msg_profile_updated)
                 loadUserBio()
                 _updateSuccess.value = true
             } catch (e: Exception) {
-                _uiMessage.value = "Error al actualizar datos: ${e.message}"
+                _uiMessage.value = context.getString(R.string.msg_profile_update_error, e.message)
             }
         }
     }
@@ -217,14 +233,14 @@ class AuthViewModel(
                 _followers.value = emptyList()
                 _following.value = emptyList()
                 _profileImageUrl.value = ""
-                _uiMessage.value = "Sesión cerrada correctamente"
+                _uiMessage.value = context.getString(R.string.msg_logout_success)
                 _userRole.value = "user"
                 _isBlocked.value = false
                 _selectedUser.value = null
                 _compatibilityPercent.value = null
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Error cerrando sesión", e)
-                _uiMessage.value = "Error al cerrar sesión"
+                _uiMessage.value = context.getString(R.string.msg_logout_error)
             }
         }
     }
@@ -233,11 +249,11 @@ class AuthViewModel(
         viewModelScope.launch {
             try {
                 repository.followUser(friend)
-                _uiMessage.value = "¡Ahora sigues a ${friend.name}!"
+                _uiMessage.value = context.getString(R.string.msg_now_following, friend.name)
                 loadUserStats()
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Error siguiendo al usuario: ${friend.uid}", e)
-                _uiMessage.value = "Error al seguir al usuario"
+                _uiMessage.value = context.getString(R.string.msg_follow_error)
             }
         }
     }
@@ -253,12 +269,12 @@ class AuthViewModel(
             try {
                 val newUrl = repository.updateProfilePicture(imageUri)
                 _profileImageUrl.value = newUrl
-                _uiMessage.value = "Foto de perfil actualizada"
+                _uiMessage.value = context.getString(R.string.msg_pfp_updated)
                 loadAllUsers()
                 loadUserStats()
             } catch (e: Exception) {
                 Log.e("PFP_DEBUG", "Error al subir imagen", e)
-                _uiMessage.value = "Error al subir la imagen: ${e.message ?: "sin detalles"}"
+                _uiMessage.value = context.getString(R.string.msg_pfp_upload_error, e.message ?: "")
             }
         }
     }
@@ -324,11 +340,11 @@ class AuthViewModel(
             try {
                 repository.removeMyProfilePicture()
                 _profileImageUrl.value = ""
-                _uiMessage.value = "Foto de perfil eliminada"
+                _uiMessage.value = context.getString(R.string.msg_pfp_removed)
                 loadAllUsers()
                 loadUserStats()
             } catch (e: Exception) {
-                _uiMessage.value = "Error al eliminar la foto: ${e.message}"
+                _uiMessage.value = context.getString(R.string.msg_pfp_remove_error, e.message ?: "")
             }
         }
     }

@@ -63,7 +63,7 @@ fun MainScreen(
                                     contentDescription = null
                                 )
                             },
-                            label = { Text(screen.title) },
+                            label = { Text(androidx.compose.ui.res.stringResource(screen.titleRes)) },
                             selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                             alwaysShowLabel = false,
                             onClick = {

@@ -1,6 +1,8 @@
 package com.example.riffrush.data.repository
 
+import com.example.riffrush.BuildConfig
+
 object CloudinaryConfig {
-    const val CLOUD_NAME = "dz0ixprcg"
-    const val UPLOAD_PRESET = "profile_pictures"
+    val CLOUD_NAME = BuildConfig.CLOUDINARY_CLOUD_NAME
+    val UPLOAD_PRESET = BuildConfig.CLOUDINARY_UPLOAD_PRESET
 }

@@ -236,4 +236,37 @@
     <string name="msg_error_fill_all_ids">Debes rellenar los 6 IDs</string>
     <string name="btn_save_challenge">Guardar reto</string>
     <string name="btn_delete_challenge">Eliminar reto</string>
+
+    <!-- AuthViewModel Messages -->
+    <string name="msg_signup_success">¡Cuenta creada correctamente!</string>
+    <string name="msg_signup_error">Error en el registro: %1$s</string>
+    <string name="msg_login_success">Sesión iniciada correctamente</string>
+    <string name="msg_login_error">Error: %1$s</string>
+    <string name="msg_guest_error">Error al entrar como invitado: %1$s</string>
+    <string name="msg_enter_email_first">Por favor, introduce tu email primero.</string>
+    <string name="msg_reset_email_sent">Se ha enviado un correo de recuperación a %1$s</string>
+    <string name="msg_no_email_found">No se ha encontrado el correo del usuario actual.</string>
+    <string name="msg_profile_updated">Perfil actualizado correctamente</string>
+    <string name="msg_profile_update_error">Error al actualizar datos: %1$s</string>
+    <string name="msg_logout_success">Sesión cerrada correctamente</string>
+    <string name="msg_logout_error">Error al cerrar sesión</string>
+    <string name="msg_now_following">¡Ahora sigues a %1$s!</string>
+    <string name="msg_follow_error">Error al seguir al usuario</string>
+    <string name="msg_pfp_updated">Foto de perfil actualizada</string>
+    <string name="msg_pfp_upload_error">Error al subir la imagen: %1$s</string>
+    <string name="msg_pfp_removed">Foto de perfil eliminada</string>
+    <string name="msg_pfp_remove_error">Error al eliminar la foto: %1$s</string>
+
+    <!-- AuthRepository Defaults -->
+    <string name="default_bio_template">Explorando nuevos ritmos desde %1$d</string>
+    <string name="default_status">¡Hola! Estoy usando RiffRush</string>
+    <string name="default_bio">Explorando nuevos ritmos</string>
+    <string name="default_no_name">Usuario sin nombre</string>
+    <string name="msg_followed_recently">Te ha seguido recientemente</string>
+
+    <!-- Navigation Bar -->
+    <string name="nav_home">Inicio</string>
+    <string name="nav_social">Social</string>
+    <string name="nav_music">Mi Música</string>
+    <string name="nav_profile">Perfil</string>
 </resources>

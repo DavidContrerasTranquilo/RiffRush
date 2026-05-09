@@ -134,7 +134,7 @@ class MatchViewModel(
         _currentRound.value = 0
         _isLoading.value = true
 
-        Log.d("MATCH_DEBUG", "listenToMatch START matchId=$matchId")
+        if (com.example.riffrush.BuildConfig.DEBUG) Log.d("MATCH_DEBUG", "listenToMatch START matchId=$matchId")
 
         matchJob = viewModelScope.launch {
             try {
@@ -345,7 +345,7 @@ class MatchViewModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Log.e("MATCH_DEBUG", "listenToMatch ERROR", e)
+                if (com.example.riffrush.BuildConfig.DEBUG) Log.e("MATCH_DEBUG", "listenToMatch ERROR", e)
                 Log.e("MatchViewModel", "Error listening to match", e)
                 _error.value = context.getString(R.string.error_connection, e.message)
             }
@@ -438,7 +438,7 @@ class MatchViewModel(
 
             } catch (e: Exception) {
                 _showAnswerResult.value = false
-                Log.e("MATCH_DEBUG", "Error submitting answer", e)
+                if (com.example.riffrush.BuildConfig.DEBUG) Log.e("MATCH_DEBUG", "Error submitting answer", e)
                 _error.value = context.getString(R.string.error_submit_answer, e.message)
             }
         }
@@ -520,6 +520,7 @@ class MatchViewModel(
         queueJob?.cancel()
         presenceJob?.cancel()
         disconnectWatcherJob?.cancel()
+        musicPlayer.release()
     }
 
     fun startOfflineMode(category: String) {
@@ -672,7 +673,7 @@ class MatchViewModel(
             try {
                 repository.abandonMatch(match.matchId)
             } catch (e: Exception) {
-                Log.e("MATCH_DEBUG", "Error abandoning match", e)
+                if (com.example.riffrush.BuildConfig.DEBUG) Log.e("MATCH_DEBUG", "Error abandoning match", e)
             }
         }
     }
@@ -690,7 +691,7 @@ class MatchViewModel(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    Log.e("MATCH_DEBUG", "Error updating presence", e)
+                    if (com.example.riffrush.BuildConfig.DEBUG) Log.e("MATCH_DEBUG", "Error updating presence", e)
                 }
 
                 delay(3000)

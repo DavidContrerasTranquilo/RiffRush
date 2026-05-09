@@ -25,6 +25,7 @@ import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -34,11 +35,17 @@ val appModule = module {
     single { FirebaseFirestore.getInstance() }
     single {
         FirebaseDatabase.getInstance(
-            "https://riffrush-229d4-default-rtdb.europe-west1.firebasedatabase.app"
+            com.example.riffrush.BuildConfig.RTDB_URL
         )
     }
 
-    singleOf(::OkHttpClient)
+    single {
+        OkHttpClient.Builder()
+            .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
+    }
 
     single {
         Retrofit.Builder()
@@ -53,7 +60,7 @@ val appModule = module {
     }
 
     single { GuestIdManager(androidContext()) }
-    singleOf(::PlayerIdentityManager)
+    single { PlayerIdentityManager(get(), get(), androidContext()) }
     singleOf(::MusicPlayer)
 
     singleOf(::FirebaseRepository)
@@ -68,7 +75,7 @@ val appModule = module {
     singleOf(::DeezerRepository)
     singleOf(::MatchRepository)
     single { SettingsDataStore(androidContext()) }
-    viewModelOf(::AuthViewModel)
+    viewModel { AuthViewModel(androidContext(), get(), get()) }
     viewModelOf(::MusicViewModel)
     viewModelOf(::MatchViewModel)
     viewModelOf(::FavoritesGameViewModel)
