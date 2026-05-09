@@ -1,7 +1,9 @@
 package com.example.riffrush.di
 
+import androidx.room.Room
 import com.example.riffrush.data.local.GuestIdManager
 import com.example.riffrush.data.local.PlayerIdentityManager
+import com.example.riffrush.data.local.RiffRushDatabase
 import com.example.riffrush.data.local.SettingsDataStore
 import com.example.riffrush.data.player.MusicPlayer
 import com.example.riffrush.data.repository.AuthRepository
@@ -38,6 +40,18 @@ val appModule = module {
             com.example.riffrush.BuildConfig.RTDB_URL
         )
     }
+
+    // ==================== Room Database (Caché local SQLite) ====================
+    single {
+        Room.databaseBuilder(
+            androidContext(),
+            RiffRushDatabase::class.java,
+            "riffrush_db"
+        ).build()
+    }
+    // DAOs inyectables derivados de la instancia de la base de datos
+    single { get<RiffRushDatabase>().songDao() }
+    single { get<RiffRushDatabase>().matchHistoryDao() }
 
     single {
         OkHttpClient.Builder()

@@ -3,6 +3,9 @@ package com.example.riffrush.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.riffrush.data.local.GuestIdManager
+import com.example.riffrush.data.local.dao.SongDao
+import com.example.riffrush.data.local.entity.toEntity
+import com.example.riffrush.data.local.entity.toSong
 import com.example.riffrush.data.model.Song
 import com.example.riffrush.data.player.MusicPlayer
 import com.example.riffrush.data.repository.AuthRepository
@@ -14,18 +17,26 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import android.util.Log
 
+/*
+ ViewModel principal de la sección de Música.
+ Implementa el patrón Single Source of Truth (SSOT):
+ - La UI siempre lee los favoritos desde Room (acceso instantáneo, funciona offline).
+ - Firestore se sincroniza en segundo plano y escribe los cambios en Room.
+ - Los usuarios invitados (no autenticados) mantienen favoritos solo en memoria RAM.
+ */
 class MusicViewModel(
     private val firebaseRepository: FirebaseRepository,
     private val authRepository: AuthRepository,
     private val deezerRepository: DeezerRepository,
     private val guestIdManager: GuestIdManager,
-    private val musicPlayer: MusicPlayer
+    private val musicPlayer: MusicPlayer,
+    private val songDao: SongDao               // DAO de Room para caché local de favoritos
 ) : ViewModel() {
-    // Estado para la lista de canciones que se muestra
+    // Estado para la lista de canciones que se muestra en la UI
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
     val songs: StateFlow<List<Song>> = _songs
 
-    // Estado para los favoritos
+    // Estado para los favoritos (fuente local Room o RAM según autenticación)
     private val _favoriteSongs = MutableStateFlow<List<Song>>(emptyList())
     val favoriteSongs: StateFlow<List<Song>> = _favoriteSongs
 
@@ -46,13 +57,17 @@ class MusicViewModel(
         return authRepository.getCurrentUser()?.uid ?: guestIdManager.getGuestId()
     }
 
-    //David, Añado para ver si esta logueado
+    // Comprueba si el usuario tiene sesión activa (no anónima)
     fun isLoggedIn(): Boolean {
         val user = authRepository.getCurrentUser()
         return user != null && !user.isAnonymous
     }
 
-    //Si no esta logueado no cargamos la musica
+    /*
+     Carga los favoritos del usuario.
+     Si está autenticado: lee primero desde Room (instantáneo) y sincroniza con Firestore en segundo plano.
+     Si es invitado: mantiene la lista en memoria RAM.
+     */
     fun loadMyMusic() {
         _isSearching.value = false
         favoritesJob?.cancel()
@@ -60,12 +75,27 @@ class MusicViewModel(
         if (isLoggedIn()) {
             val ownerId = getOwnerId()
 
+            // Paso 1: Leer desde Room (caché local instantánea - SSOT)
             favoritesJob = viewModelScope.launch {
-                firebaseRepository.getFavorites(ownerId).collect { favs ->
+                songDao.getFavoritesByUser(ownerId).collect { entities ->
+                    val favs = entities.map { it.toSong() }
                     _favoriteSongs.value = favs
                     if (!_isSearching.value) {
                         _songs.value = favs
                     }
+                }
+            }
+
+            // Paso 2: Sincronizar Firestore → Room en segundo plano
+            viewModelScope.launch {
+                try {
+                    firebaseRepository.getFavorites(ownerId).collect { cloudFavs ->
+                        // Inserta los datos de la nube en Room (REPLACE resuelve duplicados)
+                        val entities = cloudFavs.map { it.toEntity(ownerId) }
+                        songDao.insertAll(entities)
+                    }
+                } catch (e: Exception) {
+                    Log.e("MusicViewModel", "Error sincronizando favoritos desde Firestore", e)
                 }
             }
         } else {
@@ -75,9 +105,7 @@ class MusicViewModel(
         }
     }
 
-    /**
-     * Busca canciones nuevas por texto
-     */
+    // Busca canciones nuevas por texto en la API de Deezer
     fun searchSongs(query: String) {
         if (query.isBlank()) return
         _isSearching.value = true
@@ -92,11 +120,11 @@ class MusicViewModel(
         }
     }
 
-    /**
-     * Agrega o quita de favoritos
+    /*
+     Agrega o quita de favoritos.
+     Si está autenticado: escribe en Room (instantáneo) + Firestore (segundo plano).
+     Si es invitado: solo modifica la lista en memoria RAM.
      */
-    //Tambien añado aqui que si no esta logueado la musica se guarde en ram
-    //Se podria hacer en Room!
     fun toggleFavorite(song: Song) {
         val isFavorite = _favoriteSongs.value.any { it.id == song.id }
 
@@ -104,13 +132,19 @@ class MusicViewModel(
             val ownerId = getOwnerId()
             viewModelScope.launch {
                 if (isFavorite) {
+                    // Elimina de Room (la UI se actualiza instantáneamente vía Flow)
+                    songDao.delete(song.id, ownerId)
+                    // Elimina de Firestore en segundo plano
                     firebaseRepository.removeFavorite(ownerId, song.id.toString())
                 } else {
+                    // Inserta en Room (la UI se actualiza instantáneamente vía Flow)
+                    songDao.insert(song.toEntity(ownerId))
+                    // Inserta en Firestore en segundo plano
                     firebaseRepository.addFavorite(ownerId, song)
                 }
             }
         } else {
-
+            // Usuarios invitados: solo en memoria RAM
             val currentFavs = _favoriteSongs.value.toMutableList()
             if (isFavorite) {
                 currentFavs.removeAll { it.id == song.id }
@@ -124,9 +158,7 @@ class MusicViewModel(
         }
     }
 
-    /**
-     * Lógica de reproducción
-     */
+    // Lógica de reproducción de preescucha de 30 segundos
     fun playPause(song: Song) {
         viewModelScope.launch {
             if (_playingSongId.value == song.id) {
@@ -143,7 +175,7 @@ class MusicViewModel(
                 if (freshSong != null && freshSong.preview.isNotBlank()) {
                     url = freshSong.preview
 
-                    // We only want to update the local cached song info, NOT automatically add it to favorites!
+                    // Actualiza la info local cacheada sin afectar la lista de favoritos automáticamente
                     val currentFavs = _favoriteSongs.value.toMutableList()
                     val index = currentFavs.indexOfFirst { it.id == freshSong.id }
 
@@ -178,5 +210,4 @@ class MusicViewModel(
         musicPlayer.stop()
         _playingSongId.value = null
     }
-
-}
+}

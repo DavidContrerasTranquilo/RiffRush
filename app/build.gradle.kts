@@ -86,4 +86,9 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.google.firebase:firebase-database")
     implementation("androidx.datastore:datastore-preferences:1.2.1")
+
+    // Room - Base de datos local SQLite
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    kapt(libs.room.compiler)
 }
