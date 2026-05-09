@@ -41,6 +41,12 @@ import com.example.riffrush.viewmodels.MusicViewModel
 import com.example.riffrush.viewmodels.PlaylistViewModel
 import org.koin.androidx.compose.koinViewModel
 
+/*
+ Pantalla de Detalle de Playlist.
+ Muestra los temas musicales agregados a una lista de reproducción determinada.
+ Permite reproducir una partida utilizando exclusivamente las canciones de esta playlist (siempre que contenga al menos 2 canciones)
+ y quitar tracks mediante gestos de deslizamiento (Swipe-to-Dismiss).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaylistDetailScreen(
@@ -48,19 +54,23 @@ fun PlaylistDetailScreen(
     playlistName: String,
     onBack: () -> Unit,
     onPlayPlaylist: (String) -> Unit,
+    // ViewModels inyectados mediante Koin
     playlistViewModel: PlaylistViewModel = koinViewModel(),
     musicViewModel: MusicViewModel = koinViewModel()
 ) {
+    // Escucha interactiva de canciones cargadas en la playlist actual
     val songs by playlistViewModel.selectedPlaylistSongs.collectAsState()
     val playingSongId by musicViewModel.playingSongId.collectAsState()
     val uiMessage by playlistViewModel.uiMessage.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Solicita cargar los temas musicales de la playlist activa al inicializar la vista o cambiar de playlist
     LaunchedEffect(playlistId) {
         playlistViewModel.loadPlaylistSongs(playlistId)
     }
 
+    // Gestiona mensajes de confirmación de bases de datos
     LaunchedEffect(uiMessage) {
         uiMessage?.let {
             snackbarHostState.showSnackbar(it)
@@ -89,8 +99,10 @@ fun PlaylistDetailScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            // Botón interactivo para iniciar una partida personalizada usando los temas de esta lista
             Button(
                 onClick = { onPlayPlaylist(playlistId) },
+                // Regla de diseño: requiere un mínimo de 2 canciones para iniciar juego válido
                 enabled = songs.size >= 2,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -111,6 +123,7 @@ fun PlaylistDetailScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
+                    // Muestra de manera informativa el conteo total de canciones guardadas
                     item {
                         Text(
                             text = stringResource(R.string.msg_songs_count, songs.size),
@@ -123,12 +136,14 @@ fun PlaylistDetailScreen(
                         songs,
                         key = { index, song -> "${song.id}_$index" }
                     ) { _, song ->
+                        // Controla la acción deslizable para borrar canciones individuales de la playlist
                         val dismissState = rememberSwipeToDismissBoxState(
                             confirmValueChange = {
                                 if (
                                     it == SwipeToDismissBoxValue.EndToStart ||
                                     it == SwipeToDismissBoxValue.StartToEnd
                                 ) {
+                                    // Invoca la remoción del track de la base de datos de Firebase
                                     playlistViewModel.removeSongFromPlaylist(
                                         playlistId = playlistId,
                                         songId = song.id.toString()

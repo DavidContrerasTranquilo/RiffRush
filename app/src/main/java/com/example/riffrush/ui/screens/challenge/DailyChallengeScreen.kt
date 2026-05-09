@@ -49,15 +49,24 @@ import com.example.riffrush.viewmodels.DailyChallengeViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
+/*
+ Pantalla del Reto Diario (Daily Challenge).
+ Presenta un juego diario donde los usuarios intentan adivinar las canciones de la jornada.
+ Controla la lógica de visualización del juego, el reproductor de avances musicales,
+ la carga de estados y el despliegue del resumen de puntuaciones/rachas al completar la actividad.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DailyChallengeScreen(
     onExit: () -> Unit,
+    // Inyección de dependencias con Koin
     viewModel: DailyChallengeViewModel = koinViewModel(),
     musicPlayer: MusicPlayer = koinInject()
 ) {
+    // Suscripción reactiva al estado del Reto Diario
     val uiState by viewModel.uiState.collectAsState()
 
+    // Detiene la preescucha musical de inmediato cuando la pantalla es destruida o el usuario sale
     DisposableEffect(Unit) {
         onDispose { musicPlayer.stop() }
     }
@@ -83,6 +92,7 @@ fun DailyChallengeScreen(
                 .padding(padding)
         ) {
             when {
+                // Caso 1: Los datos del reto diario se están descargando desde la base de datos
                 uiState.isLoading -> {
                     Column(
                         modifier = Modifier.fillMaxSize(),
@@ -94,8 +104,10 @@ fun DailyChallengeScreen(
                         Text(stringResource(R.string.msg_loading_challenge))
                     }
                 }
-                //Añado esto para el tema invitados, que si no se crea un usuario en firebase
+
+                // Caso 2: El usuario ya completó el juego de hoy o ha agotado sus intentos
                 uiState.isCompletedToday || uiState.isGameOver -> {
+                    // Verifica si se trata de un usuario anónimo (invitado)
                     val isGuest =
                         com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.isAnonymous == true
                     DailyChallengeResultView(
@@ -106,6 +118,7 @@ fun DailyChallengeScreen(
                     )
                 }
 
+                // Caso 3: Juego activo. Muestra la ronda actual
                 uiState.songs.isNotEmpty() -> {
                     val currentSong = uiState.songs[uiState.currentRoundIndex]
 
@@ -126,6 +139,7 @@ fun DailyChallengeScreen(
                     )
                 }
 
+                // Caso 4: Error inesperado de conexión o base de datos vacía
                 else -> {
                     Column(
                         modifier = Modifier.fillMaxSize(),
@@ -143,7 +157,7 @@ fun DailyChallengeScreen(
     }
 }
 
-//La pantalla de la partida del reto diario
+// Vista interna del juego activo para cada ronda del reto diario
 @Composable
 fun DailyChallengeGameView(
     song: Song,
@@ -156,6 +170,7 @@ fun DailyChallengeGameView(
     onNextRound: () -> Unit,
     musicPlayer: MusicPlayer
 ) {
+    // Genera las 4 opciones de respuesta (1 correcta y 3 incorrectas mezcladas aleatoriamente)
     val options = remember(song) {
         val wrongOptions = allSongs
             .filter { it.id != song.id }
@@ -164,6 +179,7 @@ fun DailyChallengeGameView(
         (wrongOptions + song).shuffled()
     }
 
+    // Inicia la reproducción automática del fragmento sonoro cuando cambia la ronda o canción activa
     LaunchedEffect(song.id) {
         musicPlayer.playPreview(song.preview)
     }
@@ -177,6 +193,7 @@ fun DailyChallengeGameView(
             .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Marcador de puntuación y progreso de rondas en la parte superior
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -196,10 +213,12 @@ fun DailyChallengeGameView(
 
         Spacer(modifier = Modifier.height(48.dp))
 
+        // Despliegue de los botones interactivos con las opciones de respuesta
         options.forEach { option ->
+            // Color de respuesta reactivo: verde si es la correcta revelada, grisáceo las demás, o violeta si aún no responde
             val buttonColor = if (hasAnswered) {
-                if (option.id == song.id) Color(0xFF4CAF50) // Verde si es la correcta
-                else MaterialTheme.colorScheme.surfaceVariant // Gris las demás
+                if (option.id == song.id) Color(0xFF4CAF50)
+                else MaterialTheme.colorScheme.surfaceVariant
             } else {
                 MaterialTheme.colorScheme.secondaryContainer
             }
@@ -224,9 +243,9 @@ fun DailyChallengeGameView(
                 )
             }
         }
-        //Cuando se contesta a una cancion, pasa a la siguiente
-        if (hasAnswered) {
 
+        // Bloque informativo revelado tras contestar a la pregunta de la ronda
+        if (hasAnswered) {
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = if (answerCorrect == true) stringResource(R.string.msg_correct) else stringResource(R.string.msg_incorrect),
@@ -247,6 +266,7 @@ fun DailyChallengeGameView(
     }
 }
 
+// Vista final del resumen diario de puntuaciones y rachas consecutivas
 @Composable
 fun DailyChallengeResultView(
     score: Int,
@@ -288,6 +308,7 @@ fun DailyChallengeResultView(
                     color = MaterialTheme.colorScheme.primary
                 )
 
+                // Racha consecutiva de juego en días consecutivos (Racha 🔥)
                 if (streak >= 0) {
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -302,6 +323,7 @@ fun DailyChallengeResultView(
             }
         }
 
+        // Alerta informativa especial para invitados: les advierte de que su racha no se mantendrá permanentemente si no se registran
         if (isGuest) {
             Spacer(modifier = Modifier.height(24.dp))
             Card(

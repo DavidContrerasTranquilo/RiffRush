@@ -22,20 +22,29 @@ import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+/*
+ Repositorio para la lógica multijugador en tiempo real.
+ Conecta con Firebase Realtime Database (RTDB) para gestionar las colas de matchmaking,
+ la sincronización de partidas activas (rondas y respuestas), control de latencia/desconexión (presencia)
+ y la creación/aceptación de retos sociales directos.
+ */
 class MatchRepository(
     database: FirebaseDatabase,
     private val playerIdentityManager: PlayerIdentityManager
 ) {
+    // Referencias raíz en Realtime Database
     private val matchesRef: DatabaseReference = database.getReference("matches")
     private val queueRef: DatabaseReference = database.getReference("matchmaking_queue")
     private val challengesRef: DatabaseReference = database.getReference("challenges")
 
 
+    // Crea o registra una partida inicial en el nodo "matches"
     suspend fun createMatch(match: MatchModel) {
         if (match.matchId == "offline_test_id") return
         matchesRef.child(match.matchId).setValue(match).await()
     }
 
+    // Escucha de forma reactiva mediante un Flow los cambios en una partida específica
     fun listenToMatch(matchId: String): Flow<MatchModel?> = callbackFlow {
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -52,10 +61,12 @@ class MatchRepository(
         awaitClose { ref.removeEventListener(listener) }
     }
 
+    // Actualiza el estado de una partida (ej: PLAYING -> FINISHED)
     suspend fun updateMatchStatus(matchId: String, status: MatchStatus) {
         matchesRef.child(matchId).child("status").setValue(status.name).await()
     }
 
+    // Genera un objeto Match local configurado con un bot para partidas en modo Solitario (Offline)
     fun getOfflineMatch(category: String, songIds: List<Long>): MatchModel {
         return MatchModel(
             matchId = "offline_${category.lowercase()}",
@@ -73,10 +84,12 @@ class MatchRepository(
         )
     }
 
+    // Retorna el ID de usuario activo resolviendo si es invitado o registrado
     fun getCurrentUserId(): String {
         return playerIdentityManager.getPlayerId()
     }
 
+    // Constructor de objetos MatchModel para partidas en línea con presencia sincronizada
     private fun buildMatch(
         matchId: String,
         player1Id: String,
@@ -106,6 +119,7 @@ class MatchRepository(
         )
     }
 
+    // Une al jugador al Matchmaking: busca un rival en espera para la misma playlist, o en su defecto crea un nuevo ticket en cola
     suspend fun joinMatchmaking(playlist: String, songIds: List<Long>): MatchmakingResult {
         val playerId = playerIdentityManager.getPlayerId()
         val playerName = playerIdentityManager.getPlayerName()
@@ -113,12 +127,14 @@ class MatchRepository(
 
         val snapshot = queueRef.orderByChild("status").equalTo("WAITING").get().await()
 
+        // Intenta encontrar un rival que no sea él mismo y compita en la misma categoría
         val rivalDoc = snapshot.children.firstOrNull {
             it.child("playlist").getValue(String::class.java) == playlist &&
                     it.child("playerId").getValue(String::class.java) != playerId
         }
 
         return if (rivalDoc != null) {
+            // Emparejamiento exitoso: creamos la partida en línea asignando al rival como Player 1 y a nosotros como Player 2
             val rivalPlayerId = rivalDoc.child("playerId").getValue(String::class.java) ?: ""
             val rivalPlayerName =
                 rivalDoc.child("playerName").getValue(String::class.java) ?: "Invitado"
@@ -135,6 +151,8 @@ class MatchRepository(
             )
 
             matchesRef.child(matchId).setValue(match).await()
+            
+            // Notificamos al oponente modificando su ticket en cola a MATCHED e inyectándole el matchId
             val updates = mapOf(
                 "status" to "MATCHED",
                 "matchId" to matchId
@@ -143,6 +161,7 @@ class MatchRepository(
 
             MatchmakingResult.Matched(matchId)
         } else {
+            // No hay rivales esperando: creamos y publicamos nuestro propio ticket en la cola
             val queueId = queueRef.push().key ?: return MatchmakingResult.Waiting("")
             val entry = MatchmakingQueueEntry(
                 queueId = queueId,
@@ -159,6 +178,7 @@ class MatchRepository(
         }
     }
 
+    // Escucha en tiempo real el ticket del matchmaking para reaccionar en cuanto cambie a "MATCHED"
     fun listenToQueueEntry(queueId: String): Flow<MatchmakingQueueEntry?> = callbackFlow {
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -175,10 +195,13 @@ class MatchRepository(
         awaitClose { ref.removeEventListener(listener) }
     }
 
+    // Cancela el matchmaking eliminando el ticket de la base de datos si el usuario decide salir
     suspend fun cancelMatchmaking(queueId: String) {
         queueRef.child(queueId).removeValue().await()
     }
 
+    // Envía la respuesta de la ronda mediante una Transacción atómica de RTDB.
+    // Esto resuelve de forma concurrente cuando ambos jugadores responden casi a la vez.
     suspend fun submitAnswer(matchId: String, isCorrect: Boolean) =
         suspendCancellableCoroutine { continuation ->
             val currentUserId = getCurrentUserId()
@@ -197,6 +220,7 @@ class MatchRepository(
                     if (!amIPlayer1 && !amIPlayer2) return Transaction.abort()
                     if (match.status != MatchStatus.PLAYING) return Transaction.success(currentData)
 
+                    // Evita responder dos veces en la misma ronda
                     val alreadyAnswered = if (amIPlayer1) match.answeredP1 else match.answeredP2
                     if (alreadyAnswered) return Transaction.success(currentData)
 
@@ -214,6 +238,7 @@ class MatchRepository(
                     val isLastRound = match.currentRound >= match.staticSongList.size - 1
 
                     if (bothAnswered) {
+                        // Ambos han contestado la ronda actual: guardamos el resultado intermedio de aciertos
                         val currentSongId = match.staticSongList.getOrNull(match.currentRound)
                         val newRoundResults = match.roundResults.toMutableList()
                         newRoundResults.add(
@@ -227,6 +252,7 @@ class MatchRepository(
                         )
 
                         if (isLastRound) {
+                            // Se jugaron las 5 rondas: finalizamos la partida sincronizadamente
                             currentData.value = match.copy(
                                 scoreP1 = newScoreP1,
                                 scoreP2 = newScoreP2,
@@ -236,6 +262,7 @@ class MatchRepository(
                                 roundResults = newRoundResults
                             )
                         } else {
+                            // Avanzamos a la siguiente ronda reseteando los flags de respuesta
                             currentData.value = match.copy(
                                 scoreP1 = newScoreP1,
                                 scoreP2 = newScoreP2,
@@ -246,6 +273,7 @@ class MatchRepository(
                             )
                         }
                     } else {
+                        // Falta un jugador por responder: actualizamos solo el flag de respuesta de quien acaba de contestar
                         currentData.value = match.copy(
                             scoreP1 = newScoreP1,
                             scoreP2 = newScoreP2,
@@ -272,6 +300,7 @@ class MatchRepository(
             })
         }
 
+    // Abandona de forma voluntaria la partida activa declarando al rival como ganador inmediato mediante Transacción
     suspend fun abandonMatch(matchId: String) = suspendCancellableCoroutine{ continuation ->
         val currentUserId = getCurrentUserId()
         val matchRef = matchesRef.child(matchId)
@@ -313,6 +342,7 @@ class MatchRepository(
         })
     }
 
+    // Actualiza de forma asíncrona el ping de presencia (playerLastSeen) del jugador para certificar que sigue en línea
     suspend fun updatePresence(matchId: String, isPlayer1: Boolean) {
         val field = if (isPlayer1) "player1LastSeen" else "player2LastSeen"
         try {
@@ -322,6 +352,7 @@ class MatchRepository(
         }
     }
 
+    // Finaliza la partida declarando ganador al jugador conectado cuando el oponente excede el límite del ping de presencia
     suspend fun endMatchByConnectionLoss(
         matchId: String,
         disconnectedPlayerId: String,
@@ -360,12 +391,14 @@ class MatchRepository(
         })
     }
 
-    // ── Challenge System ──
+    // ── Challenge System (Retos directos entre amigos) ──
 
+    // Publica una solicitud de reto directo en el nodo "challenges"
     suspend fun createChallenge(challenge: ChallengeModel) {
         challengesRef.child(challenge.challengeId).setValue(challenge).await()
     }
 
+    // Escucha de forma reactiva los retos directos pendientes dirigidos al UID del usuario activo
     fun listenToIncomingChallenges(myUid: String): Flow<List<ChallengeModel>> = callbackFlow {
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -385,6 +418,7 @@ class MatchRepository(
         awaitClose { challengesRef.removeEventListener(listener) }
     }
 
+    // Acepta un reto: crea una partida multijugador online con canciones pre-descargadas de Deezer y cambia el estado del reto a ACCEPTED
     suspend fun acceptChallenge(challengeId: String, songIds: List<Long>): String {
         val snapshot = challengesRef.child(challengeId).get().await()
         val challenge = snapshot.getValue(ChallengeModel::class.java)
@@ -411,10 +445,12 @@ class MatchRepository(
         return matchId
     }
 
+    // Declina o rechaza un reto directo actualizando su estado en la base de datos
     suspend fun declineChallenge(challengeId: String) {
         challengesRef.child(challengeId).child("status").setValue("DECLINED").await()
     }
 
+    // Escucha las actualizaciones de un reto específico (utilizado por el emisor para saber si ha sido aceptado)
     fun listenToChallenge(challengeId: String): Flow<ChallengeModel?> = callbackFlow {
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -430,6 +466,7 @@ class MatchRepository(
         awaitClose { ref.removeEventListener(listener) }
     }
 
+    // Remueve un reto de la base de datos una vez que se ha resuelto para limpiar RTDB
     suspend fun cleanupChallenge(challengeId: String) {
         challengesRef.child(challengeId).removeValue().await()
     }

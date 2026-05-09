@@ -47,11 +47,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import com.example.riffrush.ui.theme.getAppThemeColors
 import com.example.riffrush.R
 import coil.compose.AsyncImage
 import com.example.riffrush.viewmodels.AuthViewModel
 import org.koin.androidx.compose.koinViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     onNavigateToSettings: () -> Unit = {},
@@ -84,6 +90,8 @@ fun ProfileScreen(
         }
     }
 
+    val colors = getAppThemeColors()
+
     LaunchedEffect(isLoggedIn) {
         if (isLoggedIn) {
             authViewModel.loadUserBio()
@@ -93,130 +101,152 @@ fun ProfileScreen(
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .verticalScroll(scrollState)
-                .padding(padding)
-                .padding(bottom = 24.dp)
-        ) {
-            ProfileHeader(
-                username = authViewModel.currentUserName,
-                bio = if (isLoggedIn && userBio.isNotBlank()) {
-                    userBio
-                } else {
-                    stringResource(R.string.msg_login_to_see_bio)
-                },
-                profileImageUrl = profileImageUrl
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            StatsSection(
-                songsCount = songsCount.toString(),
-                followersCount = followers.size.toString(),
-                followingCount = following.size.toString(),
-                onStatClick = { title ->
-                    if (isLoggedIn) onNavigateToSocialList(title) else onNavigateToLogin()
-                }
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.background)
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            topBar = {
+                CenterAlignedTopAppBar(
+                    windowInsets = WindowInsets(0.dp),
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = colors.topBarText
+                    ),
+                    title = {
+                        Text(
+                            text = "Perfil",
+                            fontWeight = FontWeight.Bold,
+                            color = colors.topBarText
+                        )
+                    }
+                )
+            }
+        ) { padding ->
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(padding)
+                    .padding(bottom = 24.dp)
             ) {
-                Text(
-                    text = stringResource(R.string.section_account),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-
-                ProfileMenuItem(
-                    icon = Icons.Default.Person,
-                    title = stringResource(R.string.menu_edit_profile),
-                    subtitle = stringResource(R.string.menu_edit_profile_desc),
-                    onClick = {
-                        if (isLoggedIn) onNavigateToEditProfile() else onNavigateToLogin()
-                    }
-                )
-
-                ProfileMenuItem(
-                    icon = Icons.Default.BarChart,
-                    title = stringResource(R.string.menu_stats),
-                    subtitle = stringResource(R.string.menu_stats_desc),
-                    onClick = {
-                        if (isLoggedIn) {
-                            onNavigateToUserStats(authViewModel.getCurrentUserId())
-                        } else {
-                            onNavigateToLogin()
-                        }
-                    }
-                )
-
-                ProfileMenuItem(
-                    icon = Icons.Default.History,
-                    title = stringResource(R.string.menu_match_history),
-                    subtitle = stringResource(R.string.menu_match_history_desc),
-                    onClick = {
-                        if (isLoggedIn) {
-                            onNavigateToMatchHistory(authViewModel.getCurrentUserId())
-                        } else {
-                            onNavigateToLogin()
-                        }
-                    }
-                )
-
-                ProfileMenuItem(
-                    icon = Icons.Default.Favorite,
-                    title = stringResource(R.string.menu_favorites),
-                    subtitle = stringResource(R.string.menu_favorites_desc),
-                    onClick = onNavigateToMusic
-                )
-
-                if (userRole == "admin") {
-                    ProfileMenuItem(
-                        icon = Icons.Default.AdminPanelSettings,
-                        title = stringResource(R.string.menu_admin),
-                        subtitle = stringResource(R.string.menu_admin_desc),
-                        onClick = onNavigateToAdminPanel
-                    )
-                }
-
-                ProfileMenuItem(
-                    icon = Icons.Default.Settings,
-                    title = stringResource(R.string.menu_settings),
-                    subtitle = stringResource(R.string.menu_settings_desc),
-                    onClick = onNavigateToSettings
+                ProfileHeader(
+                    username = authViewModel.currentUserName,
+                    bio = if (isLoggedIn && userBio.isNotBlank()) {
+                        userBio
+                    } else {
+                        stringResource(R.string.msg_login_to_see_bio)
+                    },
+                    profileImageUrl = profileImageUrl
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                if (isLoggedIn) {
+                StatsSection(
+                    songsCount = songsCount.toString(),
+                    followersCount = followers.size.toString(),
+                    followingCount = following.size.toString(),
+                    onStatClick = { title ->
+                        if (isLoggedIn) onNavigateToSocialList(title) else onNavigateToLogin()
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.section_account),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+
                     ProfileMenuItem(
-                        icon = Icons.AutoMirrored.Filled.ExitToApp,
-                        title = stringResource(R.string.menu_logout),
-                        color = MaterialTheme.colorScheme.error,
+                        icon = Icons.Default.Person,
+                        title = stringResource(R.string.menu_edit_profile),
+                        subtitle = stringResource(R.string.menu_edit_profile_desc),
                         onClick = {
-                            //Le envio al inico de sesion/registro
-                            authViewModel.signOut()
-                            onNavigateToWelcome()
+                            if (isLoggedIn) onNavigateToEditProfile() else onNavigateToLogin()
                         }
                     )
-                } else {
+
                     ProfileMenuItem(
-                        icon = Icons.AutoMirrored.Filled.Login,
-                        title = stringResource(R.string.menu_login),
-                        subtitle = stringResource(R.string.menu_login_desc),
-                        onClick = onNavigateToLogin
+                        icon = Icons.Default.BarChart,
+                        title = stringResource(R.string.menu_stats),
+                        subtitle = stringResource(R.string.menu_stats_desc),
+                        onClick = {
+                            if (isLoggedIn) {
+                                onNavigateToUserStats(authViewModel.getCurrentUserId())
+                            } else {
+                                onNavigateToLogin()
+                            }
+                        }
                     )
+
+                    ProfileMenuItem(
+                        icon = Icons.Default.History,
+                        title = stringResource(R.string.menu_match_history),
+                        subtitle = stringResource(R.string.menu_match_history_desc),
+                        onClick = {
+                            if (isLoggedIn) {
+                                onNavigateToMatchHistory(authViewModel.getCurrentUserId())
+                            } else {
+                                onNavigateToLogin()
+                            }
+                        }
+                    )
+
+                    ProfileMenuItem(
+                        icon = Icons.Default.Favorite,
+                        title = stringResource(R.string.menu_favorites),
+                        subtitle = stringResource(R.string.menu_favorites_desc),
+                        onClick = onNavigateToMusic
+                    )
+
+                    if (userRole == "admin") {
+                        ProfileMenuItem(
+                            icon = Icons.Default.AdminPanelSettings,
+                            title = stringResource(R.string.menu_admin),
+                            subtitle = stringResource(R.string.menu_admin_desc),
+                            onClick = onNavigateToAdminPanel
+                        )
+                    }
+
+                    ProfileMenuItem(
+                        icon = Icons.Default.Settings,
+                        title = stringResource(R.string.menu_settings),
+                        subtitle = stringResource(R.string.menu_settings_desc),
+                        onClick = onNavigateToSettings
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    if (isLoggedIn) {
+                        ProfileMenuItem(
+                            icon = Icons.AutoMirrored.Filled.ExitToApp,
+                            title = stringResource(R.string.menu_logout),
+                            color = MaterialTheme.colorScheme.error,
+                            onClick = {
+                                //Le envio al inico de sesion/registro
+                                authViewModel.signOut()
+                                onNavigateToWelcome()
+                            }
+                        )
+                    } else {
+                        ProfileMenuItem(
+                            icon = Icons.AutoMirrored.Filled.Login,
+                            title = stringResource(R.string.menu_login),
+                            subtitle = stringResource(R.string.menu_login_desc),
+                            onClick = onNavigateToLogin
+                        )
+                    }
                 }
             }
         }

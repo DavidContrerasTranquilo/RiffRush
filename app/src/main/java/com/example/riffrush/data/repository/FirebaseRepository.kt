@@ -13,8 +13,14 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import android.util.Log
 
+/*
+ Repositorio para operaciones persistentes en Cloud Firestore.
+ Gestiona colecciones de canciones favoritas de usuarios, historiales de partidas, estadísticas globales de juego,
+ configuraciones diarias del "Daily Challenge" y playlists personalizadas del usuario mediante flujos reactivos (Flows) y transacciones.
+ */
 class FirebaseRepository(private val firestore: FirebaseFirestore) {
 
+    // Obtiene un flujo reactivo (Flow) en tiempo real de las canciones favoritas agregadas por un usuario específico
     fun getFavorites(ownerId: String): Flow<List<Song>> = callbackFlow {
         val subscription = firestore.collection("users")
             .document(ownerId)
@@ -25,6 +31,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
                     return@addSnapshotListener
                 }
 
+                // Mapea la lista de documentos de Firestore al modelo local de canciones
                 val songs = snapshot?.documents?.mapNotNull { doc ->
                     Song(
                         id = doc.getLong("id") ?: 0L,
@@ -36,11 +43,13 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
                     )
                 } ?: emptyList()
 
-                trySend(songs)
+                trySend(songs) // Emite la nueva lista a los colectores de Flow
             }
+        // Desregistra el SnapshotListener de Firestore de manera segura al cancelarse el Flow (evita fugas de memoria)
         awaitClose { subscription.remove() }
     }
 
+    // Guarda una canción favorita en la subcolección del usuario
     suspend fun addFavorite(ownerId: String, song: Song) {
         try {
             val songData = hashMapOf(
@@ -63,6 +72,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
         }
     }
 
+    // Elimina una canción de la lista de favoritos del usuario
     suspend fun removeFavorite(ownerId: String, songId: String) {
         try {
             firestore.collection("users")
@@ -76,6 +86,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
         }
     }
 
+    // Incrementa el contador de victorias/derrotas del Reto Diario utilizando operadores atómicos de incremento de Firestore
     suspend fun saveDailyChallengeResult(ownerId: String, isWin: Boolean) {
         try {
             val statsRef = firestore.collection("users")
@@ -95,6 +106,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
         }
     }
 
+    // Recupera la configuración de canciones de un Reto Diario para una fecha específica
     suspend fun getDailyChallengeConfig(date: String): DailyChallengeConfig? {
         return try {
             val doc = firestore.collection("daily_challenges")
@@ -113,6 +125,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
         }
     }
 
+    // Agrega o actualiza un reto diario en la colección global (administración)
     suspend fun saveDailyChallengeConfig(config: DailyChallengeConfig) {
         try {
             firestore.collection("daily_challenges")
@@ -124,6 +137,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
         }
     }
 
+    // Elimina un reto diario de la colección global (administración)
     suspend fun deleteDailyChallengeConfig(date: String) {
         try {
             firestore.collection("daily_challenges")
@@ -135,6 +149,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
         }
     }
 
+    // Incrementa de manera atómica la cantidad de partidas globales completadas por el usuario
     suspend fun incrementGamesPlayed(uid: String) {
         if (uid.isBlank()) return
 
@@ -150,6 +165,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
             .await()
     }
 
+    // Incrementa la cantidad de canciones individuales que el usuario ha respondido en total
     suspend fun incrementSongsPlayed(uid: String) {
         if (uid.isBlank()) return
 
@@ -165,6 +181,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
             .await()
     }
 
+    // Actualiza la racha máxima de días consecutivos completando el reto diario si la actual supera a la almacenada
     suspend fun updateMaxStreak(uid: String, newStreak: Int) {
         val ref = firestore.collection("users").document(uid)
         val doc = ref.get().await()
@@ -176,6 +193,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
         }
     }
 
+    // Almacena un registro de partida jugada en el historial individual del usuario
     suspend fun saveMatchHistory(history: MatchHistoryModel) {
         val docRef = firestore.collection("users")
             .document(history.userId)
@@ -187,6 +205,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
         docRef.set(historyWithId).await()
     }
 
+    // Descarga todo el historial de partidas del usuario ordenado por fecha de forma descendente (más reciente primero)
     suspend fun getMatchHistory(userId: String): List<MatchHistoryModel> {
         return try {
             val snapshot = firestore.collection("users")
@@ -205,6 +224,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
         }
     }
 
+    // Obtiene un flujo en tiempo real de todas las playlists creadas por el usuario
     fun getPlaylists(ownerId: String): Flow<List<PlaylistModel>> = callbackFlow {
         val subscription = firestore.collection("users")
             .document(ownerId)
@@ -230,6 +250,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
         awaitClose { subscription.remove() }
     }
 
+    // Crea una nueva playlist personalizada vacía en Firestore
     suspend fun createPlaylist(ownerId: String, name: String) {
         val ref = firestore.collection("users")
             .document(ownerId)
@@ -246,6 +267,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
         ref.set(playlist).await()
     }
 
+    // Elimina una playlist de la colección del usuario
     suspend fun deletePlaylist(ownerId: String, playlistId: String) {
         firestore.collection("users")
             .document(ownerId)
@@ -255,6 +277,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
             .await()
     }
 
+    // Obtiene un flujo de tiempo real de todas las canciones contenidas dentro de una playlist específica
     fun getPlaylistSongs(ownerId: String, playlistId: String): Flow<List<Song>> = callbackFlow {
         val subscription = firestore.collection("users")
             .document(ownerId)
@@ -284,6 +307,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
         awaitClose { subscription.remove() }
     }
 
+    // Agrega una canción a una playlist y actualiza el contador de canciones de forma segura usando una Transacción atómica
     suspend fun addSongToPlaylist(ownerId: String, playlistId: String, song: Song) {
         val playlistRef = firestore.collection("users")
             .document(ownerId)
@@ -308,6 +332,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
 
             transaction.set(songRef, songData)
 
+            // Si la canción no estaba agregada previamente en esta playlist, incrementa el contador
             if (!existingSong.exists()) {
                 transaction.update(
                     playlistRef,
@@ -318,6 +343,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
         }.await()
     }
 
+    // Elimina una canción de una playlist y decrementa el contador de canciones de forma segura usando una Transacción atómica
     suspend fun removeSongFromPlaylist(ownerId: String, playlistId: String, songId: String) {
         val playlistRef = firestore.collection("users")
             .document(ownerId)
@@ -332,6 +358,7 @@ class FirebaseRepository(private val firestore: FirebaseFirestore) {
             val playlistSnapshot = transaction.get(playlistRef)
             val songSnapshot = transaction.get(songRef)
 
+            // Si la canción existe, disminuye el contador evitando números negativos y la remueve
             if (songSnapshot.exists()) {
                 val currentCount = playlistSnapshot.getLong("songsCount") ?: 0L
                 val newCount = (currentCount - 1).coerceAtLeast(0L)

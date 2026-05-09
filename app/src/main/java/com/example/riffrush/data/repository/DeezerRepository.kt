@@ -3,8 +3,14 @@ package com.example.riffrush.data.repository
 import android.util.Log
 import com.example.riffrush.data.model.Song
 
+/*
+ Repositorio intermedio para acceder a los datos musicales de Deezer.
+ Actúa como capa de abstracción sobre DeezerApi, manejando excepciones de red y mapeando
+ los modelos puros de la API a nuestro modelo de dominio unificado: Song.
+ */
 class DeezerRepository(private val api: DeezerApi) {
 
+    // Realiza búsquedas de canciones basadas en un texto de consulta (query)
     suspend fun searchSongs(query: String): List<Song> {
         return try {
             val response = api.search(query)
@@ -17,6 +23,7 @@ class DeezerRepository(private val api: DeezerApi) {
         }
     }
 
+    // Obtiene las canciones más populares en tendencia (chart) globales
     suspend fun getChart(): List<Song> {
         return try {
             val response = api.getChart()
@@ -29,6 +36,7 @@ class DeezerRepository(private val api: DeezerApi) {
         }
     }
 
+    // Obtiene los datos detallados de una canción específica por su ID
     suspend fun getSong(trackId: Long): Song? {
         return try {
             val item = api.getTrack(trackId)
@@ -39,6 +47,7 @@ class DeezerRepository(private val api: DeezerApi) {
         }
     }
 
+    // Obtiene todas las canciones de una playlist de Deezer por su identificador único
     suspend fun getPlaylistTracks(playlistId: Long): List<Song> {
         return try {
             val response = api.getPlaylistTracks(playlistId)
@@ -51,6 +60,7 @@ class DeezerRepository(private val api: DeezerApi) {
         }
     }
 
+    // Función de extensión interna para convertir los modelos puros de la API en canciones de nuestro dominio
     private fun DeezerTrack.toSong(): Song {
         return Song(
             id = id,
