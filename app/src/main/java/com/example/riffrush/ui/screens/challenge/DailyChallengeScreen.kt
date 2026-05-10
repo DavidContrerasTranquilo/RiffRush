@@ -42,6 +42,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.material.icons.filled.MusicNote
+import coil.compose.AsyncImage
+import com.example.riffrush.ui.theme.getAppThemeColors
 import com.example.riffrush.R
 import com.example.riffrush.data.model.Song
 import com.example.riffrush.data.player.MusicPlayer
@@ -164,19 +180,31 @@ fun DailyChallengeGameView(
     round: Int,
     score: Int,
     allSongs: List<Song>,
+    distractorPool: List<Song> = emptyList(),
     hasAnswered: Boolean,
     answerCorrect: Boolean?,
     onAnswer: (Boolean) -> Unit,
     onNextRound: () -> Unit,
     musicPlayer: MusicPlayer
 ) {
-    // Genera las 4 opciones de respuesta (1 correcta y 3 incorrectas mezcladas aleatoriamente)
-    val options = remember(song) {
-        val wrongOptions = allSongs
-            .filter { it.id != song.id }
+    val colors = getAppThemeColors()
+    
+    // Genera las 4 opciones de respuesta garantizando variedad y que no se repitan
+    val options = remember(song, distractorPool) {
+        val pastAnsweredIds = allSongs.take(round - 1).map { it.id }.toSet()
+        val combinedPool = (allSongs + distractorPool).distinctBy { it.id }
+        
+        val wrongOptions = combinedPool
+            .filter { it.id != song.id && !pastAnsweredIds.contains(it.id) }
             .shuffled()
             .take(3)
-        (wrongOptions + song).shuffled()
+            
+        val finalWrongOptions = if (wrongOptions.size < 3) {
+            val fallback = allSongs.filter { it.id != song.id }.shuffled().take(3 - wrongOptions.size)
+            wrongOptions + fallback
+        } else wrongOptions
+
+        (finalWrongOptions + song).distinctBy { it.id }.shuffled()
     }
 
     // Inicia la reproducción automática del fragmento sonoro cuando cambia la ronda o canción activa
@@ -201,28 +229,79 @@ fun DailyChallengeGameView(
             Text(
                 text = stringResource(R.string.label_score_value, score),
                 fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = colors.textMain
             )
             Text(
                 text = stringResource(R.string.label_round_progress, round, allSongs.size),
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
+                color = colors.accentPrimary,
                 style = MaterialTheme.typography.titleMedium
             )
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Spinning Vinyl Disc UI (similar to MatchScreen)
+        Box(
+            modifier = Modifier.size(220.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            val infiniteTransition = rememberInfiniteTransition(label = "VinylSpin")
+            val rotation by infiniteTransition.animateFloat(
+                initialValue = 0f,
+                targetValue = 360f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(4000, easing = LinearEasing),
+                    repeatMode = RepeatMode.Restart
+                ),
+                label = "RotationAnim"
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(180.dp)
+                    .clip(CircleShape)
+                    .background(colors.vinylBg)
+                    .border(2.dp, colors.cardBorder, CircleShape)
+                    .rotate(if (hasAnswered) 0f else rotation),
+                contentAlignment = Alignment.Center
+            ) {
+                // Inner grooves
+                Box(modifier = Modifier.size(120.dp).border(1.dp, Color.White.copy(alpha = 0.05f), CircleShape))
+                Box(modifier = Modifier.size(60.dp).border(1.dp, Color.White.copy(alpha = 0.05f), CircleShape))
+                
+                // If answered, reveal cover!
+                if (hasAnswered && song.cover.isNotBlank()) {
+                    AsyncImage(
+                        model = song.cover,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(CircleShape)
+                            .background(colors.accentPrimary.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MusicNote,
+                            contentDescription = null,
+                            modifier = Modifier.size(28.dp),
+                            tint = colors.accentPrimary
+                        )
+                    }
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(48.dp))
 
         // Despliegue de los botones interactivos con las opciones de respuesta
         options.forEach { option ->
-            // Color de respuesta reactivo: verde si es la correcta revelada, grisáceo las demás, o violeta si aún no responde
-            val buttonColor = if (hasAnswered) {
-                if (option.id == song.id) Color(0xFF4CAF50)
-                else MaterialTheme.colorScheme.surfaceVariant
-            } else {
-                MaterialTheme.colorScheme.secondaryContainer
-            }
-
             Button(
                 onClick = { onAnswer(option.id == song.id) },
                 enabled = !hasAnswered,
@@ -230,15 +309,18 @@ fun DailyChallengeGameView(
                     .fillMaxWidth()
                     .height(60.dp)
                     .padding(vertical = 4.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = buttonColor,
-                    contentColor = if (hasAnswered && option.id != song.id) Color.Gray else MaterialTheme.colorScheme.onSecondaryContainer
-                )
+                    containerColor = colors.buttonBg,
+                    contentColor = colors.buttonText,
+                    disabledContainerColor = if (hasAnswered && option.id == song.id) Color(0xFF10B981) else colors.cardBg,
+                    disabledContentColor = if (hasAnswered && option.id == song.id) Color.White else colors.textMuted
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = if (hasAnswered) 0.dp else 2.dp)
             ) {
                 Text(
                     text = option.title,
-                    fontSize = 16.sp,
+                    fontSize = 15.sp,
                     textAlign = TextAlign.Center
                 )
             }
@@ -249,18 +331,23 @@ fun DailyChallengeGameView(
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = if (answerCorrect == true) stringResource(R.string.msg_correct) else stringResource(R.string.msg_incorrect),
-                color = if (answerCorrect == true) Color(0xFF4CAF50) else Color.Red,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
+                style = MaterialTheme.typography.headlineSmall,
+                color = if (answerCorrect == true) Color(0xFF10B981) else Color.Red,
+                fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Button(
                 onClick = onNextRound,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colors.accentPrimary,
+                    contentColor = colors.buttonText
+                )
             ) {
-                Text(if (round == allSongs.size) stringResource(R.string.btn_view_results) else stringResource(R.string.btn_next_song))
+                Text(if (round == allSongs.size) stringResource(R.string.btn_view_results) else stringResource(R.string.btn_next_song), fontSize = 16.sp)
             }
         }
     }

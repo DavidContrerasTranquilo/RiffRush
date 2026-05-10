@@ -14,6 +14,9 @@ class FavoritesGameViewModel(
     private val _playingSongs = MutableStateFlow<List<Song>>(emptyList())
     val playingSongs = _playingSongs.asStateFlow()
 
+    private val _distractorPool = MutableStateFlow<List<Song>>(emptyList())
+    val distractorPool = _distractorPool.asStateFlow()
+
     private val _currentIndex = MutableStateFlow(0)
     val currentIndex = _currentIndex.asStateFlow()
 
@@ -37,6 +40,10 @@ class FavoritesGameViewModel(
             val refreshedSongs = selected.map { song ->
                 deezerRepository.getSong(song.id) ?: song
             }
+
+            val chart = deezerRepository.getChart()
+            _distractorPool.value = chart
+
             _playingSongs.value = refreshedSongs
             _currentIndex.value = 0
             _score.value = 0

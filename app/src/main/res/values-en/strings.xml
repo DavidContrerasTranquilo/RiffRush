@@ -196,7 +196,7 @@
     <string name="msg_loading_playlist_songs">Loading playlist songs...</string>
     <string name="title_match_1vs1">1VS1 DUEL</string>
     <string name="label_you">You</string>
-    <string name="label_bot">Bot</string>
+    <string name="label_rival">Rival</string>
     <string name="label_player_you">%1$s (You)</string>
     <string name="msg_tuning_match">Tuning into match...</string>
     <string name="msg_waiting_opponent">Waiting for opponent...</string>
@@ -208,6 +208,7 @@
     <string name="msg_match_abandoned">Match ended by abandonment</string>
     <string name="msg_opponent_disconnected">Opponent lost connection</string>
     <string name="msg_you_disconnected">You lost connection</string>
+    <string name="msg_game_over">Game Over</string>
     <string name="msg_connection_lost">Connection lost</string>
     <string name="msg_victory">VICTORY!</string>
     <string name="msg_draw">DRAW!</string>

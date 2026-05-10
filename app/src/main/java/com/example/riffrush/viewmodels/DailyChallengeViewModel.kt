@@ -21,6 +21,7 @@ data class DailyChallengeUiState(
     val isLoading: Boolean = true,
     val isCompletedToday: Boolean = false,
     val songs: List<Song> = emptyList(),
+    val distractorPool: List<Song> = emptyList(),
     val currentRoundIndex: Int = 0,
     val score: Int = 0,
     val streak: Int = 0,
@@ -46,7 +47,7 @@ class DailyChallengeViewModel(
         checkDailyStatusAndLoad()
     }
 
-    private fun checkDailyStatusAndLoad() {
+    fun checkDailyStatusAndLoad() {
         viewModelScope.launch {
             val uid = authRepository.getCurrentUser()?.uid ?: "guest"
             val todayStr = getCurrentDateString()
@@ -105,7 +106,8 @@ class DailyChallengeViewModel(
             if (loadedSongs.size >= 6) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    songs = loadedSongs.take(6)
+                    songs = loadedSongs.take(6),
+                    distractorPool = deezerRepository.getChart()
                 )
                 if (com.example.riffrush.BuildConfig.DEBUG) android.util.Log.d("DAILY_DEBUG", "Usando reto configurado por admin")
                 return
@@ -122,7 +124,8 @@ class DailyChallengeViewModel(
 
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                songs = selectedSongs
+                songs = selectedSongs,
+                distractorPool = allSongs
             )
         } else {
             _uiState.value = _uiState.value.copy(

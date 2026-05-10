@@ -132,6 +132,7 @@ fun FavoritesGameScreen(
 
                 else -> {
                     val currentSong = playingSongs.getOrNull(currentIndex)
+                    val distractorPool by favoritesViewModel.distractorPool.collectAsState()
 
                     if (currentSong != null) {
                         DailyChallengeGameView(
@@ -139,6 +140,7 @@ fun FavoritesGameScreen(
                             round = currentIndex + 1,
                             score = score,
                             allSongs = playingSongs,
+                            distractorPool = distractorPool,
                             hasAnswered = hasAnswered,
                             answerCorrect = answerCorrect,
                             onAnswer = { isCorrect ->

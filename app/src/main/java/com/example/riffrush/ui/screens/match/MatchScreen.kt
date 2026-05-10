@@ -9,7 +9,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,10 +50,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -84,6 +81,7 @@ fun MatchScreen(
 ) {
     val match by viewModel.currentMatch.collectAsState()
     val songs by viewModel.songs.collectAsState()
+    val distractorPool by viewModel.distractorPool.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val timeLeft by viewModel.timeLeft.collectAsState()
     val timerDuration by viewModel.currentTimerDuration.collectAsState()
@@ -133,10 +131,12 @@ fun MatchScreen(
                             Icon(Icons.Default.Close, contentDescription = stringResource(R.string.content_desc_exit), tint = colors.topBarText)
                         }
                     },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent,
+                        scrolledContainerColor = Color.Unspecified,
+                        navigationIconContentColor = colors.topBarText,
                         titleContentColor = colors.topBarText,
-                        navigationIconContentColor = colors.topBarText
+                        actionIconContentColor = Color.Unspecified
                     )
                 )
             }
@@ -167,7 +167,7 @@ fun MatchScreen(
                                     }
 
                                     val rawPlayer2Name = currentMatch.player2Name.ifBlank {
-                                        if (isOffline) stringResource(R.string.label_bot) else stringResource(R.string.default_username_guest)
+                                        if (isOffline) stringResource(R.string.label_rival) else stringResource(R.string.default_username_guest)
                                     }
 
                                     val player1DisplayName =
@@ -189,6 +189,8 @@ fun MatchScreen(
                                         scoreP1 = currentMatch.scoreP1,
                                         scoreP2 = currentMatch.scoreP2,
                                         allSongs = songs,
+                                        distractorPool = distractorPool,
+                                        isOffline = isOffline,
                                         hasAnswered = hasAnswered,
                                         timeLeft = timeLeft,
                                         onAnswer = { isCorrect ->
@@ -221,7 +223,7 @@ fun MatchScreen(
                                 }
 
                                 val rawPlayer2Name = currentMatch.player2Name.ifBlank {
-                                    if (isOffline) stringResource(R.string.label_bot) else stringResource(R.string.default_username_guest)
+                                    if (isOffline) stringResource(R.string.label_rival) else stringResource(R.string.default_username_guest)
                                 }
 
                                 val player1DisplayName =
@@ -236,7 +238,7 @@ fun MatchScreen(
                                         currentMatch.abandonedBy == currentPlayerId
                                 val opponentLostConnection =
                                     currentMatch.endReason == "CONNECTION_LOST" &&
-                                            currentMatch.abandonedBy != currentPlayerId
+                                             currentMatch.abandonedBy != currentPlayerId
                                 val iLostConnection = currentMatch.endReason == "CONNECTION_LOST" &&
                                         currentMatch.abandonedBy == currentPlayerId
                                 val iWinByEndReason = currentMatch.winnerId == currentPlayerId
@@ -266,6 +268,7 @@ fun MatchScreen(
                                     opponentLostConnection = opponentLostConnection,
                                     iLostConnection = iLostConnection,
                                     iWinByEndReason = iWinByEndReason,
+                                    isOffline = isOffline,
                                     colors = colors
                                 )
                             }
@@ -338,6 +341,8 @@ fun GameView(
     scoreP1: Int,
     scoreP2: Int,
     allSongs: List<Song>,
+    distractorPool: List<Song> = emptyList(),
+    isOffline: Boolean = false,
     hasAnswered: Boolean = false,
     timeLeft: Float,
     onAnswer: (Boolean) -> Unit,
@@ -347,12 +352,21 @@ fun GameView(
     timerDuration: Long,
     colors: com.example.riffrush.ui.theme.AppThemeColors
 ) {
-    val options = remember(song) {
-        val wrongOptions = allSongs
-            .filter { it.id != song.id }
+    val options = remember(song, distractorPool) {
+        val pastAnsweredIds = allSongs.take(round - 1).map { it.id }.toSet()
+        val combinedPool = (allSongs + distractorPool).distinctBy { it.id }
+        
+        val wrongOptions = combinedPool
+            .filter { it.id != song.id && !pastAnsweredIds.contains(it.id) }
             .shuffled()
             .take(3)
-        (wrongOptions + song).shuffled()
+            
+        val finalWrongOptions = if (wrongOptions.size < 3) {
+            val fallback = allSongs.filter { it.id != song.id }.shuffled().take(3 - wrongOptions.size)
+            wrongOptions + fallback
+        } else wrongOptions
+
+        (finalWrongOptions + song).distinctBy { it.id }.shuffled()
     }
 
     LaunchedEffect(song.id) {
@@ -368,15 +382,37 @@ fun GameView(
             .padding(horizontal = 24.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        ScoreBoard(
-            player1Name = player1Name,
-            player2Name = player2Name,
-            scoreP1 = scoreP1,
-            scoreP2 = scoreP2,
-            onPlayer1Click = onPlayer1Click,
-            onPlayer2Click = onPlayer2Click,
-            colors = colors
-        )
+        if (isOffline) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(colors.cardBg)
+                    .border(1.dp, colors.cardBorder, RoundedCornerShape(24.dp))
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = stringResource(R.string.label_score_value, scoreP1),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Black,
+                        color = colors.accentPrimary
+                    )
+                }
+            }
+        } else {
+            ScoreBoard(
+                player1Name = player1Name,
+                player2Name = player2Name,
+                scoreP1 = scoreP1,
+                scoreP2 = scoreP2,
+                onPlayer1Click = onPlayer1Click,
+                onPlayer2Click = onPlayer2Click,
+                colors = colors
+            )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -583,6 +619,7 @@ fun ResultView(
     opponentLostConnection: Boolean = false,
     iLostConnection: Boolean = false,
     iWinByEndReason: Boolean = false,
+    isOffline: Boolean = false,
     colors: com.example.riffrush.ui.theme.AppThemeColors
 ) {
     val currentPlayerId = viewModel.getCurrentPlayerId()
@@ -649,14 +686,16 @@ fun ResultView(
         }
 
         Text(
-            text = when {
+            text = if (isOffline) {
+                stringResource(R.string.msg_game_over)
+            } else when {
                 win -> stringResource(R.string.msg_victory)
                 draw -> stringResource(R.string.msg_draw)
                 else -> stringResource(R.string.msg_defeat)
             },
-            fontSize = 48.sp,
+            fontSize = 44.sp,
             fontWeight = FontWeight.Black,
-            color = when {
+            color = if (isOffline) colors.accentPrimary else when {
                 win -> colors.accentPrimary
                 draw -> colors.textMuted
                 else -> colors.accentSecondary
@@ -665,15 +704,37 @@ fun ResultView(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        ScoreBoard(
-            player1Name = player1Name,
-            player2Name = player2Name,
-            scoreP1 = scoreP1,
-            scoreP2 = scoreP2,
-            onPlayer1Click = onPlayer1Click,
-            onPlayer2Click = onPlayer2Click,
-            colors = colors
-        )
+        if (isOffline) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(colors.cardBg)
+                    .border(1.dp, colors.cardBorder, RoundedCornerShape(24.dp))
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = stringResource(R.string.label_score_value, scoreP1),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Black,
+                        color = colors.accentPrimary
+                    )
+                }
+            }
+        } else {
+            ScoreBoard(
+                player1Name = player1Name,
+                player2Name = player2Name,
+                scoreP1 = scoreP1,
+                scoreP2 = scoreP2,
+                onPlayer1Click = onPlayer1Click,
+                onPlayer2Click = onPlayer2Click,
+                colors = colors
+            )
+        }
         
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -716,18 +777,28 @@ fun ResultView(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                "$player1Name: ${if (result.player1Correct) "✔" else "✖"}",
-                                color = if (result.player1Correct) Color(0xFF10B981) else colors.accentSecondary
-                            )
-                            Text(
-                                "$player2Name: ${if (result.player2Correct) "✔" else "✖"}",
-                                color = if (result.player2Correct) Color(0xFF10B981) else colors.accentSecondary
-                            )
+                        if (isOffline) {
+                            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
+                                Text(
+                                    text = if (result.player1Correct) "✔ Acertada" else "✖ Fallada",
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (result.player1Correct) Color(0xFF10B981) else colors.accentSecondary
+                                )
+                            }
+                        } else {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    "$player1Name: ${if (result.player1Correct) "✔" else "✖"}",
+                                    color = if (result.player1Correct) Color(0xFF10B981) else colors.accentSecondary
+                                )
+                                Text(
+                                    "$player2Name: ${if (result.player2Correct) "✔" else "✖"}",
+                                    color = if (result.player2Correct) Color(0xFF10B981) else colors.accentSecondary
+                                )
+                            }
                         }
                     }
                 }

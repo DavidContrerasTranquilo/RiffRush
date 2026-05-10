@@ -111,6 +111,7 @@ fun HomeScreen(
 
     LaunchedEffect(Unit) {
         authViewModel.loadModerationState()
+        dailyChallengeViewModel.checkDailyStatusAndLoad()
     }
 
     LaunchedEffect(currentMatch) {

@@ -196,7 +196,7 @@
     <string name="msg_loading_playlist_songs">Cargando canciones de la playlist...</string>
     <string name="title_match_1vs1">DUELO 1VS1</string>
     <string name="label_you">Tú</string>
-    <string name="label_bot">Bot</string>
+    <string name="label_rival">Rival</string>
     <string name="label_player_you">%1$s (Tú)</string>
     <string name="msg_tuning_match">Sintonizando la partida...</string>
     <string name="msg_waiting_opponent">Esperando al oponente...</string>
@@ -208,6 +208,7 @@
     <string name="msg_match_abandoned">La partida terminó por abandono</string>
     <string name="msg_opponent_disconnected">El rival ha perdido la conexión</string>
     <string name="msg_you_disconnected">Has perdido la conexión</string>
+    <string name="msg_game_over">Fin de la Partida</string>
     <string name="msg_connection_lost">La conexión se ha perdido</string>
     <string name="msg_victory">¡VICTORIA!</string>
     <string name="msg_draw">¡EMPATE!</string>

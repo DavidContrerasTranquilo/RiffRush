@@ -40,6 +40,9 @@ class MatchViewModel(
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
     val songs: StateFlow<List<Song>> = _songs
 
+    private val _distractorPool = MutableStateFlow<List<Song>>(emptyList())
+    val distractorPool: StateFlow<List<Song>> = _distractorPool
+
     private val _currentRound = MutableStateFlow(0)
 
     private val _isLoading = MutableStateFlow(false)
@@ -369,6 +372,10 @@ class MatchViewModel(
                 val loadedSongs = ids.mapNotNull { id ->
                     deezerRepository.getSong(id)
                 }
+                
+                // Fetch distractors for option variety
+                _distractorPool.value = deezerRepository.getChart()
+                
                 _songs.value = loadedSongs
                 _isLoading.value = false
                 onComplete()
@@ -790,7 +797,7 @@ class MatchViewModel(
         viewModelScope.launch {
             try {
                 val myUid = repository.getCurrentUserId()
-                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                val firestore = FirebaseFirestore.getInstance()
                 val myDoc = firestore.collection("users").document(myUid).get().await()
                 val myName = myDoc.getString("name")
                     ?: myDoc.getString("username")
@@ -816,7 +823,7 @@ class MatchViewModel(
                     repository.listenToChallenge(challengeId).collect { updated ->
                         _sentChallengeState.value = updated
                         if (updated?.status == "ACCEPTED" && updated.matchId != null) {
-                            listenToMatch(updated.matchId!!)
+                            listenToMatch(updated.matchId)
                             _sentChallengeState.value = null
                             sentChallengeJob?.cancel()
                         } else if (updated?.status == "DECLINED") {
